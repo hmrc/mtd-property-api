@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import sbt.{ForkOptions, TestDefinition}
-import sbt.Tests.{Group, SubProcess}
+package v2.config
 
-object TestPhases {
-  def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
-    tests map {
-      test => Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name, "-Dlogger.resource=logback-test.xml"))))
-    }
+import com.google.inject.AbstractModule
+
+class DIModule extends AbstractModule {
+
+  override def configure(): Unit = {
+    bind(classOf[AppConfig]).to(classOf[AppConfigImpl]).asEagerSingleton()
+  }
 }

@@ -20,7 +20,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status
 import play.api.libs.ws.{WSRequest, WSResponse}
 import support.IntegrationBaseSpec
-import v2.stubs.{AuthStub, MtdIdLookupStub}
+import v2.stubs.{AuditStub, AuthStub, MtdIdLookupStub}
 
 class AuthISpec extends IntegrationBaseSpec {
 
@@ -43,6 +43,7 @@ class AuthISpec extends IntegrationBaseSpec {
         override val nino: String = "AA123456A"
 
         override def setupStubs(): StubMapping = {
+          AuditStub.audit()
           MtdIdLookupStub.internalServerError(nino)
         }
 
@@ -57,6 +58,7 @@ class AuthISpec extends IntegrationBaseSpec {
         override val nino: String = "AA123456A"
 
         override def setupStubs(): StubMapping = {
+          AuditStub.audit()
           MtdIdLookupStub.ninoFound(nino)
           AuthStub.authorised()
         }
@@ -72,6 +74,7 @@ class AuthISpec extends IntegrationBaseSpec {
         override val nino: String = "AA123456A"
 
         override def setupStubs(): StubMapping = {
+          AuditStub.audit()
           MtdIdLookupStub.ninoFound(nino)
           AuthStub.unauthorisedNotLoggedIn()
         }
@@ -87,6 +90,7 @@ class AuthISpec extends IntegrationBaseSpec {
         override val nino: String = "AA123456A"
 
         override def setupStubs(): StubMapping = {
+          AuditStub.audit()
           MtdIdLookupStub.ninoFound(nino)
           AuthStub.unauthorisedOther()
         }

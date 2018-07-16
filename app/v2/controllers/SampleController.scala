@@ -14,12 +14,19 @@
  * limitations under the License.
  */
 
-import sbt.{ForkOptions, TestDefinition}
-import sbt.Tests.{Group, SubProcess}
+package v2.controllers
 
-object TestPhases {
-  def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
-    tests map {
-      test => Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name, "-Dlogger.resource=logback-test.xml"))))
-    }
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.{Action, AnyContent}
+import v2.services.{EnrolmentsAuthService, MtdIdLookupService}
+
+import scala.concurrent.Future
+
+@Singleton
+class SampleController @Inject()(val authService: EnrolmentsAuthService,
+                                 val lookupService: MtdIdLookupService) extends AuthorisedController {
+
+  def doSomething(nino: String): Action[AnyContent] = authorisedAction(nino).async { implicit request =>
+    Future.successful(Ok(request.mtdId))
+  }
 }
