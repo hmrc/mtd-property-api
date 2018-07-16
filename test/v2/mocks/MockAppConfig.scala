@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-import sbt.{ForkOptions, TestDefinition}
-import sbt.Tests.{Group, SubProcess}
+package v2.mocks
 
-object TestPhases {
-  def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
-    tests map {
-      test => Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name, "-Dlogger.resource=logback-test.xml"))))
-    }
+import v2.config.AppConfig
+import org.scalamock.handlers.CallHandler
+import org.scalamock.scalatest.MockFactory
+
+trait MockAppConfig extends MockFactory {
+
+  val mockAppConfig: AppConfig = mock[AppConfig]
+
+  object MockedAppConfig {
+    def desBaseUrl: CallHandler[String] = (mockAppConfig.desBaseUrl _: () => String).expects()
+    def mtdIdBaseUrl: CallHandler[String] = (mockAppConfig.mtdIdBaseUrl _: () => String).expects()
+  }
 }

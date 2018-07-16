@@ -14,12 +14,22 @@
  * limitations under the License.
  */
 
-import sbt.{ForkOptions, TestDefinition}
-import sbt.Tests.{Group, SubProcess}
+package v2.connectors.httpparsers
 
-object TestPhases {
-  def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
-    tests map {
-      test => Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name, "-Dlogger.resource=logback-test.xml"))))
+import play.api.libs.json.{JsValue, Reads}
+import uk.gov.hmrc.http.HttpResponse
+
+import scala.util.{Success, Try}
+
+trait HttpParser {
+
+  implicit class HttpResponseOps(response: HttpResponse) {
+    def validateJson[T](implicit reads: Reads[T]): Option[T] = {
+      Try(response.json) match {
+        case Success(js: JsValue) => js.asOpt
+        case _ => None
+      }
     }
+  }
+
 }

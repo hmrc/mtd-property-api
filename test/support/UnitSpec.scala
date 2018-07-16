@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-import sbt.{ForkOptions, TestDefinition}
-import sbt.Tests.{Group, SubProcess}
+package support
 
-object TestPhases {
-  def oneForkedJvmPerTest(tests: Seq[TestDefinition]): Seq[Group] =
-    tests map {
-      test => Group(test.name, Seq(test), SubProcess(ForkOptions(runJVMOptions = Seq("-Dtest.name=" + test.name, "-Dlogger.resource=logback-test.xml"))))
-    }
-}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{EitherValues, Matchers, WordSpecLike}
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+
+trait UnitSpec extends WordSpecLike
+  with MockFactory
+  with EitherValues
+  with Matchers
+  with FutureAwaits
+  with DefaultAwaitTimeout
