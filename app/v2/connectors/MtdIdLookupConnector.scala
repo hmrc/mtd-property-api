@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import v2.config.AppConfig
-import v2.outcomes.MtdIdLookupOutcome.MtdIdLookupOutcome
+import v2.models.outcomes.MtdIdLookupOutcome
 
 import scala.concurrent.{ExecutionContext, Future}
 

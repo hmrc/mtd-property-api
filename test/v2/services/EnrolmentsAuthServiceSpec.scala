@@ -17,11 +17,11 @@
 package v2.services
 
 import org.scalamock.handlers.CallHandler
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, InsufficientEnrolments, MissingBearerToken}
 import uk.gov.hmrc.auth.core.authorise.{EmptyPredicate, Predicate}
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
+import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments, MissingBearerToken}
 import uk.gov.hmrc.http.HeaderCarrier
-import v2.models.errors.AuthError
+import v2.models.errors.{UnauthenticatedError, UnauthorisedError}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -60,7 +60,7 @@ class EnrolmentsAuthServiceSpec extends ServiceSpec {
     "the user is not logged in" should {
       "return an unauthenticated error" in new Test {
 
-        val expected = Left(AuthError())
+        val expected = Left(UnauthenticatedError)
 
         MockedAuthConnector.authorised(EmptyPredicate)
           .returns(Future.failed(MissingBearerToken()))
@@ -74,7 +74,7 @@ class EnrolmentsAuthServiceSpec extends ServiceSpec {
     "the user is not authorised" should {
       "return an unauthorised error" in new Test {
 
-        val expected = Left(AuthError(true, false))
+        val expected = Left(UnauthorisedError)
 
         MockedAuthConnector.authorised(EmptyPredicate)
           .returns(Future.failed(InsufficientEnrolments()))
