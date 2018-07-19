@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.models
 
-import play.api.libs.json.{Json, OFormat}
+import v2.models.errors.MtdError
 
-trait MtdError
+package object outcomes {
 
-case class Error(code: String, message: String) extends MtdError
+  type AuthOutcome = Either[MtdError, Boolean]
+  type MtdIdLookupOutcome = Either[MtdError, String]
 
-object Error {
-  implicit val format: OFormat[Error] = Json.format[Error]
 }

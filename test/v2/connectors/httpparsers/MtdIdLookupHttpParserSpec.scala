@@ -21,9 +21,9 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{FORBIDDEN, INTERNAL_SERVER_ERROR, OK}
 import support.UnitSpec
 import uk.gov.hmrc.http.HttpResponse
-import v2.models.errors.InvalidNino
-import v2.outcomes.MtdIdLookupOutcome.{DownstreamError, MtdIdLookupOutcome}
 import v2.connectors.httpparsers.MtdIdLookupHttpParser.mtdIdLookupHttpReads
+import v2.models.errors.{DownstreamError, InvalidNinoError}
+import v2.models.outcomes.MtdIdLookupOutcome
 
 class MtdIdLookupHttpParserSpec extends UnitSpec {
 
@@ -32,6 +32,7 @@ class MtdIdLookupHttpParserSpec extends UnitSpec {
   val mtdId = "test-mtd-id"
 
   val mtdIdJson: JsObject = Json.obj("mtdbsa" -> mtdId)
+  val invalidJson: JsObject = Json.obj("hello" -> "world")
 
   "read" should {
     "return an MtdId" when {
@@ -43,9 +44,23 @@ class MtdIdLookupHttpParserSpec extends UnitSpec {
       }
     }
 
-    "returns a success response without MtdId" when {
+    "returns an downstream error" when {
       "backend doesn't have a valid data" in {
+        val response = HttpResponse(OK, Some(invalidJson))
+        val result: MtdIdLookupOutcome = mtdIdLookupHttpReads.read(method, url, response)
+
+        result shouldBe Left(DownstreamError)
+      }
+
+      "backend doesn't return any data" in {
         val response = HttpResponse(OK, None)
+        val result: MtdIdLookupOutcome = mtdIdLookupHttpReads.read(method, url, response)
+
+        result shouldBe Left(DownstreamError)
+      }
+
+      "the json cannot be read" in {
+        val response = HttpResponse(OK, None.orNull)
         val result: MtdIdLookupOutcome = mtdIdLookupHttpReads.read(method, url, response)
 
         result shouldBe Left(DownstreamError)
@@ -57,7 +72,7 @@ class MtdIdLookupHttpParserSpec extends UnitSpec {
         val response = HttpResponse(FORBIDDEN)
         val result: MtdIdLookupOutcome = mtdIdLookupHttpReads.read(method, url, response)
 
-        result shouldBe Left(InvalidNino)
+        result shouldBe Left(InvalidNinoError)
       }
     }
 

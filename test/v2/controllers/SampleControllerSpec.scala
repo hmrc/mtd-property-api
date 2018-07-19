@@ -18,8 +18,7 @@ package v2.controllers
 
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.mocks.services.{MockEnrolmentsAuthService, MockMtdIdLookupService}
-import v2.models.errors.InvalidNino
-import v2.outcomes.MtdIdLookupOutcome.NotAuthorised
+import v2.models.errors.{InvalidNinoError, UnauthorisedError}
 
 import scala.concurrent.Future
 
@@ -53,7 +52,7 @@ class SampleControllerSpec extends ControllerBaseSpec {
       "a invalid NI number is passed" in new Test {
 
         MockedMtdIdLookupService.lookup(nino)
-          .returns(Future.successful(Left(InvalidNino)))
+          .returns(Future.successful(Left(InvalidNinoError)))
 
         private val result = target.doSomething(nino)(fakeGetRequest)
         status(result) shouldBe BAD_REQUEST
@@ -64,7 +63,7 @@ class SampleControllerSpec extends ControllerBaseSpec {
       "the details passed or not authorised" in new Test {
 
         MockedMtdIdLookupService.lookup(nino)
-          .returns(Future.successful(Left(NotAuthorised)))
+          .returns(Future.successful(Left(UnauthorisedError)))
 
         private val result = target.doSomething(nino)(fakeGetRequest)
         status(result) shouldBe FORBIDDEN

@@ -22,8 +22,7 @@ import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
-import v2.models.errors.{AuthError, InvalidNino}
-import v2.outcomes.MtdIdLookupOutcome._
+import v2.models.errors._
 import v2.services.{EnrolmentsAuthService, MtdIdLookupService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -48,8 +47,9 @@ abstract class AuthorisedController extends BaseController {
                                    (implicit headerCarrier: HeaderCarrier): Future[Result] = {
       authService.authorised(predicate(mtdId)).flatMap[Result] {
         case Right(_) => block(UserRequest(mtdId, request))
-        case Left(AuthError(false, _)) => Future.successful(Unauthorized(Json.obj()))
-        case Left(_) => Future.successful(Forbidden(Json.obj()))
+        case Left(UnauthenticatedError) => Future.successful(Unauthorized(Json.toJson(UnauthenticatedError)))
+        case Left(UnauthorisedError) => Future.successful(Forbidden(Json.toJson(UnauthorisedError)))
+        case Left(_) => Future.successful(InternalServerError(Json.toJson(DownstreamError)))
       }
     }
 
@@ -59,9 +59,9 @@ abstract class AuthorisedController extends BaseController {
 
       lookupService.lookup(nino).flatMap[Result] {
         case Right(mtdId) => invokeBlockWithAuthCheck(mtdId, request, block)
-        case Left(InvalidNino) => Future.successful(BadRequest(""))
-        case Left(NotAuthorised) => Future.successful(Forbidden(""))
-        case Left(_) => Future.successful(InternalServerError(""))
+        case Left(InvalidNinoError) => Future.successful(BadRequest(Json.toJson(InvalidNinoError)))
+        case Left(UnauthorisedError) => Future.successful(Forbidden(Json.toJson(UnauthorisedError)))
+        case Left(_) => Future.successful(InternalServerError(Json.toJson(DownstreamError)))
       }
     }
   }

@@ -16,4 +16,5 @@
 
 package v2.models.errors
 
-case class AuthError(authenticated: Boolean = false, authorised: Boolean = false)
+object UnauthenticatedError extends Error("UNAUTHENTICATED", "Not authenticated")
+object UnauthorisedError extends Error("UNAUTHORIZED", "Bearer token is missing or not authorized")

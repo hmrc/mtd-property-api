@@ -17,11 +17,12 @@
 package v2.services
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, MissingBearerToken}
 import uk.gov.hmrc.http.HeaderCarrier
-import v2.models.ServiceResponse
-import v2.models.errors.AuthError
+import v2.models.errors.{DownstreamError, UnauthenticatedError, UnauthorisedError}
+import v2.models.outcomes.AuthOutcome
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,12 +33,15 @@ class EnrolmentsAuthService @Inject()(val connector: AuthConnector) {
     override def authConnector: AuthConnector = connector
   }
 
-  def authorised(predicate: Predicate)(implicit hc: HeaderCarrier, ec: ExecutionContext): ServiceResponse[AuthError, Boolean] = {
+  def authorised(predicate: Predicate)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AuthOutcome] = {
     authFunction.authorised(predicate) {
       Future.successful(Right(true))
     } recoverWith {
-      case _: MissingBearerToken => Future.successful(Left(AuthError()))
-      case _: AuthorisationException => Future.successful(Left(AuthError(authenticated = true)))
+      case _: MissingBearerToken => Future.successful(Left(UnauthenticatedError))
+      case _: AuthorisationException => Future.successful(Left(UnauthorisedError))
+      case error =>
+        Logger.warn(s"[EnrolmentsAuthService][authorised] An unexpected error occurred: $error")
+        Future.successful(Left(DownstreamError))
     }
   }
 }

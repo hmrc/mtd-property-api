@@ -14,18 +14,7 @@
  * limitations under the License.
  */
 
-package v2.outcomes
+package v2.models.errors
 
-import v2.models.errors.MtdError
-
-object MtdIdLookupOutcome {
-
-  type MtdIdLookupOutcome = Either[MtdError, String]
-
-  sealed trait MtdIdLookupError extends MtdError
-
-  object NotAuthorised extends MtdIdLookupError
-
-  object DownstreamError extends MtdIdLookupError
-
-}
+object InvalidNinoError extends Error("NINO_INVALID", "The provided NINO is invalid")
+object DownstreamError extends Error("INTERNAL_SERVER_ERROR", "An internal server error occurred")
