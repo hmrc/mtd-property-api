@@ -16,7 +16,34 @@
 
 package v2.models
 
+import play.api.libs.json._
+
 sealed trait ObligationStatus
 
+object ObligationStatus {
+  def apply(status: String): ObligationStatus = status match {
+    case "O" => OpenObligation
+    case "F" => FulfilledObligation
+    case _ => throw new IllegalArgumentException("Invalid status supplied for obligation status")
+  }
+
+  implicit val reads: Reads[ObligationStatus] = new Reads[ObligationStatus] {
+    override def reads(json: JsValue): JsResult[ObligationStatus] = {
+      json.validate[String] match {
+        case JsSuccess(value, path) => JsSuccess(ObligationStatus(value), path)
+        case failure@JsError(_) => failure
+      }
+    }
+  }
+
+  implicit val writes: Writes[ObligationStatus] = new Writes[ObligationStatus] {
+    def writes(status: ObligationStatus): JsValue = status match {
+      case FulfilledObligation => Json.toJson("Fulfilled")
+      case OpenObligation => Json.toJson("Open")
+    }
+  }
+}
+
 case object OpenObligation extends ObligationStatus
+
 case object FulfilledObligation extends ObligationStatus

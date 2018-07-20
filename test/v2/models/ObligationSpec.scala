@@ -18,18 +18,21 @@ package v2.models
 
 import java.time.LocalDate
 
+import org.scalatest.Assertion
+import play.api.data.validation.ValidationError
+import play.api.libs.json.{JsResultException, Json}
 import support.UnitSpec
 
 import scala.util.{Failure, Success, Try}
 
 class ObligationSpec extends UnitSpec {
 
-  val start: LocalDate = LocalDate.parse("2017-04-06")
-  val end: LocalDate = LocalDate.parse("2018-04-05")
-  val due: LocalDate = LocalDate.parse("2019-01-31")
+  val start: LocalDate = LocalDate.parse("2018-01-01")
+  val end: LocalDate = LocalDate.parse("2018-01-01")
+  val due: LocalDate = LocalDate.parse("2018-01-01")
   val statusFulfilled: FulfilledObligation.type = FulfilledObligation
   val statusOpen: ObligationStatus = OpenObligation
-  val processed = Some(LocalDate.parse("2018-05-01"))
+  val processed = Some(LocalDate.parse("2018-01-01"))
   val periodKey: String = ""
 
   "Creating an obligation with valid details" should {
@@ -108,4 +111,238 @@ class ObligationSpec extends UnitSpec {
     }
   }
 
+  "Reading an obligation from JSON" when {
+    "the JSON represents a valid fulfilled obligation" should {
+
+      val json = Json.parse(
+        """
+          |{
+          |  "status": "F",
+          |  "inboundCorrespondenceFromDate": "2018-01-01",
+          |  "inboundCorrespondenceToDate": "2018-01-01",
+          |  "inboundCorrespondenceDateReceived": "2018-01-01",
+          |  "inboundCorrespondenceDueDate": "2018-01-01",
+          |  "periodKey": ""
+          |}
+        """.stripMargin
+      )
+
+      val expectedObligation = Obligation(
+        startDate = start,
+        endDate = end,
+        dueDate = due,
+        status = statusFulfilled,
+        processedDate = processed,
+        periodKey = periodKey
+      )
+
+      "create an obligation with the correct details" in {
+        val obligation = json.as[Obligation]
+
+        obligation shouldBe expectedObligation
+      }
+    }
+
+    "the JSON represents a valid open obligation" should {
+
+      val json = Json.parse(
+        """
+          |{
+          |  "status": "O",
+          |  "inboundCorrespondenceFromDate": "2018-01-01",
+          |  "inboundCorrespondenceToDate": "2018-01-01",
+          |  "inboundCorrespondenceDueDate": "2018-01-01",
+          |  "periodKey": ""
+          |}
+        """.stripMargin
+      )
+
+      val expectedObligation = Obligation(
+        startDate = start,
+        endDate = end,
+        dueDate = due,
+        status = statusOpen,
+        processedDate = None,
+        periodKey = periodKey
+      )
+
+      "create an obligation with the correct details" in {
+        val obligation = json.as[Obligation]
+
+        obligation shouldBe expectedObligation
+      }
+    }
+
+    "the JSON represents a fulfilled obligation with a missing processed data" should {
+
+      val json = Json.parse(
+        """
+          |{
+          |  "status": "F",
+          |  "inboundCorrespondenceFromDate": "2018-01-01",
+          |  "inboundCorrespondenceToDate": "2018-01-01",
+          |  "inboundCorrespondenceDueDate": "2018-01-01",
+          |  "periodKey": ""
+          |}
+        """.stripMargin
+      )
+
+      "throw an error" in {
+        Try(json.as[Obligation]) match {
+          case Success(_) => fail("An error was expected")
+          case Failure(e) => e.getMessage shouldBe "Cannot create a fulfilled obligation without a processed date"
+        }
+      }
+    }
+
+    "the JSON represents an open obligation with a processed data" should {
+
+      val json = Json.parse(
+        """
+          |{
+          |  "status": "O",
+          |  "inboundCorrespondenceFromDate": "2018-01-01",
+          |  "inboundCorrespondenceToDate": "2018-01-01",
+          |  "inboundCorrespondenceDueDate": "2018-01-01",
+          |  "inboundCorrespondenceDateReceived": "2018-01-01",
+          |  "periodKey": ""
+          |}
+        """.stripMargin
+      )
+
+      "throw an error" in {
+        Try(json.as[Obligation]) match {
+          case Success(_) => fail("An error was expected")
+          case Failure(e) => e.getMessage shouldBe "Cannot create an open obligation with a processed date"
+        }
+      }
+    }
+
+    val jsonWithAllFields =
+      """
+        |{
+        |  "status": "F",
+        |  "inboundCorrespondenceFromDate": "2018-01-01",
+        |  "inboundCorrespondenceToDate": "2018-01-01",
+        |  "inboundCorrespondenceDueDate": "2018-01-01",
+        |  "inboundCorrespondenceDateReceived": "2018-01-01",
+        |  "periodKey": ""
+        |}
+      """.stripMargin
+
+    testMandatoryProperty("status")
+    testMandatoryProperty("inboundCorrespondenceFromDate")
+    testMandatoryProperty("inboundCorrespondenceToDate")
+    testMandatoryProperty("inboundCorrespondenceDueDate")
+    testMandatoryProperty("periodKey")
+
+    testPropertyType("status")
+    testPropertyType("inboundCorrespondenceFromDate")
+    testPropertyType("inboundCorrespondenceToDate")
+    testPropertyType("inboundCorrespondenceDueDate")
+    testPropertyType("periodKey")
+
+    def testMandatoryProperty(property: String): Unit = {
+      s"the JSON is missing the required property $property" should {
+
+        val json = Json.parse(
+          jsonWithAllFields.replace(property, s"_$property")
+        )
+
+        val result = Try(json.as[Obligation])
+
+        "only throw one error" in {
+          result match {
+            case Failure(e: JsResultException) => e.errors.size shouldBe 1
+            case _ => fail("A JSON error was expected")
+          }
+        }
+
+        "throw the error against the correct property" in {
+          result match {
+            case Failure(e: JsResultException) =>
+              val propertyName = getOnlyJsonErrorPath(e)
+              if (propertyName.isRight) {
+                propertyName.right.get shouldBe s".$property"
+              }
+            case _ => fail("A JSON error was expected")
+          }
+        }
+
+        "throw a missing path error" in {
+          result match {
+            case Failure(e: JsResultException) =>
+              val message = getOnlyJsonErrorMessage(e)
+              if (message.isRight) {
+                message.right.get shouldBe "error.path.missing"
+              }
+            case _ => fail("A JSON error was expected")
+          }
+        }
+      }
+    }
+
+    def testPropertyType(property: String): Unit = {
+
+      val invalidTypedJson: String = jsonWithAllFields.split('\n').map { line =>
+        if (line.trim.startsWith(s""""$property""")) {
+          s""""$property":[],"""
+        } else {
+          line
+        }
+      }.mkString(" ").replace("], }", "] }")
+
+      s"the JSON has the wrong data type for property $property" should {
+
+        val json = Json.parse(invalidTypedJson)
+
+        val result = Try(json.as[Obligation])
+
+        "only throw one error" in {
+          result match {
+            case Failure(e: JsResultException) => e.errors.size shouldBe 1
+            case _ => fail("A JSON error was expected")
+          }
+        }
+
+        "throw the error against the correct property" in {
+          result match {
+            case Failure(e: JsResultException) =>
+              val propertyName = getOnlyJsonErrorPath(e)
+              if (propertyName.isRight) {
+                propertyName.right.get shouldBe s".$property"
+              }
+            case _ => fail("A JSON error was expected")
+          }
+        }
+
+        "throw an invalid type error" in {
+          result match {
+            case Failure(e: JsResultException) =>
+              val message = getOnlyJsonErrorMessage(e)
+              if (message.isRight) {
+                message.right.get should startWith("error.expected.")
+              }
+            case _ => fail("A JSON error was expected")
+          }
+        }
+      }
+    }
+
+  }
+
+  def getOnlyJsonErrorPath(ex: JsResultException): Either[Assertion, String] = {
+    ex.errors match {
+      case (jsonPath, _) :: Nil => Right(jsonPath.path.last.toJsonString)
+      case _ :: _ => Left(cancel("Too many JSON errors only expected one."))
+    }
+  }
+
+  def getOnlyJsonErrorMessage(ex: JsResultException): Either[Assertion, String] = {
+    ex.errors match {
+      case (_, ValidationError(onlyError :: Nil) :: Nil) :: Nil => Right(onlyError)
+      case (_, ValidationError(_ :: _) :: Nil) :: Nil => Left(cancel("Too many error messages for property"))
+      case _ :: _ => Left(cancel("Too many JSON errors only expected one."))
+    }
+  }
 }

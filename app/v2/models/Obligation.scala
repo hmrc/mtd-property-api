@@ -18,6 +18,9 @@ package v2.models
 
 import java.time.LocalDate
 
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{Reads, __}
+
 case class Obligation(startDate: LocalDate,
                       endDate: LocalDate,
                       dueDate: LocalDate,
@@ -32,4 +35,15 @@ case class Obligation(startDate: LocalDate,
   if (status == OpenObligation && processedDate.nonEmpty) {
     throw new Exception("Cannot create an open obligation with a processed date")
   }
+}
+
+object Obligation {
+  implicit val reads: Reads[Obligation] = (
+    (__ \ "inboundCorrespondenceFromDate").read[LocalDate] and
+    (__ \ "inboundCorrespondenceToDate").read[LocalDate] and
+    (__ \ "inboundCorrespondenceDueDate").read[LocalDate] and
+    (__ \ "status").read[ObligationStatus] and
+    (__ \ "inboundCorrespondenceDateReceived").readNullable[LocalDate] and
+    (__ \ "periodKey").read[String]
+  ) (Obligation.apply _)
 }
