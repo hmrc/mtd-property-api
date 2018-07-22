@@ -35,106 +35,177 @@ class ObligationSpec extends UnitSpec {
   val processed = Some(LocalDate.parse("2018-01-01"))
   val periodKey: String = ""
 
-  "Creating an obligation with valid details" should {
+  val fulfilledObligationInputJson =
+    """
+      |{
+      |  "status": "F",
+      |  "inboundCorrespondenceFromDate": "2018-01-01",
+      |  "inboundCorrespondenceToDate": "2018-01-01",
+      |  "inboundCorrespondenceDateReceived": "2018-01-01",
+      |  "inboundCorrespondenceDueDate": "2018-01-01",
+      |  "periodKey": ""
+      |}
+    """.stripMargin
 
-    val obligation = Obligation(
-      startDate = start,
-      endDate = end,
-      dueDate = due,
-      status = statusFulfilled,
-      processedDate = processed,
-      periodKey = periodKey
-    )
+  val openObligationInputJson =
+    """
+      |{
+      |  "status": "O",
+      |  "inboundCorrespondenceFromDate": "2018-01-01",
+      |  "inboundCorrespondenceToDate": "2018-01-01",
+      |  "inboundCorrespondenceDueDate": "2018-01-01",
+      |  "periodKey": ""
+      |}
+    """.stripMargin
 
-    "result in an obligation with the correct start date" in {
-      obligation.startDate shouldBe start
-    }
+  val fulfilledObligationOutputJson =
+    """
+      |{
+      |  "status": "Fulfilled",
+      |  "start": "2018-01-01",
+      |  "end": "2018-01-01",
+      |  "processed": "2018-01-01",
+      |  "due": "2018-01-01"
+      |}
+    """.stripMargin
 
-    "result in an obligation with the correct end date" in {
-      obligation.endDate shouldBe end
-    }
+  val openObligationOutputJson =
+    """
+      |{
+      |  "status": "Open",
+      |  "start": "2018-01-01",
+      |  "end": "2018-01-01",
+      |  "due": "2018-01-01"
+      |}
+    """.stripMargin
 
-    "result in an obligation with the correct due date" in {
-      obligation.dueDate shouldBe due
-    }
+  val fulfilledObligation = Obligation(
+    startDate = start,
+    endDate = end,
+    dueDate = due,
+    status = statusFulfilled,
+    processedDate = processed,
+    periodKey = periodKey
+  )
 
-    "result in an obligation with the correct status" in {
-      obligation.status shouldBe statusFulfilled
-    }
+  val openObligation = Obligation(
+    startDate = start,
+    endDate = end,
+    dueDate = due,
+    status = statusOpen,
+    processedDate = None,
+    periodKey = periodKey
+  )
 
-    "result in an obligation with the correct processed date" in {
-      obligation.processedDate shouldBe processed
-    }
+  "Creating a valid obligation" when {
+    "the details represent a fulfilled obligation" should {
 
-    "result in an obligation with the correct period key" in {
-      obligation.periodKey shouldBe periodKey
-    }
-  }
+      val obligation = fulfilledObligation
 
-  "Creating an fulfilled obligation without a processed date" should {
-    "throw an exception" in {
-
-      Try(
-        Obligation(
-          startDate = start,
-          endDate = end,
-          dueDate = due,
-          status = statusFulfilled,
-          processedDate = None,
-          periodKey = periodKey
-        )
-      ) match {
-        case Success(_) => fail("Fulfilled obligation must have a processed date")
-        case Failure(e) => e.getMessage shouldBe "Cannot create a fulfilled obligation without a processed date"
+      "result in an obligation with the correct start date" in {
+        obligation.startDate shouldBe start
       }
 
-    }
-  }
-
-  "Creating an open obligation with a processed date" should {
-    "throw an exception" in {
-
-      Try(
-        Obligation(
-          startDate = start,
-          endDate = end,
-          dueDate = due,
-          status = statusOpen,
-          processedDate = processed,
-          periodKey = periodKey
-        )
-      ) match {
-        case Success(_) => fail("Open obligation must NOT have a processed date")
-        case Failure(e) => e.getMessage shouldBe "Cannot create an open obligation with a processed date"
+      "result in an obligation with the correct end date" in {
+        obligation.endDate shouldBe end
       }
 
+      "result in an obligation with the correct due date" in {
+        obligation.dueDate shouldBe due
+      }
+
+      "result in an obligation with the correct status" in {
+        obligation.status shouldBe statusFulfilled
+      }
+
+      "result in an obligation with the correct processed date" in {
+        obligation.processedDate shouldBe processed
+      }
+
+      "result in an obligation with the correct period key" in {
+        obligation.periodKey shouldBe periodKey
+      }
+    }
+
+    "the details represent an open obligation" should {
+
+      val obligation = openObligation
+
+      "result in an obligation with the correct start date" in {
+        obligation.startDate shouldBe start
+      }
+
+      "result in an obligation with the correct end date" in {
+        obligation.endDate shouldBe end
+      }
+
+      "result in an obligation with the correct due date" in {
+        obligation.dueDate shouldBe due
+      }
+
+      "result in an obligation with the correct status" in {
+        obligation.status shouldBe statusOpen
+      }
+
+      "result in an obligation with the correct processed date" in {
+        obligation.processedDate shouldBe None
+      }
+
+      "result in an obligation with the correct period key" in {
+        obligation.periodKey shouldBe periodKey
+      }
+    }
+
+  }
+
+  "Creating an invalid obligation" when {
+    "a fulfilled obligation is missing the processed date" should {
+      "throw an exception" in {
+
+        Try(
+          Obligation(
+            startDate = start,
+            endDate = end,
+            dueDate = due,
+            status = statusFulfilled,
+            processedDate = None,
+            periodKey = periodKey
+          )
+        ) match {
+          case Success(_) => fail("Fulfilled obligation must have a processed date")
+          case Failure(e) => e.getMessage shouldBe "Cannot create a fulfilled obligation without a processed date"
+        }
+
+      }
+    }
+
+    "an open obligation has a processed date" should {
+      "throw an exception" in {
+
+        Try(
+          Obligation(
+            startDate = start,
+            endDate = end,
+            dueDate = due,
+            status = statusOpen,
+            processedDate = processed,
+            periodKey = periodKey
+          )
+        ) match {
+          case Success(_) => fail("Open obligation must NOT have a processed date")
+          case Failure(e) => e.getMessage shouldBe "Cannot create an open obligation with a processed date"
+        }
+
+      }
     }
   }
 
   "Reading an obligation from JSON" when {
     "the JSON represents a valid fulfilled obligation" should {
 
-      val json = Json.parse(
-        """
-          |{
-          |  "status": "F",
-          |  "inboundCorrespondenceFromDate": "2018-01-01",
-          |  "inboundCorrespondenceToDate": "2018-01-01",
-          |  "inboundCorrespondenceDateReceived": "2018-01-01",
-          |  "inboundCorrespondenceDueDate": "2018-01-01",
-          |  "periodKey": ""
-          |}
-        """.stripMargin
-      )
+      val json = Json.parse(fulfilledObligationInputJson)
 
-      val expectedObligation = Obligation(
-        startDate = start,
-        endDate = end,
-        dueDate = due,
-        status = statusFulfilled,
-        processedDate = processed,
-        periodKey = periodKey
-      )
+      val expectedObligation = fulfilledObligation
 
       "create an obligation with the correct details" in {
         val obligation = json.as[Obligation]
@@ -145,26 +216,9 @@ class ObligationSpec extends UnitSpec {
 
     "the JSON represents a valid open obligation" should {
 
-      val json = Json.parse(
-        """
-          |{
-          |  "status": "O",
-          |  "inboundCorrespondenceFromDate": "2018-01-01",
-          |  "inboundCorrespondenceToDate": "2018-01-01",
-          |  "inboundCorrespondenceDueDate": "2018-01-01",
-          |  "periodKey": ""
-          |}
-        """.stripMargin
-      )
+      val json = Json.parse(openObligationInputJson)
 
-      val expectedObligation = Obligation(
-        startDate = start,
-        endDate = end,
-        dueDate = due,
-        status = statusOpen,
-        processedDate = None,
-        periodKey = periodKey
-      )
+      val expectedObligation = openObligation
 
       "create an obligation with the correct details" in {
         val obligation = json.as[Obligation]
@@ -218,17 +272,7 @@ class ObligationSpec extends UnitSpec {
       }
     }
 
-    val jsonWithAllFields =
-      """
-        |{
-        |  "status": "F",
-        |  "inboundCorrespondenceFromDate": "2018-01-01",
-        |  "inboundCorrespondenceToDate": "2018-01-01",
-        |  "inboundCorrespondenceDueDate": "2018-01-01",
-        |  "inboundCorrespondenceDateReceived": "2018-01-01",
-        |  "periodKey": ""
-        |}
-      """.stripMargin
+    val jsonWithAllFields = fulfilledObligationInputJson
 
     testMandatoryProperty("status")
     testMandatoryProperty("inboundCorrespondenceFromDate")
@@ -329,6 +373,25 @@ class ObligationSpec extends UnitSpec {
       }
     }
 
+  }
+
+  "Writing an obligation to JSON" when {
+
+    "The obligation is open" should {
+      "generate the correct JSON" in {
+        val json = Json.toJson(openObligation)
+        val expectedJson = Json.parse(openObligationOutputJson)
+        json shouldBe expectedJson
+      }
+    }
+
+    "The obligation is fulfilled" should {
+      "generate the correct JSON" in {
+        val json = Json.toJson(fulfilledObligation)
+        val expectedJson = Json.parse(fulfilledObligationOutputJson)
+        json shouldBe expectedJson
+      }
+    }
   }
 
   def getOnlyJsonErrorPath(ex: JsResultException): Either[Assertion, String] = {

@@ -19,7 +19,7 @@ package v2.models
 import java.time.LocalDate
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Reads, __}
+import play.api.libs.json._
 
 case class Obligation(startDate: LocalDate,
                       endDate: LocalDate,
@@ -40,10 +40,28 @@ case class Obligation(startDate: LocalDate,
 object Obligation {
   implicit val reads: Reads[Obligation] = (
     (__ \ "inboundCorrespondenceFromDate").read[LocalDate] and
-    (__ \ "inboundCorrespondenceToDate").read[LocalDate] and
-    (__ \ "inboundCorrespondenceDueDate").read[LocalDate] and
-    (__ \ "status").read[ObligationStatus] and
-    (__ \ "inboundCorrespondenceDateReceived").readNullable[LocalDate] and
-    (__ \ "periodKey").read[String]
-  ) (Obligation.apply _)
+      (__ \ "inboundCorrespondenceToDate").read[LocalDate] and
+      (__ \ "inboundCorrespondenceDueDate").read[LocalDate] and
+      (__ \ "status").read[ObligationStatus] and
+      (__ \ "inboundCorrespondenceDateReceived").readNullable[LocalDate] and
+      (__ \ "periodKey").read[String]
+    ) (Obligation.apply _)
+
+  implicit val writes: Writes[Obligation] = new Writes[Obligation] {
+    override def writes(obligation: Obligation): JsValue = obligation.status match {
+      case OpenObligation => Json.obj(
+        "status" -> obligation.status,
+        "start" -> obligation.startDate,
+        "end" -> obligation.endDate,
+        "due" -> obligation.dueDate
+      )
+      case FulfilledObligation => Json.obj(
+        "status" -> obligation.status,
+        "start" -> obligation.startDate,
+        "end" -> obligation.endDate,
+        "due" -> obligation.dueDate,
+        "processed" -> obligation.processedDate
+      )
+    }
+  }
 }

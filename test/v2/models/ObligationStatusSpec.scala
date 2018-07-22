@@ -25,7 +25,7 @@ class ObligationStatusSpec extends UnitSpec {
 
   "Reading an obligation status from JSON" when {
     "the JSON represents a valid fulfilled status" should {
-      "create an fulfilled obligation status" in {
+      "create a fulfilled obligation status" in {
         val json = JsString("F")
         val status = json.as[ObligationStatus]
         status shouldBe FulfilledObligation
