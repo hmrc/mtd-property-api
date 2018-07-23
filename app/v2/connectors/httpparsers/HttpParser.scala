@@ -34,8 +34,8 @@ trait HttpParser {
       }
     }
 
-    def parseResult[T](json: JsValue)
-                      (implicit reads: Reads[T]): Option[T] = json.validate[T] match {
+    private def parseResult[T](json: JsValue)
+                              (implicit reads: Reads[T]): Option[T] = json.validate[T] match {
 
       case JsSuccess(value, _) => Some(value)
       case JsError(error) =>
