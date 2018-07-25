@@ -29,7 +29,7 @@ object ObligationsHttpParser extends HttpParser {
   private val obligationsJsonReads: Reads[Seq[ObligationDetails]] = (__ \ "obligations").read[Seq[ObligationDetails]]
   private val multipleErrorJsonReads: Reads[Seq[Error]] = (__ \ "failures").read[Seq[Error]]
 
-  implicit val obligationsHttpReads: HttpReads[ObligationsOutcome] = new HttpReads[ObligationsOutcome] {
+  implicit val  obligationsHttpReads: HttpReads[ObligationsOutcome] = new HttpReads[ObligationsOutcome] {
     override def read(method: String, url: String, response: HttpResponse): ObligationsOutcome = {
 
       def parseErrors(response: HttpResponse): Seq[Error] = {
