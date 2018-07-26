@@ -30,3 +30,5 @@ object Error {
       (__ \ "reason").read[String]
     ) (Error.apply _)
 }
+
+case class ErrorResponse(error: Error, errors: Option[Seq[Error]])
