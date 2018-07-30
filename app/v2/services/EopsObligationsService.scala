@@ -22,11 +22,13 @@ import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
-import v2.models.errors.{Error, ErrorResponse, InvalidNinoError, NotFoundError}
+import v2.models.errors.GetEopsObligationsErrors._
+import v2.models.errors.{BadRequestError, Error, ErrorResponse, InvalidNinoError, NotFoundError}
 import v2.models.outcomes.EopsObligationsOutcome
 import v2.models.{Obligation, ObligationDetails}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @Singleton
 class EopsObligationsService @Inject()(connector: DesConnector) {
@@ -63,13 +65,54 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
       .flatMap(_.obligations.filter(_.periodKey == "EOPS"))
   }
 
+  def validateDate(date: String): (Boolean, Boolean) = date.trim match {
+    case "" => (false, true)
+    case _ => (true, Try(LocalDate.parse(date)).isSuccess)
+  }
+
   private[services] def validateGetEopsObligationsInput(nino: String,
                                                         from: String,
                                                         to: String): Either[ErrorResponse, (LocalDate, LocalDate)] = {
-    if (!Nino.isValid(nino)) {
-      Left(ErrorResponse(InvalidNinoError, None))
-    } else {
-      Right((LocalDate.parse(from), LocalDate.parse(to)))
+
+    val ninoError = if (!Nino.isValid(nino)) Some(InvalidNinoError) else None
+
+    val fromDateError = validateDate(from) match {
+      case (false, _) => Some(MissingFromDateError)
+      case (_, false) => Some(InvalidFromDateError)
+      case _ => None
+    }
+
+    val toDateError = validateDate(to) match {
+      case (false, _) => Some(MissingToDateError)
+      case (_, false) => Some(InvalidToDateError)
+      case _ => None
+    }
+
+    val invalidRangeError = (fromDateError, toDateError) match {
+      case (None, None) =>
+        val fromDate = LocalDate.parse(from)
+        val toDate = LocalDate.parse(to)
+        if (toDate.isBefore(fromDate)) {
+          Some(InvalidRangeError)
+        } else if (fromDate.plusDays(366).isBefore(toDate)) {
+          Some(RangeTooBigError)
+        } else {
+          None
+        }
+      case _ => None
+    }
+
+    val validationErrors: Seq[Option[Error]] = Seq(
+      ninoError,
+      fromDateError,
+      toDateError,
+      invalidRangeError
+    )
+
+    validationErrors.flatten match {
+      case List() => Right((LocalDate.parse(from), LocalDate.parse(to)))
+      case error :: Nil => Left(ErrorResponse(error, None))
+      case errors => Left(ErrorResponse(BadRequestError, Some(errors)))
     }
   }
 }

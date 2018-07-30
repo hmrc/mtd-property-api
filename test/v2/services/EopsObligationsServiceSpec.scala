@@ -19,7 +19,8 @@ package v2.services
 import java.time.LocalDate
 
 import v2.mocks.connectors.MockDesConnector
-import v2.models.errors.{ErrorResponse, InvalidNinoError, NotFoundError}
+import v2.models.errors.GetEopsObligationsErrors._
+import v2.models.errors.{BadRequestError, ErrorResponse, InvalidNinoError, NotFoundError}
 import v2.models.outcomes.{EopsObligationsOutcome, ObligationsOutcome}
 import v2.models.{FulfilledObligation, Obligation, ObligationDetails}
 
@@ -237,32 +238,125 @@ class EopsObligationsServiceSpec extends ServiceSpec {
     }
 
     "return a missing from date error" when {
-      "the from date is None" in new Test {
-        pending
+      "the from date is empty" in new Test {
+        val nino: String = "AA123456A"
+        val from: String = ""
+        val to: String = "2018-12-31"
+
+        val expectedErrorResponse = ErrorResponse(MissingFromDateError, None)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+        result shouldBe Left(expectedErrorResponse)
       }
     }
 
     "return an invalid from date error" when {
+
+      val nino: String = "AA123456A"
+      val to: String = "2018-12-31"
+
       "the from date is in the wrong format" in new Test {
-        pending
+        val from: String = "BOB"
+        val expectedErrorResponse = ErrorResponse(InvalidFromDateError, None)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+
+        result shouldBe Left(expectedErrorResponse)
+      }
+
+      "the from date is an invalid date" in new Test {
+        val from: String = "9999-99-99"
+        val expectedErrorResponse = ErrorResponse(InvalidFromDateError, None)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+
+        result shouldBe Left(expectedErrorResponse)
       }
     }
 
     "return a missing to date error" when {
-      "the to date is None" in new Test {
-        pending
+      "the to date is empty" in new Test {
+        val nino: String = "AA123456A"
+        val from: String = "2018-01-01"
+        val to: String = ""
+        val expectedErrorResponse = ErrorResponse(MissingToDateError, None)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+
+        result shouldBe Left(expectedErrorResponse)
       }
     }
 
     "return invalid to date error" when {
+      val nino: String = "AA123456A"
+      val from: String = "2018-01-01"
+
       "the to date is in the wrong format" in new Test {
-        pending
+        val to: String = "BOB"
+        val expectedErrorResponse = ErrorResponse(InvalidToDateError, None)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+
+        result shouldBe Left(expectedErrorResponse)
+      }
+
+      "the from date is an invalid date" in new Test {
+        val to: String = "9999-99-99"
+        val expectedErrorResponse = ErrorResponse(InvalidToDateError, None)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+
+        result shouldBe Left(expectedErrorResponse)
+      }
+    }
+
+    "return an invalid range error" when {
+      "the to date is before the from date" in new Test {
+        val nino: String = "AA123456A"
+        val from: String = "2018-12-31"
+        val to: String = "2018-01-01"
+
+        val expectedErrorResponse = ErrorResponse(InvalidRangeError, None)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+        result shouldBe Left(expectedErrorResponse)
+      }
+    }
+
+    "return a range too big error" when {
+      "the days between the from date and to date range is 367 days" in new Test {
+        val nino: String = "AA123456A"
+        val from: String = "2018-01-01"
+        val to: String = "2019-01-03" // 367 days difference
+
+        val expectedErrorResponse = ErrorResponse(RangeTooBigError, None)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+        result shouldBe Left(expectedErrorResponse)
+      }
+
+      "the days between the from date and to date range is 368 days" in new Test {
+        val nino: String = "AA123456A"
+        val from: String = "2018-01-01"
+        val to: String = "2019-01-04" // 368 days difference
+
+        val expectedErrorResponse = ErrorResponse(RangeTooBigError, None)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+        result shouldBe Left(expectedErrorResponse)
       }
     }
 
     "return multiple errors" when {
-      "the there are problems with more than one input" in new Test {
-        pending
+      "the there are problems with more than one argument" in new Test {
+        val nino: String = "AA123456A"
+        val from: String = ""
+        val to: String = ""
+
+        val expectedErrorResponse = ErrorResponse(BadRequestError, Some(Seq(MissingFromDateError, MissingToDateError)))
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+        result shouldBe Left(expectedErrorResponse)
       }
     }
   }
