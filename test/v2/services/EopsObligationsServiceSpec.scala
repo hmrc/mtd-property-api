@@ -21,7 +21,8 @@ import java.time.LocalDate
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
 import v2.models.errors.Error
-import v2.models.{FulfilledObligation, Obligation, ObligationDetails, outcomes}
+import v2.models.outcomes.EopsObligationsOutcome
+import v2.models.{FulfilledObligation, Obligation, ObligationDetails}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -144,14 +145,14 @@ class EopsObligationsServiceSpec extends ServiceSpec {
       "successful request is made to des" in new Test {
         val outcomesObligations: Future[Either[Seq[Error], Seq[ObligationDetails]]] = Future(Right(validObligationsData))
 
-        (mockDesConnector.getObligations(_: String, _: LocalDate, _: LocalDate)(_:HeaderCarrier, _:ExecutionContext))
+        (mockDesConnector.getObligations(_: String, _: LocalDate, _: LocalDate)(_: HeaderCarrier, _: ExecutionContext))
           .expects(*, *, *, *, *)
           .returns(outcomesObligations)
 
         val from: LocalDate = LocalDate.parse("2018-01-01")
         val to: LocalDate = LocalDate.parse("2018-12-31")
 
-        val result: Either[Seq[Error], Seq[Obligation]] = await(service.retrieveEopsObligations("AA123456A", from, to))
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations("AA123456A", from, to))
         result shouldBe Right(successEopsObligations)
       }
     }
@@ -159,14 +160,14 @@ class EopsObligationsServiceSpec extends ServiceSpec {
       "no ISTP EOPS obligation types are returned" in new Test {
         val outcomesObligations: Future[Either[Seq[Error], Seq[ObligationDetails]]] = Future(Right(emptyObligationsData))
 
-        (mockDesConnector.getObligations(_: String, _: LocalDate, _: LocalDate)(_:HeaderCarrier, _:ExecutionContext))
+        (mockDesConnector.getObligations(_: String, _: LocalDate, _: LocalDate)(_: HeaderCarrier, _: ExecutionContext))
           .expects(*, *, *, *, *)
           .returns(outcomesObligations)
 
         val from: LocalDate = LocalDate.parse("2018-01-01")
         val to: LocalDate = LocalDate.parse("2018-12-31")
 
-        val result: Either[Seq[Error], Seq[Obligation]] = await(service.retrieveEopsObligations("AA123456A", from, to))
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations("AA123456A", from, to))
         result shouldBe Right(emptyEopsObligations)
       }
     }

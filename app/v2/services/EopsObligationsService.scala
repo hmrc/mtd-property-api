@@ -21,7 +21,8 @@ import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
-import v2.models.errors.Error
+import v2.models.errors.{Error, ErrorResponse}
+import v2.models.outcomes.EopsObligationsOutcome
 import v2.models.{Obligation, ObligationDetails}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,12 +31,11 @@ import scala.concurrent.{ExecutionContext, Future}
 class EopsObligationsService @Inject()(connector: DesConnector) {
 
 
-
   def retrieveEopsObligations(nino: String, from: LocalDate, to: LocalDate)
-                             (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Either[Seq[Error], Seq[Obligation]]] = {
+                             (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsObligationsOutcome] = {
     connector.getObligations(nino, from, to).map {
-      case Left(o) => Left(o)
-      case Right(o) => Right(filterEopsObligations(o))
+      case Left(errors) => Left(ErrorResponse(Error("CODE", "message"), Some(errors)))
+      case Right(obligations) => Right(filterEopsObligations(obligations))
     }
   }
 
