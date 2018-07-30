@@ -191,38 +191,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
 
   }
 
-  "calling retrieveEopsObligations" should {
-    "return multiple obligations details" when {
-      "successful request is made to des" in new Test {
-        val nino: String = "AA123456A"
-        val from: String = "2018-01-01"
-        val to: String = "2018-12-31"
-
-        val outcomesObligations: Future[ObligationsOutcome] = Future(Right(validObligationsData))
-
-        MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
-          .returns(outcomesObligations)
-
-        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
-        result shouldBe Right(successEopsObligations)
-      }
-    }
-
-    "return Not Found error" when {
-      "no ISTP EOPS obligation types are returned" in new Test {
-        val nino: String = "AA123456A"
-        val from: String = "2018-01-01"
-        val to: String = "2018-12-31"
-
-        val outcomesObligations: Future[ObligationsOutcome] = Future(Right(validNonEopsObligationsData))
-
-        MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
-          .returns(outcomesObligations)
-
-        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
-        result shouldBe Left(ErrorResponse(NotFoundError, None))
-      }
-    }
+  "calling retrieveEopsObligations with invalid arguments" should {
 
     "return an invalid NINO error" when {
       "the NINO is in the wrong format" in new Test {
@@ -321,6 +290,17 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
       }
+
+      "the from date is the same as the to date" in new Test {
+        val nino: String = "AA123456A"
+        val from: String = "2018-01-01"
+        val to: String = "2018-01-01"
+
+        val expectedErrorResponse = ErrorResponse(InvalidRangeError, None)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+        result shouldBe Left(expectedErrorResponse)
+      }
     }
 
     "return a range too big error" when {
@@ -359,6 +339,42 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         result shouldBe Left(expectedErrorResponse)
       }
     }
+  }
+
+  "calling retrieveEopsObligations with valid arguments" should {
+
+    "return multiple obligations details" when {
+      "successful request is made to des" in new Test {
+        val nino: String = "AA123456A"
+        val from: String = "2018-01-01"
+        val to: String = "2018-12-31"
+
+        val outcomesObligations: Future[ObligationsOutcome] = Future(Right(validObligationsData))
+
+        MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
+          .returns(outcomesObligations)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+        result shouldBe Right(successEopsObligations)
+      }
+    }
+
+    "return Not Found error" when {
+      "no ITSP EOPS obligations types are returned" in new Test {
+        val nino: String = "AA123456A"
+        val from: String = "2018-01-01"
+        val to: String = "2018-12-31"
+
+        val outcomesObligations: Future[ObligationsOutcome] = Future(Right(validNonEopsObligationsData))
+
+        MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
+          .returns(outcomesObligations)
+
+        val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+        result shouldBe Left(ErrorResponse(NotFoundError, None))
+      }
+    }
+
   }
 
 }

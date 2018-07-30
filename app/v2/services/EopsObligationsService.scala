@@ -36,21 +36,22 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
   def retrieveEopsObligations(nino: String, from: String, to: String)
                              (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsObligationsOutcome] = {
 
-    validateGetEopsObligationsInput(nino, from, to) match {
+    validateGetEopsObligationsArgs(nino, from, to) match {
       case Right((fromDate, toDate)) => retrieveEopsObligations(nino, fromDate, toDate)
       case Left(errors) => Future.successful(Left(errors))
     }
 
   }
 
-  private[services] def retrieveEopsObligations(nino: String, from: LocalDate, to: LocalDate)
-                                               (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsObligationsOutcome] = {
+  private def retrieveEopsObligations(nino: String, from: LocalDate, to: LocalDate)
+                                     (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsObligationsOutcome] = {
 
     connector.getObligations(nino, from, to).map {
-      case Left(errors) => Left(ErrorResponse(Error("CODE", "message"), Some(errors)))
+      case Left(singleError :: Nil) => Left(ErrorResponse(singleError, None))
+      case Left(errors) => Left(ErrorResponse(BadRequestError, Some(errors)))
       case Right(obligations) =>
         val eopsObligations = filterEopsObligations(obligations)
-        if (eopsObligations.size > 0) {
+        if (eopsObligations.nonEmpty) {
           Right(eopsObligations)
         } else {
           Left(ErrorResponse(NotFoundError, None))
@@ -65,40 +66,46 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
       .flatMap(_.obligations.filter(_.periodKey == "EOPS"))
   }
 
-  def validateDate(date: String): (Boolean, Boolean) = date.trim match {
-    case "" => (false, true)
-    case _ => (true, Try(LocalDate.parse(date)).isSuccess)
+  private def validateDate(date: String,
+                           missingDateError: Error,
+                           invalidDateError: Error): Option[Error] = date.trim match {
+    case "" => Some(missingDateError)
+    case _ if Try(LocalDate.parse(date)).isFailure => Some(invalidDateError)
+    case _ => None
   }
 
-  private[services] def validateGetEopsObligationsInput(nino: String,
-                                                        from: String,
-                                                        to: String): Either[ErrorResponse, (LocalDate, LocalDate)] = {
+  private def validateDateRange(from: LocalDate,
+                                to: LocalDate,
+                                maxRangeInDays: Int,
+                                invalidRangeError: Error,
+                                rangeExceededError: Error): Option[Error] = {
+
+    if (to.isBefore(from) || to == from) {
+      Some(invalidRangeError)
+    } else if (from.plusDays(maxRangeInDays).isBefore(to)) {
+      Some(rangeExceededError)
+    } else {
+      None
+    }
+  }
+
+  private def validateGetEopsObligationsArgs(nino: String,
+                                             from: String,
+                                             to: String): Either[ErrorResponse, (LocalDate, LocalDate)] = {
+
+    val MAX_DATE_RANGE_IN_DAYS = 366
 
     val ninoError = if (!Nino.isValid(nino)) Some(InvalidNinoError) else None
 
-    val fromDateError = validateDate(from) match {
-      case (false, _) => Some(MissingFromDateError)
-      case (_, false) => Some(InvalidFromDateError)
-      case _ => None
-    }
+    val fromDateError = validateDate(from, MissingFromDateError, InvalidFromDateError)
 
-    val toDateError = validateDate(to) match {
-      case (false, _) => Some(MissingToDateError)
-      case (_, false) => Some(InvalidToDateError)
-      case _ => None
-    }
+    val toDateError = validateDate(to, MissingToDateError, InvalidToDateError)
 
     val invalidRangeError = (fromDateError, toDateError) match {
       case (None, None) =>
         val fromDate = LocalDate.parse(from)
         val toDate = LocalDate.parse(to)
-        if (toDate.isBefore(fromDate)) {
-          Some(InvalidRangeError)
-        } else if (fromDate.plusDays(366).isBefore(toDate)) {
-          Some(RangeTooBigError)
-        } else {
-          None
-        }
+        validateDateRange(fromDate, toDate, MAX_DATE_RANGE_IN_DAYS, InvalidRangeError, RangeTooBigError)
       case _ => None
     }
 
