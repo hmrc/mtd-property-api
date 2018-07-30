@@ -16,12 +16,13 @@
 
 package v2.models
 
-import v2.models.errors.{Error, MtdError}
+import v2.models.errors.{Error, ErrorResponse, MtdError}
 
 package object outcomes {
 
   type AuthOutcome = Either[MtdError, Boolean]
   type MtdIdLookupOutcome = Either[MtdError, String]
   type ObligationsOutcome = Either[Seq[Error], Seq[ObligationDetails]]
+  type EopsObligationsOutcome = Either[ErrorResponse, Seq[Obligation]]
 
 }
