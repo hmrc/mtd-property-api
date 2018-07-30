@@ -18,3 +18,4 @@ package v2.models.errors
 
 object InvalidNinoError extends Error("NINO_INVALID", "The provided NINO is invalid")
 object DownstreamError extends Error("INTERNAL_SERVER_ERROR", "An internal server error occurred")
+object NotFoundError extends Error("MATCHING_RESOURCE_NOT FOUND", "Matching resource not found")
