@@ -41,9 +41,11 @@ class ObligationsHttpParserSpec extends UnitSpec {
           |{
           |  "obligations": [
           |    {
-          |      "referenceType": "NINO",
-          |      "referenceNumber": "AA123456A",
-          |      "incomeSourceType": "ITSA",
+          |      "identification": {
+          |        "referenceType": "NINO",
+          |        "referenceNumber": "AA123456A",
+          |        "incomeSourceType": "ITSA"
+          |      },
           |      "obligationDetails": [
           |        {
           |          "status": "F",
