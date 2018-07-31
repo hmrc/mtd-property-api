@@ -62,21 +62,40 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
 
   "GET EOPS Obligations controller" should {
     
-    "return valid EOPS Obligations" when {
+    "return a 200 response" when {
       "passed a valid NINO, from and to date" in new Test {
+
         MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
           .returns(Future.successful(Right(successEopsObligations)))
+
+        val expectedJson = Json.obj("obligations" -> Json.toJson(successEopsObligations))
         val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
+
         status(response) shouldBe OK
-        contentAsJson(response) shouldBe Json.toJson(successEopsObligations)
+      }
+    }
+
+    "return valid EOPS Obligations" when {
+      "passed a valid NINO, from and to date" in new Test {
+
+        MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
+          .returns(Future.successful(Right(successEopsObligations)))
+
+        val expectedJson = Json.obj("obligations" -> Json.toJson(successEopsObligations))
+        val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
+
+        contentAsJson(response) shouldBe expectedJson
       }
     }
 
     "return error BAD REQUEST" when {
       "passed invalid parameters" in new Test {
+
         MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
           .returns(Future.successful(Left(ErrorResponse(InvalidToDateError, None))))
+
         val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
+
         status(response) shouldBe BAD_REQUEST
       }
     }

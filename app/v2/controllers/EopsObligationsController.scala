@@ -35,7 +35,7 @@ class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService
     authorisedAction(nino).async { implicit request =>
       service.retrieveEopsObligations(nino, from, to).map {
         case Left(e) => processError(e)
-        case Right(success) => Ok(Json.toJson(success))
+        case Right(success) => Ok(Json.obj("obligations" -> Json.toJson(success)))
       }
     }
 
