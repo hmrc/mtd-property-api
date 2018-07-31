@@ -17,7 +17,7 @@
 package v2.models.errors
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{Json, Reads, Writes, __}
+import play.api.libs.json._
 
 trait MtdError
 
@@ -32,3 +32,7 @@ object Error {
 }
 
 case class ErrorResponse(error: Error, errors: Option[Seq[Error]])
+
+object ErrorResponse{
+  implicit val formats: OFormat[ErrorResponse] = Json.format[ErrorResponse]
+}
