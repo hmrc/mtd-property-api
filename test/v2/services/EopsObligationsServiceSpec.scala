@@ -379,7 +379,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
       ("NOT_FOUND", "not found", NotFoundError),
       ("NOT_FOUND_BPKEY", "downstream", DownstreamError),
       ("SERVICE_UNAVAILABLE", "service unavailable", DownstreamError),
-      ("SERVER_ERROR", "not found", NotFoundError),
+      ("SERVER_ERROR", "downstream", DownstreamError),
       ("INVALID_IDTYPE", "not found", NotFoundError),
       ("INVALID_IDNUMBER", "invalid nino", InvalidNinoError),
       ("INVALID_STATUS", "downstream", DownstreamError),

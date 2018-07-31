@@ -17,7 +17,6 @@
 package v2.controllers
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import v2.models.errors.GetEopsObligationsErrors._
