@@ -1,1 +1,3 @@
 GET        /sample/:nino        v2.controllers.SampleController.doSomething(nino:String)
+
+GET        /ni/:nino/uk-properties/end-of-period-statements/from/:start/to/:end         v2.controllers.EopsObligationsController.getEopsObligations(nino: String, start: String, end: String)
