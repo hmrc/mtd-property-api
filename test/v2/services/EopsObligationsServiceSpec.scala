@@ -20,14 +20,13 @@ import java.time.LocalDate
 
 import v2.mocks.connectors.MockDesConnector
 import v2.models.errors.GetEopsObligationsErrors._
-import v2.models.errors.{BadRequestError, ErrorResponse, InvalidNinoError, NotFoundError}
+import v2.models.errors._
 import v2.models.outcomes.{EopsObligationsOutcome, ObligationsOutcome}
 import v2.models.{FulfilledObligation, Obligation, ObligationDetails}
 
 import scala.concurrent.Future
 
 class EopsObligationsServiceSpec extends ServiceSpec {
-
 
   private trait Test extends MockDesConnector {
     val service = new EopsObligationsService(mockDesConnector)
@@ -373,6 +372,40 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(ErrorResponse(NotFoundError, None))
       }
+    }
+
+    val possibleDesErrors: Seq[(String, String, Error)] = Seq(
+      (DownstreamError.code, "downstream", DownstreamError),
+      ("NOT_FOUND", "not found", NotFoundError),
+      ("NOT_FOUND_BPKEY", "downstream", DownstreamError),
+      ("SERVICE_UNAVAILABLE", "service unavailable", DownstreamError),
+      ("SERVER_ERROR", "not found", NotFoundError),
+      ("INVALID_IDTYPE", "not found", NotFoundError),
+      ("INVALID_IDNUMBER", "invalid nino", InvalidNinoError),
+      ("INVALID_STATUS", "downstream", DownstreamError),
+      ("INVALID_REGIME", "downstream", DownstreamError),
+      ("INVALID_DATE_TO", "invalid to date", InvalidToDateError),
+      ("INVALID_DATE_FROM", "invalid from date", InvalidFromDateError),
+      ("INVALID_DATE_RANGE", "invalid date range", RangeTooBigError)
+    )
+
+    possibleDesErrors.foreach {
+      case (desCode, description, mtdError) =>
+        s"return a $description error" when {
+          s"the DES connector returns a $desCode code" in new Test {
+            val nino: String = "AA123456A"
+            val from: String = "2018-01-01"
+            val to: String = "2018-12-31"
+
+            val error: Future[ObligationsOutcome] = Future.successful(Left(Seq(Error(desCode, ""))))
+
+            MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
+              .returns(error)
+
+            val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
+            result shouldBe Left(ErrorResponse(mtdError, None))
+          }
+        }
     }
 
   }

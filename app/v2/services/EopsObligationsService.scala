@@ -23,7 +23,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
 import v2.models.errors.GetEopsObligationsErrors._
-import v2.models.errors.{BadRequestError, Error, ErrorResponse, InvalidNinoError, NotFoundError}
+import v2.models.errors.{BadRequestError, DownstreamError, Error, ErrorResponse, InvalidNinoError, NotFoundError}
 import v2.models.outcomes.EopsObligationsOutcome
 import v2.models.{Obligation, ObligationDetails}
 
@@ -47,8 +47,8 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
                                      (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsObligationsOutcome] = {
 
     connector.getObligations(nino, from, to).map {
-      case Left(singleError :: Nil) => Left(ErrorResponse(singleError, None))
-      case Left(errors) => Left(ErrorResponse(BadRequestError, Some(errors)))
+      case Left(singleError :: Nil) => Left(ErrorResponse(desErrorToMtdError(singleError.code), None))
+      case Left(errors) => Left(ErrorResponse(BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
       case Right(obligations) =>
         val eopsObligations = filterEopsObligations(obligations)
         if (eopsObligations.nonEmpty) {
@@ -73,6 +73,21 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
     case _ if Try(LocalDate.parse(date)).isFailure => Some(invalidDateError)
     case _ => None
   }
+
+  val desErrorToMtdError: Map[String, Error] = Map(
+    "NOT_FOUND" -> NotFoundError,
+    "NOT_FOUND_BPKEY" -> DownstreamError,
+    "SERVICE_UNAVAILABLE" -> DownstreamError,
+    "SERVER_ERROR" -> NotFoundError,
+    "INVALID_IDTYPE" -> NotFoundError,
+    "INVALID_IDNUMBER" -> InvalidNinoError,
+    "INVALID_STATUS" -> DownstreamError,
+    "INVALID_REGIME" -> DownstreamError,
+    "INVALID_DATE_TO" -> InvalidToDateError,
+    "INVALID_DATE_FROM" -> InvalidFromDateError,
+    "INVALID_DATE_RANGE" -> RangeTooBigError,
+    "INTERNAL_SERVER_ERROR" -> DownstreamError
+  )
 
   private def validateDateRange(from: LocalDate,
                                 to: LocalDate,
