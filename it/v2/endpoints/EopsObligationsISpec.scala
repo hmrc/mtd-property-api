@@ -18,11 +18,14 @@ package v2.endpoints
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status
+import play.api.libs.json.Json
 import play.api.libs.ws.{WSRequest, WSResponse}
 import support.IntegrationBaseSpec
-import v2.stubs.{AuditStub, AuthStub, MtdIdLookupStub}
+import v2.fixtures.EopsObligationsFixture
+import v2.models.errors.DownstreamError
+import v2.stubs.{AuditStub, AuthStub, EopsObligationsStub, MtdIdLookupStub}
 
-class SampleISpec extends IntegrationBaseSpec {
+class EopsObligationsISpec extends IntegrationBaseSpec {
 
   private trait Test {
 
@@ -32,25 +35,44 @@ class SampleISpec extends IntegrationBaseSpec {
 
     def request(): WSRequest = {
       setupStubs()
-      buildRequest(s"/2.0/sample/$nino")
+        buildRequest(s"/2.0/ni/$nino/uk-properties/end-of-period-statements/obligations?from=2017-04-06&to=2018-04-05")
     }
   }
 
-  "Calling the sample endpoint" should {
+  "Calling the EOPS endpoint" should {
 
-    "return a 200 status code" when {
+    "return a 200 status code and correct body" when {
 
-      "any valid request is made" in new Test {
+      "an obligation exists for the NINO within the date range" in new Test {
         override val nino: String = "AA123456A"
 
         override def setupStubs(): StubMapping = {
           AuditStub.audit()
           AuthStub.authorised()
           MtdIdLookupStub.ninoFound(nino)
+          EopsObligationsStub.successfulEopsObligations(nino)
         }
 
         val response: WSResponse = await(request().get())
         response.status shouldBe Status.OK
+        response.json shouldBe EopsObligationsFixture.EOPSSuccess
+      }
+    }
+
+    "return a 500" when {
+      "DES returns a server error" in new Test {
+        override val nino: String = "AA123456A"
+
+        override def setupStubs(): StubMapping = {
+          AuditStub.audit()
+          AuthStub.authorised()
+          MtdIdLookupStub.ninoFound(nino)
+          EopsObligationsStub.unsuccessfulEopsObligations(nino)
+        }
+
+        val response: WSResponse = await(request().get())
+        response.status shouldBe Status.INTERNAL_SERVER_ERROR
+        response.json shouldBe Json.toJson(DownstreamError)
       }
     }
   }

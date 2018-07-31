@@ -76,17 +76,17 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
 
   val desErrorToMtdError: Map[String, Error] = Map(
     "NOT_FOUND" -> NotFoundError,
-    "NOT_FOUND_BPKEY" -> DownstreamError,
-    "SERVICE_UNAVAILABLE" -> DownstreamError,
-    "SERVER_ERROR" -> NotFoundError,
     "INVALID_IDTYPE" -> NotFoundError,
     "INVALID_IDNUMBER" -> InvalidNinoError,
-    "INVALID_STATUS" -> DownstreamError,
-    "INVALID_REGIME" -> DownstreamError,
     "INVALID_DATE_TO" -> InvalidToDateError,
     "INVALID_DATE_FROM" -> InvalidFromDateError,
     "INVALID_DATE_RANGE" -> RangeTooBigError,
-    "INTERNAL_SERVER_ERROR" -> DownstreamError
+    "INTERNAL_SERVER_ERROR" -> DownstreamError,
+    "NOT_FOUND_BPKEY" -> DownstreamError,
+    "SERVICE_UNAVAILABLE" -> DownstreamError,
+    "SERVER_ERROR" -> DownstreamError,
+    "INVALID_STATUS" -> DownstreamError,
+    "INVALID_REGIME" -> DownstreamError
   )
 
   private def validateDateRange(from: LocalDate,
