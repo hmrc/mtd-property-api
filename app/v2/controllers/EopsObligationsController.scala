@@ -16,10 +16,12 @@
 
 package v2.controllers
 
-import java.time.LocalDate
-
 import javax.inject.{Inject, Singleton}
+
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
+import v2.models.errors.GetEopsObligationsErrors._
+import v2.models.errors._
 import v2.services.{EnrolmentsAuthService, EopsObligationsService, MtdIdLookupService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,11 +31,22 @@ class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService
                                           val lookupService: MtdIdLookupService,
                                           val service: EopsObligationsService) extends AuthorisedController {
 
-  def getEopsObligations(nino: String, from: LocalDate, to: LocalDate): Action[AnyContent] =
+  def getEopsObligations(nino: String, from: String, to: String): Action[AnyContent] =
     authorisedAction(nino).async { implicit request =>
       service.retrieveEopsObligations(nino, from, to).map {
-        case Left(e) => BadRequest
-        case Right(success) => Ok
+        case Left(e) => processError(e)
+        case Right(success) => Ok(Json.toJson(success))
       }
     }
+
+  private def processError(errorResponse: ErrorResponse) = {
+    errorResponse.error match {
+      case MissingFromDateError | MissingToDateError
+           | InvalidFromDateError | InvalidToDateError
+           | InvalidRangeError | BadRequestError | InvalidNinoError =>
+        BadRequest(Json.toJson(errorResponse))
+      case NotFoundError => NotFound(Json.toJson(errorResponse))
+      case DownstreamError => InternalServerError(Json.toJson(errorResponse))
+    }
+  }
 }

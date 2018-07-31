@@ -18,9 +18,13 @@ package v2.controllers
 
 import java.time.LocalDate
 
+import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.mocks.services.{MockEnrolmentsAuthService, MockEopsObligationsService, MockMtdIdLookupService}
+import v2.models.errors.ErrorResponse
+import v2.models.errors.GetEopsObligationsErrors.InvalidToDateError
+import v2.models.{FulfilledObligation, Obligation}
 
 import scala.concurrent.Future
 
@@ -32,6 +36,17 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
+  val successEopsObligations: Seq[Obligation] = Seq(
+    Obligation(
+      startDate = LocalDate.parse("2018-02-01"),
+      endDate = LocalDate.parse("2018-02-01"),
+      dueDate = LocalDate.parse("2018-02-01"),
+      status = FulfilledObligation,
+      processedDate = Some(LocalDate.parse("2018-02-01")),
+      periodKey = "EOPS"
+    )
+  )
+
   class Test {
     MockedEnrolmentsAuthService.authoriseUser()
     MockedMtdIdLookupService.lookup("AA123456A")
@@ -42,24 +57,26 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
   }
 
   val nino: String = "AA123456A"
+  val from: String = "2018-01-01"
+  val to: String = "2018-12-31"
 
   "GET EOPS Obligations controller" should {
+    
     "return valid EOPS Obligations" when {
       "passed a valid NINO, from and to date" in new Test {
-        MockedEopsObligationsService.retrieveEopsObligations(nino,
-          LocalDate.now().minusMonths(3),
-          LocalDate.now()).returns(Future.successful(Right(Seq.empty)))
-        val response: Future[Result] = testController.getEopsObligations(nino, LocalDate.now().minusMonths(3), LocalDate.now())(fakeRequest)
+        MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
+          .returns(Future.successful(Right(successEopsObligations)))
+        val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
         status(response) shouldBe OK
+        contentAsJson(response) shouldBe Json.toJson(successEopsObligations)
       }
     }
 
     "return error BAD REQUEST" when {
       "passed invalid parameters" in new Test {
-        MockedEopsObligationsService.retrieveEopsObligations(nino,
-          LocalDate.now(),
-          LocalDate.now()).returns(Future.successful(Left(Seq.empty)))
-        val response: Future[Result] = testController.getEopsObligations(nino, LocalDate.now(), LocalDate.now())(fakeRequest)
+        MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
+          .returns(Future.successful(Left(ErrorResponse(InvalidToDateError, None))))
+        val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
         status(response) shouldBe BAD_REQUEST
       }
     }
