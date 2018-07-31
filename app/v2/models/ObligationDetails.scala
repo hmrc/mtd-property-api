@@ -24,7 +24,7 @@ case class ObligationDetails(incomeSourceType : Option[String],
 
 object ObligationDetails {
   implicit val reads: Reads[ObligationDetails] = (
-    (__ \ "incomeSourceType").readNullable[String] and
+    (__ \\ "incomeSourceType").readNullable[String] and
       (__ \ "obligationDetails").read[Seq[Obligation]]
     ) (ObligationDetails.apply _)
 }
