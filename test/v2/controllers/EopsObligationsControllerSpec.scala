@@ -22,8 +22,8 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.mocks.services.{MockEnrolmentsAuthService, MockEopsObligationsService, MockMtdIdLookupService}
-import v2.models.errors.ErrorResponse
-import v2.models.errors.GetEopsObligationsErrors.InvalidToDateError
+import v2.models.errors.GetEopsObligationsErrors._
+import v2.models.errors._
 import v2.models.{FulfilledObligation, Obligation}
 
 import scala.concurrent.Future
@@ -60,8 +60,19 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
   val from: String = "2018-01-01"
   val to: String = "2018-12-31"
 
+  def eopsErrorTest(error: v2.models.errors.Error, expectedStatus: Int): Unit =
+    {
+      s"returned a ${error.code} error" in new Test {
+        MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
+          .returns(Future.successful(Left(ErrorResponse(error, None))))
+
+        val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
+        status(response) shouldBe expectedStatus
+      }
+    }
+
   "GET EOPS Obligations controller" should {
-    
+
     "return a 200 response" when {
       "passed a valid NINO, from and to date" in new Test {
 
@@ -88,16 +99,25 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
       }
     }
 
-    "return error BAD REQUEST" when {
-      "passed invalid parameters" in new Test {
+    "return error 400 (Bad Request)" when {
 
-        MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
-          .returns(Future.successful(Left(ErrorResponse(InvalidToDateError, None))))
+      val eopsErrors = Seq(
+        MissingFromDateError, MissingToDateError,
+        InvalidFromDateError, InvalidToDateError,
+        InvalidRangeError, RangeTooBigError,
+        BadRequestError, InvalidNinoError)
 
-        val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
-
-        status(response) shouldBe BAD_REQUEST
+      for (error <- eopsErrors){
+        eopsErrorTest(error, BAD_REQUEST)
       }
+    }
+
+    "return a 404 (Not Found) error" when {
+      eopsErrorTest(NotFoundError, NOT_FOUND)
+    }
+
+    "return a 500 (ISE)" when {
+      eopsErrorTest(DownstreamError, INTERNAL_SERVER_ERROR)
     }
   }
 }
