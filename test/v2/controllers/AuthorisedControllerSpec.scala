@@ -99,7 +99,7 @@ class AuthorisedControllerSpec extends ControllerBaseSpec {
         .returns(Future.successful(Left(UnauthorisedError)))
 
       private val result = target.action(nino)(fakeGetRequest)
-      status(result) shouldBe UNAUTHORIZED
+      status(result) shouldBe FORBIDDEN
     }
   }
 
@@ -124,7 +124,7 @@ class AuthorisedControllerSpec extends ControllerBaseSpec {
         .returns(Future.successful(Left(UnauthorisedError)))
 
       private val result = target.action(nino)(fakeGetRequest)
-      status(result) shouldBe UNAUTHORIZED
+      status(result) shouldBe FORBIDDEN
     }
   }
 
@@ -138,7 +138,7 @@ class AuthorisedControllerSpec extends ControllerBaseSpec {
         .returns(Future.successful(Left(UnauthorisedError)))
 
       private val result = target.action(nino)(fakeGetRequest)
-      status(result) shouldBe UNAUTHORIZED
+      status(result) shouldBe FORBIDDEN
     }
   }
 
