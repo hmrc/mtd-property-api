@@ -32,11 +32,13 @@ object ObligationsHttpParser extends HttpParser {
   implicit val  obligationsHttpReads: HttpReads[ObligationsOutcome] = new HttpReads[ObligationsOutcome] {
     override def read(method: String, url: String, response: HttpResponse): ObligationsOutcome = {
 
+      val loggingPrefix = "[ObligationsHttpParser][obligationsHttpReads][read]"
+
       def parseErrors(response: HttpResponse): Seq[Error] = {
         val singleError = response.validateJson[Error].map(Seq(_))
         lazy val multipleErrors = response.validateJson[Seq[Error]](multipleErrorJsonReads)
         lazy val unableToParseJsonError = {
-          Logger.warn(s"Unable to parse errors: ${response.json}")
+          Logger.warn(s"$loggingPrefix Unable to parse errors: ${response.json}")
           Seq(DownstreamError)
         }
 
@@ -48,7 +50,10 @@ object ObligationsHttpParser extends HttpParser {
           case Some(obligations) => Right(obligations)
           case None => Left(Seq(DownstreamError))
         }
-        case _ => Left(parseErrors(response))
+        case _ =>
+          val errors = parseErrors(response)
+          Logger.warn(s"$loggingPrefix Get obligations returned the following error(s): ${errors.map(_.code).mkString(",")}")
+          Left(errors)
       }
     }
   }
