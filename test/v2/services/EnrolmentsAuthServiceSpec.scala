@@ -21,7 +21,7 @@ import uk.gov.hmrc.auth.core.authorise.{EmptyPredicate, Predicate}
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
 import uk.gov.hmrc.auth.core.{AuthConnector, InsufficientEnrolments, MissingBearerToken}
 import uk.gov.hmrc.http.HeaderCarrier
-import v2.models.errors.{UnauthenticatedError, UnauthorisedError}
+import v2.models.errors.UnauthorisedError
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
@@ -60,7 +60,7 @@ class EnrolmentsAuthServiceSpec extends ServiceSpec {
     "the user is not logged in" should {
       "return an unauthenticated error" in new Test {
 
-        val expected = Left(UnauthenticatedError)
+        val expected = Left(UnauthorisedError)
 
         MockedAuthConnector.authorised(EmptyPredicate)
           .returns(Future.failed(MissingBearerToken()))

@@ -16,5 +16,4 @@
 
 package v2.models.errors
 
-object UnauthenticatedError extends Error("UNAUTHENTICATED", "Not authenticated")
-object UnauthorisedError extends Error("UNAUTHORIZED", "Bearer token is missing or not authorized")
+object UnauthorisedError extends Error("CLIENT_OR_AGENT_NOT_AUTHORISED", "The client and/or agent is not authorised.")
