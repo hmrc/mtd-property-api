@@ -18,11 +18,12 @@ package v2.endpoints
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.{WSRequest, WSResponse}
 import support.IntegrationBaseSpec
 import v2.fixtures.EopsObligationsFixture
-import v2.models.errors.DownstreamError
+import v2.models.errors.GetEopsObligationsErrors.{MissingFromDateError, MissingToDateError}
+import v2.models.errors.{BadRequestError, DownstreamError, ErrorResponse}
 import v2.stubs.{AuditStub, AuthStub, EopsObligationsStub, MtdIdLookupStub}
 
 class EopsObligationsISpec extends IntegrationBaseSpec {
@@ -73,6 +74,29 @@ class EopsObligationsISpec extends IntegrationBaseSpec {
         val response: WSResponse = await(request().get())
         response.status shouldBe Status.INTERNAL_SERVER_ERROR
         response.json shouldBe Json.toJson(DownstreamError)
+      }
+    }
+
+    "return a 400" when {
+      "a request is made with no query parameters" in new Test {
+        override val nino: String = "AA654321A"
+
+        override def setupStubs(): StubMapping = {
+          AuditStub.audit()
+          AuthStub.authorised()
+          MtdIdLookupStub.ninoFound(nino)
+        }
+
+        override def request(): WSRequest = {
+          setupStubs()
+          buildRequest(s"/2.0/ni/$nino/uk-properties/end-of-period-statements/obligations")
+        }
+
+        val multiDateErrorJson: JsValue = Json.toJson(ErrorResponse(BadRequestError, Some(Seq(MissingFromDateError, MissingToDateError))))
+
+        val response: WSResponse = await(request().get())
+        response.status shouldBe Status.BAD_REQUEST
+        response.json shouldBe multiDateErrorJson
       }
     }
   }

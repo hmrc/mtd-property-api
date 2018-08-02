@@ -42,7 +42,8 @@ class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService
     errorResponse.error match {
       case MissingFromDateError | MissingToDateError
            | InvalidFromDateError | InvalidToDateError
-           | InvalidRangeError | BadRequestError | InvalidNinoError =>
+           | InvalidRangeError | RangeTooBigError
+           | BadRequestError | InvalidNinoError =>
         BadRequest(Json.toJson(errorResponse))
       case NotFoundError => NotFound(Json.toJson(errorResponse))
       case DownstreamError => InternalServerError(Json.toJson(errorResponse))
