@@ -79,10 +79,11 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
         MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
           .returns(Future.successful(Right(successEopsObligations)))
 
-        val expectedJson = Json.obj("obligations" -> Json.toJson(successEopsObligations))
-        val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
+        private val expectedJson = Json.obj("obligations" -> Json.toJson(successEopsObligations))
+        private val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
 
         status(response) shouldBe OK
+        contentAsJson(response) shouldBe expectedJson
       }
     }
 
@@ -92,8 +93,8 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
         MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
           .returns(Future.successful(Right(successEopsObligations)))
 
-        val expectedJson = Json.obj("obligations" -> Json.toJson(successEopsObligations))
-        val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
+        private val expectedJson = Json.obj("obligations" -> Json.toJson(successEopsObligations))
+        private val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
 
         contentAsJson(response) shouldBe expectedJson
       }
