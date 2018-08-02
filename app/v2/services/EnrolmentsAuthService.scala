@@ -38,7 +38,7 @@ class EnrolmentsAuthService @Inject()(val connector: AuthConnector) {
     authFunction.authorised(predicate) {
       Future.successful(Right(true))
     } recoverWith {
-      case _: MissingBearerToken | _: AuthorisationException => Future.successful(Left(UnauthorisedError))
+      case _: AuthorisationException => Future.successful(Left(UnauthorisedError))
       case error =>
         Logger.warn(s"[EnrolmentsAuthService][authorised] An unexpected error occurred: $error")
         Future.successful(Left(DownstreamError))
