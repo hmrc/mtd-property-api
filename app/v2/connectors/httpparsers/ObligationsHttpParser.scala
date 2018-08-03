@@ -38,7 +38,7 @@ object ObligationsHttpParser extends HttpParser {
         val singleError = response.validateJson[Error].map(Seq(_))
         lazy val multipleErrors = response.validateJson[Seq[Error]](multipleErrorJsonReads)
         lazy val unableToParseJsonError = {
-          Logger.warn(s"$loggingPrefix Unable to parse errors: ${response.json}")
+          Logger.warn(s"$loggingPrefix Unable to parse errors: ${response.body}")
           Seq(DownstreamError)
         }
 
