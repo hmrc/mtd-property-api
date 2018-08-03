@@ -19,8 +19,8 @@ package v2.connectors
 import java.time.LocalDate
 
 import javax.inject.{Inject, Singleton}
-import play.api.http.HeaderNames
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import v2.config.AppConfig
 import v2.models.outcomes.ObligationsOutcome
@@ -31,10 +31,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class DesConnector @Inject()(http: HttpClient,
                              appConfig: AppConfig) {
 
-  private[connectors] def desHeaderCarrier(implicit hc: HeaderCarrier): HeaderCarrier = hc.withExtraHeaders(
-    HeaderNames.AUTHORIZATION -> appConfig.desToken,
-    "Environment" -> appConfig.desEnv
-  )
+  private[connectors] def desHeaderCarrier(implicit hc: HeaderCarrier): HeaderCarrier = hc
+    .copy(authorization = Some(Authorization(s"Bearer ${appConfig.desToken}")))
+    .withExtraHeaders("Environment" -> appConfig.desEnv)
 
   def getObligations(nino: String, from: LocalDate, to: LocalDate)
                     (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ObligationsOutcome] = {

@@ -43,7 +43,7 @@ class DesConnectorSpec extends ConnectorSpec {
 
   "desHeaderCarrier" should {
     "return a header carrier with an authorization header using the DES token specified in config" in new Test {
-      connector.desHeaderCarrier.headers.contains(HeaderNames.AUTHORIZATION -> "des-token") shouldBe true
+      connector.desHeaderCarrier.headers.contains(HeaderNames.AUTHORIZATION -> "Bearer des-token") shouldBe true
     }
 
     "return a header carrier with an environment header using the DES environment specified in config" in new Test {
