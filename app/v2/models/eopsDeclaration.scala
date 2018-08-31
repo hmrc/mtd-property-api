@@ -25,9 +25,4 @@ object EopsDeclaration {
   implicit val format: Reads[EopsDeclaration] = Json.reads[EopsDeclaration]
 }
 
-case class DesEopsDeclaration(EOPSDeclarationTimestamp: String)
-
-object DesEopsDeclaration {
-  implicit val writes: Writes[DesEopsDeclaration] = Json.writes[DesEopsDeclaration]
-}
 
