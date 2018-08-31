@@ -31,15 +31,6 @@ class eopsDeclarationSpec extends UnitSpec with JsonErrorValidators{
 
   val eopsDeclarationRequest = EopsDeclaration(finalised = true)
 
-  val desEopsDeclarationRequestJson =Json.parse(
-    """
-      |{
-      |"EOPSDeclarationTimestamp": "2018-08-27"
-      |}
-    """.stripMargin)
-
-  val desEopsDeclarationRequest = DesEopsDeclaration(EOPSDeclarationTimestamp = "2018-08-27")
-
   "eopsDeclaration reads" should {
 
     import JsonError._
@@ -59,15 +50,6 @@ class eopsDeclarationSpec extends UnitSpec with JsonErrorValidators{
         Json.parse(eopsDeclarationRequestJson).as[EopsDeclaration] shouldBe eopsDeclarationRequest
       }
 
-    }
-  }
-
-  "desEopsDeclaration writes" should {
-    "render the correct Json" when {
-
-      "all fields exist" in {
-        Json.toJson(desEopsDeclarationRequest) shouldBe desEopsDeclarationRequestJson
-      }
     }
   }
 }
