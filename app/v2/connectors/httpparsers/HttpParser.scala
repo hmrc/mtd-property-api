@@ -17,8 +17,9 @@
 package v2.connectors.httpparsers
 
 import play.api.Logger
-import play.api.libs.json.{JsError, JsSuccess, JsValue, Reads}
+import play.api.libs.json._
 import uk.gov.hmrc.http.HttpResponse
+import v2.models.errors.{DesError, DownstreamError, Error, MultipleBVRErrors, MultipleErrors, SingleError}
 
 import scala.util.{Success, Try}
 
@@ -36,7 +37,6 @@ trait HttpParser {
 
     private def parseResult[T](json: JsValue)
                               (implicit reads: Reads[T]): Option[T] = json.validate[T] match {
-
       case JsSuccess(value, _) => Some(value)
       case JsError(error) =>
         Logger.warn(s"[KnownJsonResponse][validateJson] Unable to parse JSON: $error")
@@ -44,4 +44,21 @@ trait HttpParser {
     }
   }
 
+  private val multipleErrorReads: Reads[Seq[Error]] = (__ \ "failures").read[Seq[Error]]
+  private val bvrErrorReads: Reads[Seq[Error]] = {
+    implicit val errorIdReads: Reads[Error] = (__ \ "id").read[String].map(Error(_, ""))
+    (__ \ "bvrfailureResponseElement" \ "validationRuleFailures").read[Seq[Error]]
+  }
+
+  def parseErrors(response: HttpResponse): DesError = {
+    val singleError = response.validateJson[Error].map(SingleError)
+    lazy val multipleErrors = response.validateJson(multipleErrorReads).map(MultipleErrors)
+    lazy val bvrErrors = response.validateJson(bvrErrorReads).map(MultipleBVRErrors)
+    lazy val unableToParseJsonError = {
+      Logger.warn(s"unable to parse errors from response: ${response.body}")
+      SingleError(DownstreamError)
+    }
+
+    singleError orElse multipleErrors orElse bvrErrors getOrElse unableToParseJsonError
+  }
 }
