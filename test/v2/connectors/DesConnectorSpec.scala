@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import play.api.http.HeaderNames
 import v2.mocks.{MockAppConfig, MockHttpClient}
-import v2.models.errors.DownstreamError
+import v2.models.errors._
 import v2.models.outcomes.ObligationsOutcome
 
 import scala.concurrent.Future
@@ -77,6 +77,37 @@ class DesConnectorSpec extends ConnectorSpec {
 
         val result: ObligationsOutcome = await(connector.getObligations(nino, from, to))
         result shouldBe Left(Seq(DownstreamError))
+      }
+    }
+  }
+
+  "submitEOPSDeclaration" should {
+
+    val nino = "AA12356A"
+    val from = "2017-01-01"
+    val to = "2018-01-01"
+
+    val url = s"$baseUrl/income-tax/income-sources/nino/$nino/uk-property/$to/$from/declaration"
+
+    "return a None" when {
+      "the http client returns None" in new Test {
+        MockedHttpClient.postEmpty[Option[DesError]](url)
+          .returns(Future.successful(None))
+
+        val result: Option[DesError] = await(connector.submitEOPSDeclaration(nino, from, to))
+        result shouldBe None
+      }
+    }
+
+    "return an ErrorResponse" when {
+      "the http client returns an error response" in new Test {
+        val errorResponse = SingleError(InvalidNinoError)
+
+        MockedHttpClient.postEmpty[Option[DesError]](url)
+          .returns(Future.successful(Some(errorResponse)))
+
+        val result: Option[DesError] = await(connector.submitEOPSDeclaration(nino, from, to))
+        result shouldBe Some(errorResponse)
       }
     }
   }

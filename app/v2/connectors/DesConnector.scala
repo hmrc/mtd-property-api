@@ -23,6 +23,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import v2.config.AppConfig
+import v2.models.errors.DesError
 import v2.models.outcomes.ObligationsOutcome
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,5 +43,14 @@ class DesConnector @Inject()(http: HttpClient,
     val urlPath = s"/enterprise/obligation-data/nino/$nino/ITSA?from=$from&to=$to"
 
     http.GET[ObligationsOutcome](appConfig.desBaseUrl + urlPath)(implicitly, desHeaderCarrier, implicitly)
+  }
+
+  def submitEOPSDeclaration(nino: String, from: String, to: String)
+                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[DesError]] = {
+    import v2.connectors.httpparsers.SubmitEOPSDeclarationHttpParser.submitEOPSDeclarationHttpReads
+
+    val url = s"${appConfig.desBaseUrl}/income-tax/income-sources/nino/$nino/uk-property/$to/$from/declaration"
+
+    http.POSTEmpty[Option[DesError]](url)(submitEOPSDeclarationHttpReads, desHeaderCarrier, implicitly)
   }
 }
