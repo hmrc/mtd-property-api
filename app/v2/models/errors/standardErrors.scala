@@ -20,3 +20,5 @@ object InvalidNinoError extends Error("FORMAT_NINO", "The NINO format is invalid
 object DownstreamError extends Error("INTERNAL_SERVER_ERROR", "An internal server error occurred")
 object NotFoundError extends Error("MATCHING_RESOURCE_NOT_FOUND", "Matching resource not found")
 object BadRequestError extends Error("INVALID_REQUEST", "Invalid request")
+object BVRError extends Error("BUSINESS_ERROR", "Business validation error")
+object ServiceUnavailableError extends Error("SERVICE_UNAVAILABLE", "Internal server error")

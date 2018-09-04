@@ -84,8 +84,8 @@ class DesConnectorSpec extends ConnectorSpec {
   "submitEOPSDeclaration" should {
 
     val nino = "AA12356A"
-    val from = "2017-01-01"
-    val to = "2018-01-01"
+    val from = LocalDate.parse("2018-01-01")
+    val to = LocalDate.parse("2018-01-01")
 
     val url = s"$baseUrl/income-tax/income-sources/nino/$nino/uk-property/$to/$from/declaration"
 
