@@ -17,7 +17,6 @@
 package v2.services
 
 import java.time.LocalDate
-
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier

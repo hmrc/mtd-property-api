@@ -45,7 +45,7 @@ class DesConnector @Inject()(http: HttpClient,
     http.GET[ObligationsOutcome](appConfig.desBaseUrl + urlPath)(implicitly, desHeaderCarrier, implicitly)
   }
 
-  def submitEOPSDeclaration(nino: String, from: String, to: String)
+  def submitEOPSDeclaration(nino: String, from: LocalDate, to: LocalDate)
                            (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[DesError]] = {
     import v2.connectors.httpparsers.SubmitEOPSDeclarationHttpParser.submitEOPSDeclarationHttpReads
 
