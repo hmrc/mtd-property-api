@@ -37,8 +37,8 @@ trait MockDesConnector extends MockFactory {
         .expects(nino, from, to, *, *)
     }
 
-    def submitEOPSDeclaration(nino: String, from: LocalDate, to: LocalDate): CallHandler[Future[Option[DesError]]] = {
-      (mockDesConnector.submitEOPSDeclaration(_: String, _: LocalDate, _: LocalDate)(_: HeaderCarrier, _: ExecutionContext))
+    def submitEOPSDeclaration(nino: String, from: String, to: String): CallHandler[Future[Option[DesError]]] = {
+      (mockDesConnector.submitEOPSDeclaration(_: String, _: String, _: String)(_: HeaderCarrier, _: ExecutionContext))
         .expects(nino, from, to, *, *)
     }
   }

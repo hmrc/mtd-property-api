@@ -17,7 +17,9 @@
 package v2.services
 
 import java.time.LocalDate
+
 import javax.inject.{Inject, Singleton}
+import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
@@ -109,13 +111,13 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
 
     val MAX_DATE_RANGE_IN_DAYS = 366
 
-    val ninoError = if (!Nino.isValid(nino)) Some(InvalidNinoError) else None
+    val ninoError: Option[InvalidNinoError.type] = if (!Nino.isValid(nino)) Some(InvalidNinoError) else None
 
-    val fromDateError = validateDate(from, MissingFromDateError, InvalidFromDateError)
+    val fromDateError: Option[Error] = validateDate(from, MissingFromDateError, InvalidFromDateError)
 
-    val toDateError = validateDate(to, MissingToDateError, InvalidToDateError)
+    val toDateError: Option[Error] = validateDate(to, MissingToDateError, InvalidToDateError)
 
-    val invalidRangeError = (fromDateError, toDateError) match {
+    val invalidRangeError: Option[Error] = (fromDateError, toDateError) match {
       case (None, None) =>
         val fromDate = LocalDate.parse(from)
         val toDate = LocalDate.parse(to)
@@ -123,12 +125,12 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
       case _ => None
     }
 
-    val validationErrors: Seq[Option[Error]] = Seq(
-      ninoError,
-      fromDateError,
-      toDateError,
-      invalidRangeError
-    )
+      val validationErrors: Seq[Option[Error]] = Seq(
+        ninoError,
+        fromDateError,
+        toDateError,
+        invalidRangeError
+      )
 
     validationErrors.flatten match {
       case List() => Right((LocalDate.parse(from), LocalDate.parse(to)))
