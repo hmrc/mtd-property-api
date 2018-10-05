@@ -16,10 +16,15 @@
 
 package v2.controllers
 
+import java.time.LocalDate
+
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Result
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
+import v2.controllers.validators.EopsDeclarationSubmission
 import v2.mocks.services.{MockEnrolmentsAuthService, MockEopsDeclarationService, MockMtdIdLookupService}
+import v2.mocks.validators.MockEopsDeclarationValidator
 import v2.models.errors._
 import v2.models.errors.SubmitEopsDeclarationErrors._
 
@@ -28,7 +33,8 @@ import scala.concurrent.Future
 class EopsDeclarationControllerSpec extends ControllerBaseSpec
   with MockEopsDeclarationService
   with MockEnrolmentsAuthService
-  with MockMtdIdLookupService {
+  with MockMtdIdLookupService
+  with MockEopsDeclarationValidator {
 
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -60,6 +66,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
       .returns(Future.successful(Right("test-mtd-id")))
     lazy val testController = new EopsDeclarationController(mockEnrolmentsAuthService,
       mockMtdIdLookupService,
+      mockEopsDeclarationValidator,
       mockEopsDeclarationService)
   }
 
@@ -72,7 +79,12 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
     "return a 204 response" when {
       "a valid NINO, from and to date, and declaration is passed" in new Test {
 
-        MockedEopsDeclarationService.submitDeclaration(nino, from, to)
+        MockEopsDeclarationValidator.validateSubmit(nino, from, to, Json.parse(requestJson))
+          .returns(Right(EopsDeclarationSubmission(Nino(nino),
+            LocalDate.parse(from), LocalDate.parse(to))))
+
+        MockedEopsDeclarationService.submitDeclaration(EopsDeclarationSubmission(Nino(nino),
+          LocalDate.parse(from), LocalDate.parse(to)))
           .returns(Future.successful(None))
 
         private val response: Future[Result] =
@@ -116,7 +128,13 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
   def eopsDeclarationErrorScenarios(error: v2.models.errors.Error, expectedStatus: Int): Unit =
   {
     s"returned a ${error.code} error" in new Test {
-      MockedEopsDeclarationService.submitDeclaration(nino, from, to)
+
+      MockEopsDeclarationValidator.validateSubmit(nino, from, to, Json.parse(requestJson))
+        .returns(Right(EopsDeclarationSubmission(Nino(nino),
+          LocalDate.parse(from), LocalDate.parse(to))))
+
+      MockedEopsDeclarationService.submitDeclaration(EopsDeclarationSubmission(Nino(nino),
+        LocalDate.parse(from), LocalDate.parse(to)))
         .returns(Future.successful(Some(ErrorResponse(error, None))))
 
       val response: Future[Result] = testController.submit(nino, from, to)(fakePostRequest[JsValue](Json.parse(requestJson)))

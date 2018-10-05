@@ -17,9 +17,10 @@
 package v2.services
 
 import javax.inject.{Inject, Singleton}
+
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
-import v2.controllers.validators.EopsDeclarationValidator
+import v2.controllers.validators.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 
@@ -28,10 +29,11 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class EopsDeclarationService @Inject()(connector: DesConnector) {
 
-  def submit(nino: String, startDate: String, endDate: String)
+  def submit(eopsDeclarationSubmission: EopsDeclarationSubmission)
                              (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ErrorResponse]] = {
 
-      connector.submitEOPSDeclaration(nino, startDate, endDate).map {
+      connector.submitEOPSDeclaration(eopsDeclarationSubmission.nino, eopsDeclarationSubmission.from,
+        eopsDeclarationSubmission.to).map {
         case Some(SingleError(error)) => Some(ErrorResponse(desErrorToMtdError(error.code), None))
         case Some(MultipleErrors(errors)) => Some(ErrorResponse(BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
         case Some(MultipleBVRErrors(errors)) => Some(ErrorResponse(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))

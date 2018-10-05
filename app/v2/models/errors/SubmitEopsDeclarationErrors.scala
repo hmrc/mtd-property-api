@@ -23,8 +23,6 @@ object SubmitEopsDeclarationErrors {
 
   object MissingEndDateError extends Error("MISSING_END_DATE", "Missing account period end date")
   object InvalidEndDateError extends Error("FORMAT_END_DATE", "Invalid account period end date")
-  object InvalidRangeError extends Error("RANGE_INVALID", "The start date must be the same day or before the from date.")
-
   object InvalidRangeError extends Error("RANGE_INVALID", "The start date must be the same day or before the from date")
 
   object ConflictError extends Error("RULE_ALREADY_SUBMITTED", "You cannot submit a statement for the same accounting period twice")

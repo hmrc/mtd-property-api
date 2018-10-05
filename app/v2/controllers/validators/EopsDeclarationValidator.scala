@@ -16,12 +16,27 @@
 
 package v2.controllers.validators
 
+import java.time.LocalDate
 import javax.inject.Singleton
+
+import play.api.libs.json.JsValue
+import uk.gov.hmrc.domain.Nino
 import v2.models.errors.ErrorResponse
 
 @Singleton
 class EopsDeclarationValidator extends Validator {
 
-  def validateSubmit(nino: String, from: String, to: String): Option[ErrorResponse] =
-    validationErrors(validateNino(nino), fromDateError(from), toDateError(to))
+  def validateSubmit(nino: String, from: String, to: String, requestBody: JsValue): Either[ErrorResponse, EopsDeclarationSubmission] =
+    validationErrors(validateNino(nino), fromDateError(from), toDateError(to)) match {
+      case None => Right(EopsDeclarationSubmission(
+        new Nino(nino),
+        LocalDate.parse(from),
+        LocalDate.parse(to))
+      )
+      case Some(error) => Left(error)
+
+    }
 }
+
+
+case class EopsDeclarationSubmission(nino: Nino, from: LocalDate, to: LocalDate)

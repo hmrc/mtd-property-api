@@ -17,8 +17,9 @@
 package v2.connectors
 
 import java.time.LocalDate
-
 import javax.inject.{Inject, Singleton}
+
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
@@ -45,11 +46,11 @@ class DesConnector @Inject()(http: HttpClient,
     http.GET[ObligationsOutcome](appConfig.desBaseUrl + urlPath)(implicitly, desHeaderCarrier, implicitly)
   }
 
-  def submitEOPSDeclaration(nino: String, from: String, to: String)
+  def submitEOPSDeclaration(nino: Nino, from: LocalDate, to: LocalDate)
                            (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[DesError]] = {
     import v2.connectors.httpparsers.SubmitEOPSDeclarationHttpParser.submitEOPSDeclarationHttpReads
 
-    val url = s"${appConfig.desBaseUrl}/income-tax/income-sources/nino/$nino/uk-property/$from/$to/declaration"
+    val url = s"${appConfig.desBaseUrl}/income-tax/income-sources/nino/${nino.nino}/uk-property/$from/$to/declaration"
 
     http.POSTEmpty[Option[DesError]](url)(submitEOPSDeclarationHttpReads, desHeaderCarrier, implicitly)
   }

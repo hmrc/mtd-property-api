@@ -18,7 +18,8 @@ package v2.mocks.validators
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import v2.controllers.validators.EopsDeclarationValidator
+import play.api.libs.json.JsValue
+import v2.controllers.validators.{EopsDeclarationSubmission, EopsDeclarationValidator}
 import v2.models.errors.ErrorResponse
 
 trait MockEopsDeclarationValidator extends MockFactory {
@@ -26,9 +27,10 @@ trait MockEopsDeclarationValidator extends MockFactory {
   val mockEopsDeclarationValidator: EopsDeclarationValidator = mock[EopsDeclarationValidator]
 
   object MockEopsDeclarationValidator {
-    def validateSubmit(nino: String, from: String, to: String): CallHandler[Option[ErrorResponse]] = {
-      (mockEopsDeclarationValidator.validateSubmit(_: String, _: String, _: String))
-        .expects(nino, from, to)
+    def validateSubmit(nino: String, from: String, to: String,
+                       requestBody: JsValue): CallHandler[Either[ErrorResponse, EopsDeclarationSubmission]] = {
+      (mockEopsDeclarationValidator.validateSubmit(_: String, _: String, _: String, _: JsValue))
+        .expects(nino, from, to, requestBody)
     }
   }
 

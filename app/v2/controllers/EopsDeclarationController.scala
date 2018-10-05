@@ -20,22 +20,29 @@ import javax.inject.{Inject, Singleton}
 
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
+import v2.controllers.validators.EopsDeclarationValidator
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 import v2.services.{EnrolmentsAuthService, EopsDeclarationService, MtdIdLookupService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 @Singleton
 class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService,
                                          val lookupService: MtdIdLookupService,
+                                         val validator: EopsDeclarationValidator,
                                          val service: EopsDeclarationService) extends AuthorisedController {
 
   def submit(nino: String, from: String, to: String): Action[JsValue] =
     authorisedAction(nino).async(parse.json) { implicit request =>
-      service.submit(nino, from, to).map {
-        case None => NoContent
-        case Some(result) => processError(result)
+      validator.validateSubmit(nino, from, to, request.body) match {
+        case Left(errorResponse) => Future {processError(errorResponse)}
+        case Right(eopsDeclarationSubmission) =>
+          service.submit(eopsDeclarationSubmission).map {
+            case None => NoContent
+            case Some(result) => processError(result)
+          }
       }
     }
 

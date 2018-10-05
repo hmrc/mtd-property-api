@@ -16,6 +16,8 @@
 
 package v2.endpoints
 
+import java.time.LocalDate
+
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status
 import play.api.libs.ws.{WSRequest, WSResponse}
@@ -42,7 +44,7 @@ class EopsDeclarationISpec extends IntegrationBaseSpec {
 
     def request(): WSRequest = {
       setupStubs()
-        buildRequest(s"/2.0/ni/$nino/uk-properties/end-of-period-statements/from/$from/to/$to")
+        buildRequest(s"/2.0/ni/$nino/uk-properties/end-of-period-statements/from/${LocalDate.parse(from)}/to/${LocalDate.parse(to)}")
     }
   }
 
