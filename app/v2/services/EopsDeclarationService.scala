@@ -61,6 +61,7 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
     "C55502" -> RuleNonFhlPrivateUseAdjustment,
     "C55008" -> RuleMismatchStartDate,
     "C55013" -> RuleMismatchEndDate,
-    "C55014" -> RuleMismatchEndDate
+    "C55014" -> RuleMismatchEndDate,
+    "C55503" -> RuleConsolidatedExpenses
   )
 }

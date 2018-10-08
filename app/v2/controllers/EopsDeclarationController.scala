@@ -50,7 +50,8 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
     errorResponse.error match {
       case InvalidStartDateError | InvalidEndDateError
            | InvalidRangeError | BadRequestError | InvalidNinoError
-           | EarlySubmissionError | LateSubmissionError =>
+           | EarlySubmissionError | LateSubmissionError
+           | NotFinalisedDeclaration =>
         BadRequest(Json.toJson(errorResponse))
       case ConflictError
            | RuleClass4Over16
@@ -58,7 +59,9 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
            | RuleFhlPrivateUseAdjustment
            | RuleNonFhlPrivateUseAdjustment
            | RuleMismatchStartDate
-           | RuleMismatchEndDate =>
+           | RuleMismatchEndDate
+           | RuleConsolidatedExpenses
+           | BVRError =>
         Forbidden(Json.toJson(errorResponse))
       case NotFoundError => NotFound(Json.toJson(errorResponse))
       case DownstreamError => InternalServerError(Json.toJson(errorResponse))

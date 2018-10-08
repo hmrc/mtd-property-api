@@ -46,19 +46,13 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
       |}
     """.stripMargin
 
-  /*private val invalidRequestJson =
+  private val invalidRequestJson =
     """
       |{
       |"finalised": false
       |}
     """.stripMargin
 
-  private val invalidNullRequestJson =
-    """
-      |{
-      |"finalised": null
-      |}
-    """.stripMargin*/
 
   class Test {
     MockedEnrolmentsAuthService.authoriseUser()
@@ -77,7 +71,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
   "Submit EOPS declaration" should {
 
     "return a 204 response" when {
-      "a valid NINO, from and to date, and declaration is passed" in new Test {
+      "a valid NINO, from and to date, with declaration as true is passed" in new Test {
 
         MockEopsDeclarationValidator.validateSubmit(nino, from, to, Json.parse(requestJson))
           .returns(Right(EopsDeclarationSubmission(Nino(nino),
@@ -94,38 +88,123 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
       }
     }
 
-    "return error 400 (Bad Request)" when {
+    "return a 400 (Bad Request) error" when {
+      "a valid NINO, from and to date, with declaration as false is passed" in new Test {
 
-      val eopsErrors = Seq(
-        InvalidStartDateError, InvalidEndDateError, InvalidRangeError, BadRequestError,
-        InvalidNinoError, EarlySubmissionError, LateSubmissionError)
+        MockEopsDeclarationValidator.validateSubmit(nino, from, to, Json.parse(invalidRequestJson))
+          .returns(Left(ErrorResponse(NotFinalisedDeclaration, None)))
 
-      for (error <- eopsErrors){
-        eopsDeclarationErrorScenarios(error, BAD_REQUEST)
+        private val response: Future[Result] =
+          testController.submit(nino, from, to)(fakePostRequest[JsValue](Json.parse(invalidRequestJson)))
+
+        status(response) shouldBe BAD_REQUEST
+        contentAsJson(response) shouldBe Json.toJson(NotFinalisedDeclaration)
+      }
+    }
+
+    "return a error" when {
+      "a valid NINO, from and to date, with no declaration is passed" in new Test {
+
+        MockEopsDeclarationValidator.validateSubmit(nino, from, to, Json.parse("""{}""".stripMargin))
+          .returns(Left(ErrorResponse(NotFinalisedDeclaration, None)))
+
+        private val response: Future[Result] =
+          testController.submit(nino, from, to)(fakeRequest.withBody(Json.parse("""{}""".stripMargin)))
+
+        status(response) shouldBe BAD_REQUEST
+        contentAsJson(response) shouldBe Json.toJson(NotFinalisedDeclaration)
+      }
+    }
+
+    "return validation failed errors 400 (Bad Request)" when {
+
+      val eopsErrors = Seq(InvalidStartDateError, InvalidEndDateError,
+        InvalidRangeError, BadRequestError,
+        InvalidNinoError)
+
+      for (error <- eopsErrors) {
+        eopsDeclarationValidationScenarios(error, BAD_REQUEST)
+      }
+    }
+
+    "return business failed errors 400 (Bad Request)" when {
+
+      val eopsErrors = Seq(EarlySubmissionError, LateSubmissionError)
+
+      for (error <- eopsErrors) {
+        eopsDeclarationValidationScenarios(error, BAD_REQUEST)
       }
     }
 
     "return a 404 (Not Found) error" when {
-      eopsDeclarationErrorScenarios(NotFoundError, NOT_FOUND)
+      eopsDeclarationBusinessScenarios(NotFoundError, NOT_FOUND)
     }
 
     "return a 500 (ISE)" when {
-      eopsDeclarationErrorScenarios(DownstreamError, INTERNAL_SERVER_ERROR)
+      eopsDeclarationBusinessScenarios(DownstreamError, INTERNAL_SERVER_ERROR)
     }
 
     "return error 403 (Forbidden)" when {
 
       val eopsErrors = Seq(ConflictError, RuleClass4Over16, RuleClass4PensionAge,
         RuleFhlPrivateUseAdjustment, RuleNonFhlPrivateUseAdjustment,
-        RuleMismatchStartDate, RuleMismatchEndDate)
+        RuleMismatchStartDate, RuleMismatchEndDate, RuleConsolidatedExpenses)
 
       for (error <- eopsErrors) {
-        eopsDeclarationErrorScenarios(error, FORBIDDEN)
+        eopsDeclarationBusinessScenarios(error, FORBIDDEN)
+      }
+    }
+
+    "return multiple errors 400 (Bad Request)" when {
+
+      "validation is failed for more than one scenarios" in new Test {
+
+        MockEopsDeclarationValidator.validateSubmit(nino, from, to, Json.parse(invalidRequestJson))
+          .returns(Left(ErrorResponse(BadRequestError, Some(Seq(InvalidStartDateError, InvalidRangeError)))))
+
+        private val response: Future[Result] =
+          testController.submit(nino, from, to)(fakePostRequest[JsValue](Json.parse(invalidRequestJson)))
+
+        status(response) shouldBe BAD_REQUEST
+        contentAsJson(response) shouldBe Json.toJson(ErrorResponse(BadRequestError, Some(Seq(InvalidStartDateError, InvalidRangeError))))
+      }
+    }
+
+    "return multiple bvr errors 403 (Forbidden)" when {
+
+      "business validation is failed for more than one scenarios" in new Test {
+
+        MockEopsDeclarationValidator.validateSubmit(nino, from, to, Json.parse(requestJson))
+          .returns(Right(EopsDeclarationSubmission(Nino(nino),
+            LocalDate.parse(from), LocalDate.parse(to))))
+
+        MockedEopsDeclarationService.submitDeclaration(EopsDeclarationSubmission(Nino(nino),
+          LocalDate.parse(from), LocalDate.parse(to)))
+          .returns(Future.successful(Some(ErrorResponse(BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge))))))
+
+        private val response: Future[Result] =
+          testController.submit(nino, from, to)(fakePostRequest[JsValue](Json.parse(requestJson)))
+
+        status(response) shouldBe FORBIDDEN
+        contentAsJson(response) shouldBe Json.toJson(ErrorResponse(BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge))))
       }
     }
   }
 
-  def eopsDeclarationErrorScenarios(error: v2.models.errors.Error, expectedStatus: Int): Unit =
+  def eopsDeclarationValidationScenarios(error: v2.models.errors.Error, expectedStatus: Int): Unit =
+  {
+    s"returned a ${error.code} error" in new Test {
+
+      MockEopsDeclarationValidator.validateSubmit(nino, from, to, Json.parse(requestJson))
+        .returns(Left(ErrorResponse(error, None)))
+
+      val response: Future[Result] = testController.submit(nino, from, to)(fakePostRequest[JsValue](Json.parse(requestJson)))
+      status(response) shouldBe expectedStatus
+      contentAsJson(response) shouldBe Json.toJson(error)
+    }
+  }
+
+  def eopsDeclarationBusinessScenarios(error: v2.models.errors.Error, expectedStatus: Int): Unit =
   {
     s"returned a ${error.code} error" in new Test {
 
@@ -139,6 +218,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
 
       val response: Future[Result] = testController.submit(nino, from, to)(fakePostRequest[JsValue](Json.parse(requestJson)))
       status(response) shouldBe expectedStatus
+      contentAsJson(response) shouldBe Json.toJson(error)
     }
   }
 }

@@ -21,22 +21,30 @@ import javax.inject.Singleton
 
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
-import v2.models.errors.ErrorResponse
+import v2.models.Declaration
+import v2.models.errors.{ErrorResponse, Error}
+import v2.models.errors.SubmitEopsDeclarationErrors.NotFinalisedDeclaration
+
 
 @Singleton
 class EopsDeclarationValidator extends Validator {
 
   def validateSubmit(nino: String, from: String, to: String, requestBody: JsValue): Either[ErrorResponse, EopsDeclarationSubmission] =
-    validationErrors(validateNino(nino), fromDateError(from), toDateError(to)) match {
+    validationErrors(validateNino(nino), fromDateError(from), toDateError(to),
+      dateRangeError(LocalDate.parse(from), LocalDate.parse(to)), validateDeclarationBody(requestBody)) match {
       case None => Right(EopsDeclarationSubmission(
         new Nino(nino),
         LocalDate.parse(from),
         LocalDate.parse(to))
       )
       case Some(error) => Left(error)
+    }
 
+  def validateDeclarationBody(requestBody: JsValue): Option[Error] =
+    requestBody.asOpt[Declaration] match {
+      case Some(declaration) if declaration.finalised => None
+      case _ => Some(NotFinalisedDeclaration)
     }
 }
-
 
 case class EopsDeclarationSubmission(nino: Nino, from: LocalDate, to: LocalDate)

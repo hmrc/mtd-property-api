@@ -18,21 +18,31 @@ package v2.stubs
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status._
+import play.api.libs.json.JsValue
 import support.WireMockMethods
-import v2.models.errors.ErrorResponse
+import v2.fixtures.DESErrorsFixture.{conflictErrorJson, _}
 
 object EopsDeclarationStub extends WireMockMethods {
 
-  val url = (nino: String, from: String, to: String) => s"/income-tax/income-sources/nino/$nino/uk-property/$to/$from/declaration"
+  val url = (nino: String, from: String, to: String) => s"/income-tax/income-sources/nino/$nino/uk-property/$from/$to/declaration"
 
   def successfulEopsDeclaration(nino: String, from: String, to: String): StubMapping = {
-    when(method = GET, uri = url(nino, from, to))
+    when(method = POST, uri = url(nino, from, to))
       .thenReturn(status = NO_CONTENT)
   }
 
-  def unsuccessfulEopsDeclaration(nino: String, from: String, to: String,
-                                  status: Int, errorResponse: ErrorResponse): StubMapping = {
-    when(method = GET, uri = url(nino, from, to))
-      .thenReturn(status = status, body = errorResponse)
+  def unSuccessfulEopsDeclaration(nino: String, from: String, to: String,
+                                  status: Int, errorType: String): StubMapping = {
+    when(method = POST, uri = url(nino, from, to))
+      .thenReturn(status = status, body = desStatusToError(errorType))
   }
+
+  private val desStatusToError: Map[String, JsValue] = Map(
+    "NOT_FOUND" -> notFoundErrorJson,
+    "CONFLICT" -> conflictErrorJson,
+    "EARLY_SUBMISSION" -> earlySubmissionErrorJson,
+    "SERVER_ERROR" -> serverErrorJson,
+    "BVR" -> bvrErrorJson,
+    "MULTIPLE_ERROR" -> multipleErrorJson
+  )
 }
