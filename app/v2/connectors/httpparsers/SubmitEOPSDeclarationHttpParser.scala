@@ -16,7 +16,8 @@
 
 package v2.connectors.httpparsers
 
-import play.api.http.Status.NO_CONTENT
+import play.api.Logger
+import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import v2.models.errors._
 
@@ -27,8 +28,20 @@ object SubmitEOPSDeclarationHttpParser extends HttpParser {
       override def read(method: String, url: String, response: HttpResponse): Option[DesError] = {
         response.status match {
           case NO_CONTENT => None
-          case _ => Some(parseErrors(response))
+          case BAD_REQUEST | FORBIDDEN | CONFLICT =>
+            logError("Parsing expected DES errors")
+            Some(parseErrors(response))
+          case NOT_FOUND =>
+            logError("Not Found. Returning standard error")
+            Some(GenericError(NotFoundError))
+          case INTERNAL_SERVER_ERROR =>
+            logError("Internal Server Error.  Returning standard error")
+            Some(GenericError(DownstreamError))
+          case SERVICE_UNAVAILABLE =>
+            logError("Service Unavailable.  Returning standard error")
+            Some(GenericError(ServiceUnavailableError))
         }
       }
+      private def logError(code:String):Unit = Logger.warn(s"[SubmitEOPSDeclarationHttpParser] [read] - Downstream Service returned $code")
     }
 }

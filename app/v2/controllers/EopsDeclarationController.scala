@@ -50,10 +50,10 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
     errorResponse.error match {
       case InvalidStartDateError | InvalidEndDateError
            | InvalidRangeError | BadRequestError | InvalidNinoError
-           | EarlySubmissionError | LateSubmissionError
-           | NotFinalisedDeclaration =>
+           | EarlySubmissionError | LateSubmissionError =>
         BadRequest(Json.toJson(errorResponse))
       case ConflictError
+           | NotFinalisedDeclaration
            | RuleClass4Over16
            | RuleClass4PensionAge
            | RuleFhlPrivateUseAdjustment

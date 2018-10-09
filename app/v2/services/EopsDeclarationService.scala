@@ -37,6 +37,7 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
         case Some(SingleError(error)) => Some(ErrorResponse(desErrorToMtdError(error.code), None))
         case Some(MultipleErrors(errors)) => Some(ErrorResponse(BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
         case Some(MultipleBVRErrors(errors)) => Some(ErrorResponse(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
+        case Some(GenericError(error)) => Some(ErrorResponse(error, None))
         case _ => None
       }
     }

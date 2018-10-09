@@ -16,6 +16,7 @@
 
 package v2.connectors.httpparsers
 
+import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
 import v2.connectors.httpparsers.SubmitEOPSDeclarationHttpParser.submitEOPSDeclarationHttpReads
@@ -47,31 +48,50 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
         val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
         result shouldBe Some(expected)
       }
+
+      def genericError(status: Int, error: Error): Unit = {
+        s"the http response has a status of $status with any body" in {
+          val expected = GenericError(error)
+
+          val httpResponse = HttpResponse(status, Some(Json.toJson(error)))
+          val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
+          result shouldBe Some(expected)
+        }
+      }
+
+      genericError(NOT_FOUND, NotFoundError)
+      genericError(INTERNAL_SERVER_ERROR, DownstreamError)
+      genericError(SERVICE_UNAVAILABLE, ServiceUnavailableError)
     }
 
     "return multiple errors" when {
-      "the http response contains a 400 with an error response body with multiple errors" in {
-        val errorResponseJson = Json.parse(
-          """
-            |{
-            |  "failures": [
-            |    {
-            |      "code": "TEST_CODE_1",
-            |      "reason": "some reason"
-            |    },
-            |    {
-            |      "code": "TEST_CODE_2",
-            |      "reason": "some reason"
-            |    }
-            |  ]
-            |}
-          """.stripMargin)
-        val expected = MultipleErrors(Seq(Error("TEST_CODE_1", "some reason"), Error("TEST_CODE_2", "some reason")))
+      def testMultipleError(status: Int): Unit = {
+        s"the http response has a status of $status with an error response body with multiple errors" in {
+          val errorResponseJson = Json.parse(
+            """
+              |{
+              |  "failures": [
+              |    {
+              |      "code": "TEST_CODE_1",
+              |      "reason": "some reason"
+              |    },
+              |    {
+              |      "code": "TEST_CODE_2",
+              |      "reason": "some reason"
+              |    }
+              |  ]
+              |}
+            """.stripMargin)
+          val expected = MultipleErrors(Seq(Error("TEST_CODE_1", "some reason"), Error("TEST_CODE_2", "some reason")))
 
-        val httpResponse = HttpResponse(BAD_REQUEST, Some(errorResponseJson))
-        val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
-        result shouldBe Some(expected)
+          val httpResponse = HttpResponse(status, Some(errorResponseJson))
+          val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
+          result shouldBe Some(expected)
+        }
       }
+      testMultipleError(BAD_REQUEST)
+      testMultipleError(FORBIDDEN)
+      testMultipleError(CONFLICT)
     }
 
     "return bvr errors" when {
