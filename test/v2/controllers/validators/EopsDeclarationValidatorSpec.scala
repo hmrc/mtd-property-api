@@ -21,8 +21,8 @@ import java.time.LocalDate
 import play.api.libs.json.{JsValue, Json}
 import support.UnitSpec
 import uk.gov.hmrc.domain.Nino
-import v2.models.errors.ErrorResponse
-import v2.models.errors.SubmitEopsDeclarationErrors.NotFinalisedDeclaration
+import v2.models.errors.{BadRequestError, ErrorResponse, InvalidNinoError}
+import v2.models.errors.SubmitEopsDeclarationErrors.{InvalidStartDateError, NotFinalisedDeclaration}
 
 class EopsDeclarationValidatorSpec extends UnitSpec {
 
@@ -64,10 +64,18 @@ class EopsDeclarationValidatorSpec extends UnitSpec {
       }
     }
 
-    "return error" when {
-      "a valid NINO, from and to date, with no declaration is passed" in new Test {
-        val result = TestValidator.validateSubmit(nino, from, to, Json.parse("""{}""".stripMargin))
-        result shouldBe Left(ErrorResponse(NotFinalisedDeclaration, None))
+    "return a single error" when {
+      "an invalid NINO with an invalid request body passed" in new Test {
+        val result = TestValidator.validateSubmit("boop", from, to, Json.parse("""{}""".stripMargin))
+        result shouldBe Left(ErrorResponse(InvalidNinoError, None))
+      }
+      "an invalid date with an invalid request body is passed" in new Test {
+        val result = TestValidator.validateSubmit(nino, "notadate", to, Json.parse("""{}""".stripMargin))
+        result shouldBe Left(ErrorResponse(InvalidStartDateError, None))
+      }
+      "an invalid NINO is supplied with an invalid date range" in new Test {
+        val result = TestValidator.validateSubmit("boop", to, from, requestJson)
+        result shouldBe Left(ErrorResponse(InvalidNinoError, None))
       }
     }
   }

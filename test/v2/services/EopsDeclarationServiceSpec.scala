@@ -29,6 +29,10 @@ import scala.concurrent.Future
 class EopsDeclarationServiceSpec extends ServiceSpec {
 
   private trait Test extends MockDesConnector {
+    val nino: String = "AA123456A"
+    val start: String = "2018-01-01"
+    val end: String = "2018-12-31"
+
     val service = new EopsDeclarationService(mockDesConnector)
   }
 
@@ -36,9 +40,6 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
 
     "return None without errors " when {
       "successful request is made end des" in new Test {
-        val nino: String = "AA123456A"
-        val start: String = "2018-01-01"
-        val end: String = "2018-12-31"
 
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
           .returns(Future{None})
@@ -52,9 +53,6 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
 
     "return multiple errors " when {
       "des connector returns sequence of errors" in new Test {
-        val nino: String = "AA123456A"
-        val start: String = "2018-01-01"
-        val end: String = "2018-12-31"
 
         val desResponse = MultipleErrors(Seq(Error("INVALID_ACCOUNTINGPERIODENDDATE", "some reason"),
           Error("INVALID_ACCOUNTINGPERIODSTARTDATE", "some reason")))
@@ -70,11 +68,26 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
       }
     }
 
+    "return a single 500 (ISE) error" when {
+      "multiple errors are returned that includes an INVALID_IDTYPE" in new Test {
+
+        val desResponse = MultipleErrors(Seq(Error("INVALID_ACCOUNTINGPERIODENDDATE", "some reason"),
+          Error("INVALID_IDTYPE", "'nino' type submitted is incorrect")))
+
+        MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
+          .returns(Future{Some(desResponse)})
+
+        val expected = ErrorResponse(DownstreamError, None)
+
+        val result: Option[ErrorResponse] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
+          LocalDate.parse(start), LocalDate.parse(end))))
+
+        result.get shouldBe expected
+      }
+    }
+
     "return multiple bvr errors " when {
       "des connector returns sequence of bvr errors" in new Test {
-        val nino: String = "AA123456A"
-        val start: String = "2018-01-01"
-        val end: String = "2018-12-31"
 
         val desResponse = MultipleBVRErrors(Seq(Error("C55317", "some reason"),
           Error("C55318", "some reason")))
@@ -108,24 +121,19 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
       case (desCode, description, mtdError) =>
         s"return a $description error" when {
           s"the DES connector returns a $desCode code" in new Test {
-            val nino: String = "AA123456A"
-            val from: String = "2018-01-01"
-            val to: String = "2018-12-31"
 
             val error: Future[Option[DesError]] = Future.successful(Some(SingleError(Error(desCode, ""))))
 
-            MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(from), LocalDate.parse(to))
+            MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
               .returns(error)
 
             val result: Option[ErrorResponse]  = await(service.submit(EopsDeclarationSubmission(Nino(nino),
-              LocalDate.parse(from), LocalDate.parse(to))))
+              LocalDate.parse(start), LocalDate.parse(end))))
 
             result.get shouldBe ErrorResponse(mtdError, None)
           }
         }
     }
-
-
   }
 
 }

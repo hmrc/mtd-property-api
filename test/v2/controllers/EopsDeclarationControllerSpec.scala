@@ -88,7 +88,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
       }
     }
 
-    "return a 400 (Bad Request) error" when {
+    "return a 403 (Forbidden) error" when {
       "a valid NINO, from and to date, with declaration as false is passed" in new Test {
 
         MockEopsDeclarationValidator.validateSubmit(nino, from, to, Json.parse(invalidRequestJson))
@@ -97,7 +97,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
         private val response: Future[Result] =
           testController.submit(nino, from, to)(fakePostRequest[JsValue](Json.parse(invalidRequestJson)))
 
-        status(response) shouldBe BAD_REQUEST
+        status(response) shouldBe FORBIDDEN
         contentAsJson(response) shouldBe Json.toJson(NotFinalisedDeclaration)
       }
     }
@@ -106,13 +106,13 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
       "a valid NINO, from and to date, with no declaration is passed" in new Test {
 
         MockEopsDeclarationValidator.validateSubmit(nino, from, to, Json.parse("""{}""".stripMargin))
-          .returns(Left(ErrorResponse(NotFinalisedDeclaration, None)))
+          .returns(Left(ErrorResponse(BadRequestError, None)))
 
         private val response: Future[Result] =
           testController.submit(nino, from, to)(fakeRequest.withBody(Json.parse("""{}""".stripMargin)))
 
         status(response) shouldBe BAD_REQUEST
-        contentAsJson(response) shouldBe Json.toJson(NotFinalisedDeclaration)
+        contentAsJson(response) shouldBe Json.toJson(BadRequestError)
       }
     }
 
@@ -146,7 +146,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
 
     "return error 403 (Forbidden)" when {
 
-      val eopsErrors = Seq(ConflictError, RuleClass4Over16, RuleClass4PensionAge,
+      val eopsErrors = Seq(NotFinalisedDeclaration, ConflictError, RuleClass4Over16, RuleClass4PensionAge,
         RuleFhlPrivateUseAdjustment, RuleNonFhlPrivateUseAdjustment,
         RuleMismatchStartDate, RuleMismatchEndDate, RuleConsolidatedExpenses)
 

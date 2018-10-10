@@ -17,7 +17,7 @@
 package v2.services
 
 import javax.inject.{Inject, Singleton}
-
+import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
 import v2.controllers.validators.EopsDeclarationSubmission
@@ -32,10 +32,15 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
   def submit(eopsDeclarationSubmission: EopsDeclarationSubmission)
                              (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ErrorResponse]] = {
 
+    val logger = Logger(this.getClass)
+
       connector.submitEOPSDeclaration(eopsDeclarationSubmission.nino, eopsDeclarationSubmission.from,
         eopsDeclarationSubmission.to).map {
         case Some(SingleError(error)) => Some(ErrorResponse(desErrorToMtdError(error.code), None))
-        case Some(MultipleErrors(errors)) => Some(ErrorResponse(BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
+        case Some(MultipleErrors(errors)) =>
+          val mtdErrors = errors.map(error => desErrorToMtdError(error.code))
+          if (mtdErrors.contains(DownstreamError)) { Some(ErrorResponse(DownstreamError, None)) }
+          else { Some(ErrorResponse(BadRequestError, Some(mtdErrors))) }
         case Some(MultipleBVRErrors(errors)) => Some(ErrorResponse(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
         case Some(GenericError(error)) => Some(ErrorResponse(error, None))
         case _ => None

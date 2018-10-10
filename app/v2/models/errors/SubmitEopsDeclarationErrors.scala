@@ -25,7 +25,7 @@ object SubmitEopsDeclarationErrors {
   object InvalidEndDateError extends Error("FORMAT_END_DATE", "Invalid account period end date")
   object InvalidRangeError extends Error("RANGE_INVALID", "The start date must be the same day or before the from date")
 
-  object NotFinalisedDeclaration extends Error("INVALID_REQUEST", "The statement cannot be accepted without a declaration that it is finalised.")
+  object NotFinalisedDeclaration extends Error("RULE_NOT_FINALISED", "The statement cannot be accepted without a declaration that it is finalised.")
 
   object ConflictError extends Error("RULE_ALREADY_SUBMITTED", "You cannot submit a statement for the same accounting period twice")
   object EarlySubmissionError extends Error("RULE_EARLY_SUBMISSION", "You cannot submit a statement before the end of your accounting period")
