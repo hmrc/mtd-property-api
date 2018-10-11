@@ -48,7 +48,7 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
           Some(ErrorResponse(BadRequestError, Some(mtdErrors)))
         }
       case Some(MultipleBVRErrors(errors)) =>
-        Some(ErrorResponse(BVRError, Some(errors.map(_.code).map(desErrorToMtdError))))
+        Some(ErrorResponse(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
       case Some(GenericError(error)) => Some(ErrorResponse(error, None))
       case _ => None
     }
@@ -64,7 +64,10 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
     "EARLY_SUBMISSION" -> EarlySubmissionError,
     "LATE_SUBMISSION" -> LateSubmissionError,
     "SERVER_ERROR" -> DownstreamError,
-    "SERVICE_UNAVAILABLE" -> ServiceUnavailableError,
+    "SERVICE_UNAVAILABLE" -> ServiceUnavailableError
+  )
+
+  private val desBvrErrorToMtdError: Map[String, Error] = Map(
     "C55317" -> RuleClass4Over16,
     "C55318" -> RuleClass4PensionAge,
     "C55501" -> RuleFhlPrivateUseAdjustment,

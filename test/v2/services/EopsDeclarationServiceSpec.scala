@@ -122,14 +122,7 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
       ("INVALID_ACCOUNTINGPERIODSTARTDATE", "invalid start date", InvalidStartDateError),
       ("CONFLICT", "duplicate submission", ConflictError),
       ("EARLY_SUBMISSION", "early submission", EarlySubmissionError),
-      ("LATE_SUBMISSION", "late submission", LateSubmissionError),
-      ("C55317", "rule class4 over 16", RuleClass4Over16),
-      ("C55318", "rule class4 pension age", RuleClass4PensionAge),
-      ("C55501", "rule FHL private use adjustment", RuleFhlPrivateUseAdjustment),
-      ("C55502", "rule non FHL private use adjustment", RuleNonFhlPrivateUseAdjustment),
-      ("C55008", "rule mismatch start date", RuleMismatchStartDate),
-      ("C55013", "rule mismatch end date", RuleMismatchEndDate),
-      ("C55503", "rule consolidated expenses", RuleConsolidatedExpenses)
+      ("LATE_SUBMISSION", "late submission", LateSubmissionError)
     )
 
     possibleDesErrors.foreach {
