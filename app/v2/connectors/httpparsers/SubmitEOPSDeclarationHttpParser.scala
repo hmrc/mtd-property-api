@@ -28,25 +28,24 @@ object SubmitEOPSDeclarationHttpParser extends HttpParser {
   implicit val submitEOPSDeclarationHttpReads: HttpReads[Option[DesError]] =
     new HttpReads[Option[DesError]] {
       override def read(method: String, url: String, response: HttpResponse): Option[DesError] = {
+
+        if (response.status != NO_CONTENT) {
+          logger.info("[SubmitEOPSDeclarationHttpParser][read] - " +
+            s"Error response received from DES with status: ${response.status} and body\n" +
+            s"${response.body} when calling $url")
+        }
+
         response.status match {
           case NO_CONTENT => None
           case BAD_REQUEST | FORBIDDEN | CONFLICT =>
-            logResponse(response)
             Some(parseErrors(response))
           case NOT_FOUND =>
-            logResponse(response)
             Some(GenericError(NotFoundError))
-          case INTERNAL_SERVER_ERROR =>
-            logResponse(response)
-            Some(GenericError(DownstreamError))
           case SERVICE_UNAVAILABLE =>
-            logResponse(response)
             Some(GenericError(ServiceUnavailableError))
+          case _ =>
+            Some(GenericError(DownstreamError))
         }
-        def logResponse(response: HttpResponse): Unit =
-          logger.info("[SubmitEOPSDeclarationHttpParser][read] - " +
-              s"Error response received from DES with status: ${response.status} and body\n" +
-              s"${response.body} when calling $url")
       }
     }
 }

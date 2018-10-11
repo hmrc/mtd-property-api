@@ -30,28 +30,29 @@ import scala.concurrent.{ExecutionContext, Future}
 class EopsDeclarationService @Inject()(connector: DesConnector) {
 
   def submit(eopsDeclarationSubmission: EopsDeclarationSubmission)
-                             (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ErrorResponse]] = {
+            (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ErrorResponse]] = {
 
     val logger: Logger = Logger(this.getClass)
 
-      connector.submitEOPSDeclaration(eopsDeclarationSubmission.nino, eopsDeclarationSubmission.from,
-        eopsDeclarationSubmission.to).map {
-        case Some(SingleError(error)) =>
-          Some(ErrorResponse(desErrorToMtdError(error.code), None))
-        case Some(MultipleErrors(errors)) =>
-          val mtdErrors = errors.map(error => desErrorToMtdError(error.code))
-          if (mtdErrors.contains(DownstreamError)) {
-            logger.info("[EopsDeclarationService] [submit] - downstream returned INVALID_IDTYPE. Revert to ISE")
-            Some(ErrorResponse(DownstreamError, None))
-          }
-          else {
-            Some(ErrorResponse(BadRequestError, Some(mtdErrors))) }
-        case Some(MultipleBVRErrors(errors)) =>
-          Some(ErrorResponse(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
-        case Some(GenericError(error)) => Some(ErrorResponse(error, None))
-        case _ => None
-      }
+    connector.submitEOPSDeclaration(eopsDeclarationSubmission.nino, eopsDeclarationSubmission.from,
+      eopsDeclarationSubmission.to).map {
+      case Some(SingleError(error)) =>
+        Some(ErrorResponse(desErrorToMtdError(error.code), None))
+      case Some(MultipleErrors(errors)) =>
+        val mtdErrors = errors.map(error => desErrorToMtdError(error.code))
+        if (mtdErrors.contains(DownstreamError)) {
+          logger.info("[EopsDeclarationService] [submit] - downstream returned INVALID_IDTYPE. Revert to ISE")
+          Some(ErrorResponse(DownstreamError, None))
+        }
+        else {
+          Some(ErrorResponse(BadRequestError, Some(mtdErrors)))
+        }
+      case Some(MultipleBVRErrors(errors)) =>
+        Some(ErrorResponse(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
+      case Some(GenericError(error)) => Some(ErrorResponse(error, None))
+      case _ => None
     }
+  }
 
   private val desErrorToMtdError: Map[String, Error] = Map(
     "NOT_FOUND" -> NotFoundError,
