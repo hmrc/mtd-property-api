@@ -68,7 +68,7 @@ class EopsDeclarationISpec extends IntegrationBaseSpec with Status{
       }
     }
 
-    "return single error 400 (Bad Request)" when {
+    "return single error 403 (Forbidden)" when {
       "submitted with valid data" in new Test {
 
         override def setupStubs(): StubMapping = {

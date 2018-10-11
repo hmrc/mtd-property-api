@@ -42,7 +42,9 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
       "successful request is made end des" in new Test {
 
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
-          .returns(Future{None})
+          .returns(Future {
+            None
+          })
 
         val result: Option[ErrorResponse] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
           LocalDate.parse(start), LocalDate.parse(end))))
@@ -58,13 +60,15 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
           Error("INVALID_ACCOUNTINGPERIODSTARTDATE", "some reason")))
 
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
-          .returns(Future{Some(desResponse)})
+          .returns(Future {
+            Some(desResponse)
+          })
 
-        val expected = ErrorResponse(BadRequestError, Some(Seq(InvalidEndDateError,InvalidStartDateError)))
+        val expected = ErrorResponse(BadRequestError, Some(Seq(InvalidEndDateError, InvalidStartDateError)))
 
         val result: Option[ErrorResponse] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
           LocalDate.parse(start), LocalDate.parse(end))))
-        result.get shouldBe expected
+        result shouldBe Some(expected)
       }
     }
 
@@ -75,14 +79,16 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
           Error("INVALID_IDTYPE", "'nino' type submitted is incorrect")))
 
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
-          .returns(Future{Some(desResponse)})
+          .returns(Future {
+            Some(desResponse)
+          })
 
         val expected = ErrorResponse(DownstreamError, None)
 
         val result: Option[ErrorResponse] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
           LocalDate.parse(start), LocalDate.parse(end))))
 
-        result.get shouldBe expected
+        result shouldBe Some(expected)
       }
     }
 
@@ -93,14 +99,16 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
           Error("C55318", "some reason")))
 
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
-          .returns(Future{Some(desResponse)})
+          .returns(Future {
+            Some(desResponse)
+          })
 
-        val expected = ErrorResponse(BVRError, Some(Seq(RuleClass4Over16,RuleClass4PensionAge)))
+        val expected = ErrorResponse(BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge)))
 
         val result: Option[ErrorResponse] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
           LocalDate.parse(start), LocalDate.parse(end))))
 
-        result.get shouldBe expected
+        result shouldBe Some(expected)
       }
     }
 
@@ -114,7 +122,14 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
       ("INVALID_ACCOUNTINGPERIODSTARTDATE", "invalid start date", InvalidStartDateError),
       ("CONFLICT", "duplicate submission", ConflictError),
       ("EARLY_SUBMISSION", "early submission", EarlySubmissionError),
-      ("LATE_SUBMISSION", "late submission", LateSubmissionError)
+      ("LATE_SUBMISSION", "late submission", LateSubmissionError),
+      ("C55317", "rule class4 over 16", RuleClass4Over16),
+      ("C55318", "rule class4 pension age", RuleClass4PensionAge),
+      ("C55501", "rule FHL private use adjustment", RuleFhlPrivateUseAdjustment),
+      ("C55502", "rule non FHL private use adjustment", RuleNonFhlPrivateUseAdjustment),
+      ("C55008", "rule mismatch start date", RuleMismatchStartDate),
+      ("C55013", "rule mismatch end date", RuleMismatchEndDate),
+      ("C55503", "rule consolidated expenses", RuleConsolidatedExpenses)
     )
 
     possibleDesErrors.foreach {
@@ -127,13 +142,12 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
             MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
               .returns(error)
 
-            val result: Option[ErrorResponse]  = await(service.submit(EopsDeclarationSubmission(Nino(nino),
+            val result: Option[ErrorResponse] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
               LocalDate.parse(start), LocalDate.parse(end))))
 
-            result.get shouldBe ErrorResponse(mtdError, None)
+            result shouldBe Some(ErrorResponse(mtdError, None))
           }
         }
     }
   }
-
 }
