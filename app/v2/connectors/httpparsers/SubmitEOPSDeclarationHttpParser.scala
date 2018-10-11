@@ -23,25 +23,30 @@ import v2.models.errors._
 
 object SubmitEOPSDeclarationHttpParser extends HttpParser {
 
+  val logger = Logger(this.getClass)
+
   implicit val submitEOPSDeclarationHttpReads: HttpReads[Option[DesError]] =
     new HttpReads[Option[DesError]] {
       override def read(method: String, url: String, response: HttpResponse): Option[DesError] = {
         response.status match {
           case NO_CONTENT => None
           case BAD_REQUEST | FORBIDDEN | CONFLICT =>
-            logError("Parsing expected DES errors")
+            logResponse(response)
             Some(parseErrors(response))
           case NOT_FOUND =>
-            logError("Not Found. Returning standard error")
+            logResponse(response)
             Some(GenericError(NotFoundError))
           case INTERNAL_SERVER_ERROR =>
-            logError("Internal Server Error.  Returning standard error")
+            logResponse(response)
             Some(GenericError(DownstreamError))
           case SERVICE_UNAVAILABLE =>
-            logError("Service Unavailable.  Returning standard error")
+            logResponse(response)
             Some(GenericError(ServiceUnavailableError))
         }
+        def logResponse(response: HttpResponse): Unit =
+          logger.info("[SubmitEOPSDeclarationHttpParser][read] - " +
+              s"Error response received from DES with status: ${response.status} and body\n" +
+              s"${response.body} when calling $url")
       }
-      private def logError(code:String):Unit = Logger.warn(s"[SubmitEOPSDeclarationHttpParser] [read] - Downstream Service returned $code")
     }
 }

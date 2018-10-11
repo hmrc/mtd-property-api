@@ -48,9 +48,13 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
 
   private def processError(errorResponse: ErrorResponse) = {
     errorResponse.error match {
-      case InvalidStartDateError | InvalidEndDateError
-           | InvalidRangeError | BadRequestError | InvalidNinoError
-           | EarlySubmissionError | LateSubmissionError =>
+      case InvalidStartDateError
+           | InvalidEndDateError
+           | InvalidRangeError
+           | BadRequestError
+           | InvalidNinoError
+           | EarlySubmissionError
+           | LateSubmissionError =>
         BadRequest(Json.toJson(errorResponse))
       case ConflictError
            | NotFinalisedDeclaration
