@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package v2.mocks.validators
+package v2.mocks.services
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import play.api.libs.json.JsValue
-import v2.controllers.validators.{EopsDeclarationSubmission, EopsDeclarationValidator}
+import uk.gov.hmrc.http.HeaderCarrier
+import v2.controllers.validators.EopsDeclarationSubmission
 import v2.models.errors.ErrorResponse
+import v2.services.EopsDeclarationService
 
-trait MockEopsDeclarationValidator extends MockFactory {
+import scala.concurrent.{ExecutionContext, Future}
 
-  val mockEopsDeclarationValidator: EopsDeclarationValidator = mock[EopsDeclarationValidator]
+trait MockEopsDeclarationService extends MockFactory {
 
-  object MockEopsDeclarationValidator {
-    def validateSubmit(nino: String, from: String, to: String,
-                       requestBody: JsValue): CallHandler[Either[ErrorResponse, EopsDeclarationSubmission]] = {
-      (mockEopsDeclarationValidator.validateSubmit(_: String, _: String, _: String, _: JsValue))
-        .expects(nino, from, to, requestBody)
+  val mockEopsDeclarationService: EopsDeclarationService = mock[EopsDeclarationService]
+
+  object MockedEopsDeclarationService {
+    def submitDeclaration(eopsDeclarationSubmission: EopsDeclarationSubmission): CallHandler[Future[Option[ErrorResponse]]] = {
+      (mockEopsDeclarationService.submit(_: EopsDeclarationSubmission)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(eopsDeclarationSubmission, *, *)
     }
   }
-
-
 }

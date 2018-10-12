@@ -16,18 +16,35 @@
 
 package v2.connectors.httpparsers
 
-import play.api.http.Status.NO_CONTENT
+import play.api.Logger
+import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import v2.models.errors._
 
 object SubmitEOPSDeclarationHttpParser extends HttpParser {
 
+  val logger = Logger(this.getClass)
+
   implicit val submitEOPSDeclarationHttpReads: HttpReads[Option[DesError]] =
     new HttpReads[Option[DesError]] {
       override def read(method: String, url: String, response: HttpResponse): Option[DesError] = {
+
+        if (response.status != NO_CONTENT) {
+          logger.info("[SubmitEOPSDeclarationHttpParser][read] - " +
+            s"Error response received from DES with status: ${response.status} and body\n" +
+            s"${response.body} when calling $url")
+        }
+
         response.status match {
           case NO_CONTENT => None
-          case _ => Some(parseErrors(response))
+          case BAD_REQUEST | FORBIDDEN | CONFLICT =>
+            Some(parseErrors(response))
+          case NOT_FOUND =>
+            Some(GenericError(NotFoundError))
+          case SERVICE_UNAVAILABLE =>
+            Some(GenericError(ServiceUnavailableError))
+          case _ =>
+            Some(GenericError(DownstreamError))
         }
       }
     }

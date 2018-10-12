@@ -31,4 +31,44 @@ object DESErrorsFixture {
 
   //Des Error Responses
   val serverErrorJson: JsValue = desError("SERVER_ERROR")
+  val conflictErrorJson: JsValue = desError("CONFLICT")
+  val notFoundErrorJson: JsValue = desError("NOT_FOUND")
+  val earlySubmissionErrorJson: JsValue = desError("EARLY_SUBMISSION")
+
+  val multipleErrorJson: JsValue = Json.parse(
+    """
+      |{
+      |  "failures": [
+      |    {
+      |      "code": "INVALID_ACCOUNTINGPERIODSTARTDATE",
+      |      "reason": "some reason"
+      |    },
+      |    {
+      |      "code": "INVALID_ACCOUNTINGPERIODENDDATE",
+      |      "reason": "some reason"
+      |    }
+      |  ]
+      |}
+    """.stripMargin)
+
+  val bvrErrorJson: JsValue =
+    Json.parse(
+      """
+        |{
+        |  "bvrfailureResponseElement": {
+        |    "validationRuleFailures": [
+        |      {
+        |        "id": "C55317",
+        |        "type": "err",
+        |        "text": "some text"
+        |      },
+        |      {
+        |        "id": "C55318",
+        |        "type": "err",
+        |        "text": "some text"
+        |      }
+        |    ]
+        |  }
+        |}
+      """.stripMargin)
 }

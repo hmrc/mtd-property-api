@@ -19,6 +19,7 @@ package v2.connectors
 import java.time.LocalDate
 
 import play.api.http.HeaderNames
+import uk.gov.hmrc.domain.Nino
 import v2.mocks.{MockAppConfig, MockHttpClient}
 import v2.models.errors._
 import v2.models.outcomes.ObligationsOutcome
@@ -83,11 +84,11 @@ class DesConnectorSpec extends ConnectorSpec {
 
   "submitEOPSDeclaration" should {
 
-    val nino = "AA12356A"
-    val from = "2018-01-01"
-    val to = "2018-01-01"
+    val nino = Nino("AA123456A")
+    val from = LocalDate.parse("2018-01-01")
+    val to = LocalDate.parse("2018-01-01")
 
-    val url = s"$baseUrl/income-tax/income-sources/nino/$nino/uk-property/$to/$from/declaration"
+    val url = s"$baseUrl/income-tax/income-sources/nino/${nino.nino}/uk-property/$from/$to/declaration"
 
     "return a None" when {
       "the http client returns None" in new Test {

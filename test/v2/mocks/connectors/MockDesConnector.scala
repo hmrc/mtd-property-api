@@ -20,6 +20,7 @@ import java.time.LocalDate
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
 import v2.models.errors.DesError
@@ -37,8 +38,8 @@ trait MockDesConnector extends MockFactory {
         .expects(nino, from, to, *, *)
     }
 
-    def submitEOPSDeclaration(nino: String, from: String, to: String): CallHandler[Future[Option[DesError]]] = {
-      (mockDesConnector.submitEOPSDeclaration(_: String, _: String, _: String)(_: HeaderCarrier, _: ExecutionContext))
+    def submitEOPSDeclaration(nino: Nino, from: LocalDate, to: LocalDate): CallHandler[Future[Option[DesError]]] = {
+      (mockDesConnector.submitEOPSDeclaration(_: Nino, _: LocalDate, _: LocalDate)(_: HeaderCarrier, _: ExecutionContext))
         .expects(nino, from, to, *, *)
     }
   }

@@ -17,9 +17,10 @@
 package v2.services
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
-import v2.controllers.validators.EopsDeclarationValidator
+import v2.controllers.validators.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 
@@ -28,16 +29,34 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class EopsDeclarationService @Inject()(connector: DesConnector) {
 
-  def submit(nino: String, startDate: String, endDate: String)
-                             (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ErrorResponse]] = {
+  def submit(eopsDeclarationSubmission: EopsDeclarationSubmission)
+            (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ErrorResponse]] = {
 
-      connector.submitEOPSDeclaration(nino, startDate, endDate).map {
-        case Some(SingleError(error)) => Some(ErrorResponse(desErrorToMtdError(error.code), None))
-        case Some(MultipleErrors(errors)) => Some(ErrorResponse(BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
-        case Some(MultipleBVRErrors(errors)) => Some(ErrorResponse(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
-        case _ => None
-      }
+    val logger: Logger = Logger(this.getClass)
+
+    connector.submitEOPSDeclaration(eopsDeclarationSubmission.nino, eopsDeclarationSubmission.from,
+      eopsDeclarationSubmission.to).map {
+      case Some(SingleError(error)) =>
+        Some(ErrorResponse(desErrorToMtdError(error.code), None))
+      case Some(MultipleErrors(errors)) =>
+        val mtdErrors = errors.map(error => desErrorToMtdError(error.code))
+        if (mtdErrors.contains(DownstreamError)) {
+          logger.info("[EopsDeclarationService] [submit] - downstream returned INVALID_IDTYPE. Revert to ISE")
+          Some(ErrorResponse(DownstreamError, None))
+        }
+        else {
+          Some(ErrorResponse(BadRequestError, Some(mtdErrors)))
+        }
+      case Some(BVRErrors(errors)) =>
+        if(errors.size == 1){
+          Some(ErrorResponse(desBvrErrorToMtdError(errors.head.code), None))
+        }else {
+          Some(ErrorResponse(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
+        }
+      case Some(GenericError(error)) => Some(ErrorResponse(error, None))
+      case _ => None
     }
+  }
 
   private val desErrorToMtdError: Map[String, Error] = Map(
     "NOT_FOUND" -> NotFoundError,
@@ -59,6 +78,7 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
     "C55502" -> RuleNonFhlPrivateUseAdjustment,
     "C55008" -> RuleMismatchStartDate,
     "C55013" -> RuleMismatchEndDate,
-    "C55014" -> RuleMismatchEndDate
+    "C55014" -> RuleMismatchEndDate,
+    "C55503" -> RuleConsolidatedExpenses
   )
 }

@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.models
 
-sealed trait DesError
+import play.api.libs.json._
 
-case class SingleError(error: Error) extends DesError
-case class MultipleErrors(errors: Seq[Error]) extends DesError
-case class BVRErrors(errors: Seq[Error]) extends DesError
-case class GenericError(error: Error) extends DesError
+case class Declaration(finalised: Boolean)
+
+object Declaration {
+  implicit val read: Reads[Declaration] = Json.reads[Declaration]
+}

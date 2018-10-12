@@ -22,7 +22,7 @@ import uk.gov.hmrc.domain.Nino
 import v2.models.errors.SubmitEopsDeclarationErrors.{InvalidRangeError, _}
 import v2.models.errors.{BadRequestError, Error, ErrorResponse, InvalidNinoError}
 
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 trait Validator {
 

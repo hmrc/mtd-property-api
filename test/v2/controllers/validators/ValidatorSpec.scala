@@ -112,7 +112,7 @@ class ValidatorSpec extends UnitSpec {
           TestValidator.validationErrors(None) shouldBe None
         }
         "when an empty list of errors is returned" in new Test {
-          TestValidator.validationErrors(None, None, None)
+          TestValidator.validationErrors(None, None, None) shouldBe None
         }
       }
     }
