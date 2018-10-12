@@ -112,6 +112,25 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
       }
     }
 
+    "return single bvr error " when {
+      "des connector returns single of bvr error" in new Test {
+
+        val desResponse = MultipleBVRErrors(Seq(Error("C55317", "some reason")))
+
+        MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
+          .returns(Future {
+            Some(desResponse)
+          })
+
+        val expected = ErrorResponse(RuleClass4Over16, None)
+
+        val result: Option[ErrorResponse] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
+          LocalDate.parse(start), LocalDate.parse(end))))
+
+        result shouldBe Some(expected)
+      }
+    }
+
     val possibleDesErrors: Seq[(String, String, Error)] = Seq(
       ("NOT_FOUND", "not found", NotFoundError),
       ("INVALID_IDTYPE", "downstream", DownstreamError),
