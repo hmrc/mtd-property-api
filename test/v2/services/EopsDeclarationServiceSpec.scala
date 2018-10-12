@@ -95,7 +95,7 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
     "return multiple bvr errors " when {
       "des connector returns sequence of bvr errors" in new Test {
 
-        val desResponse = MultipleBVRErrors(Seq(Error("C55317", "some reason"),
+        val desResponse = BVRErrors(Seq(Error("C55317", "some reason"),
           Error("C55318", "some reason")))
 
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
@@ -115,7 +115,7 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
     "return single bvr error " when {
       "des connector returns single of bvr error" in new Test {
 
-        val desResponse = MultipleBVRErrors(Seq(Error("C55317", "some reason")))
+        val desResponse = BVRErrors(Seq(Error("C55317", "some reason")))
 
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
           .returns(Future {

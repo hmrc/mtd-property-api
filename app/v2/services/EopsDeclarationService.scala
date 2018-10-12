@@ -47,7 +47,7 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
         else {
           Some(ErrorResponse(BadRequestError, Some(mtdErrors)))
         }
-      case Some(MultipleBVRErrors(errors)) =>
+      case Some(BVRErrors(errors)) =>
         if(errors.size == 1){
           Some(ErrorResponse(desBvrErrorToMtdError(errors.head.code), None))
         }else {

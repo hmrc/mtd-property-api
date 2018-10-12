@@ -19,7 +19,7 @@ package v2.connectors.httpparsers
 import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.http.HttpResponse
-import v2.models.errors.{DesError, DownstreamError, Error, GenericError, MultipleBVRErrors, MultipleErrors, SingleError}
+import v2.models.errors.{DesError, DownstreamError, Error, GenericError, BVRErrors, MultipleErrors, SingleError}
 
 import scala.util.{Success, Try}
 
@@ -53,7 +53,7 @@ trait HttpParser {
     def parseErrors(response: HttpResponse): DesError = {
     val singleError = response.validateJson[Error].map(SingleError)
     lazy val multipleErrors = response.validateJson(multipleErrorReads).map(MultipleErrors)
-    lazy val bvrErrors = response.validateJson(bvrErrorReads).map(MultipleBVRErrors)
+    lazy val bvrErrors = response.validateJson(bvrErrorReads).map(BVRErrors)
 
     lazy val unableToParseJsonError = {
       Logger.warn(s"unable to parse errors from response: ${response.body}")

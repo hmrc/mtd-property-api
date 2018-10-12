@@ -189,6 +189,23 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
         contentAsJson(response) shouldBe Json.toJson(ErrorResponse(BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge))))
       }
     }
+    "return a single error with 403 (Forbidden)" when {
+      "business validation has failed with just one error" in new Test {
+        MockEopsDeclarationValidator.validateSubmit(nino, from, to, Json.parse(requestJson))
+          .returns(Right(EopsDeclarationSubmission(Nino(nino),
+            LocalDate.parse(from), LocalDate.parse(to))))
+
+        MockedEopsDeclarationService.submitDeclaration(EopsDeclarationSubmission(Nino(nino),
+          LocalDate.parse(from), LocalDate.parse(to)))
+          .returns(Future.successful(Some(ErrorResponse(RuleClass4Over16, None))))
+
+        private val response: Future[Result] =
+          testController.submit(nino, from, to)(fakePostRequest[JsValue](Json.parse(requestJson)))
+
+        status(response) shouldBe FORBIDDEN
+        contentAsJson(response) shouldBe Json.toJson(ErrorResponse(RuleClass4Over16, None))
+      }
+    }
   }
 
   def eopsDeclarationValidationScenarios(error: v2.models.errors.Error, expectedStatus: Int): Unit =
