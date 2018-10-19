@@ -36,9 +36,9 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
 
     connector.submitEOPSDeclaration(eopsDeclarationSubmission.nino, eopsDeclarationSubmission.from,
       eopsDeclarationSubmission.to).map {
-      case Some(SingleError(error)) =>
+      case Left(SingleError(error)) =>
         Some(ErrorResponse(desErrorToMtdError(error.code), None))
-      case Some(MultipleErrors(errors)) =>
+      case Left(MultipleErrors(errors)) =>
         val mtdErrors = errors.map(error => desErrorToMtdError(error.code))
         if (mtdErrors.contains(DownstreamError)) {
           logger.info("[EopsDeclarationService] [submit] - downstream returned INVALID_IDTYPE. Revert to ISE")
@@ -47,14 +47,17 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
         else {
           Some(ErrorResponse(BadRequestError, Some(mtdErrors)))
         }
-      case Some(BVRErrors(errors)) =>
+      case Left(BVRErrors(errors)) =>
         if(errors.size == 1){
           Some(ErrorResponse(desBvrErrorToMtdError(errors.head.code), None))
         }else {
           Some(ErrorResponse(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
         }
-      case Some(GenericError(error)) => Some(ErrorResponse(error, None))
-      case _ => None
+      case Left(GenericError(error)) => Some(ErrorResponse(error, None))
+      case Right(correlationId) =>
+        //audit
+        // @TODO Audit implementation
+        None
     }
   }
 

@@ -20,9 +20,10 @@ import java.time.LocalDate
 
 import play.api.http.HeaderNames
 import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.HttpResponse
 import v2.mocks.{MockAppConfig, MockHttpClient}
 import v2.models.errors._
-import v2.models.outcomes.ObligationsOutcome
+import v2.models.outcomes.{EopsDeclarationOutcome, ObligationsOutcome}
 
 import scala.concurrent.Future
 
@@ -90,13 +91,15 @@ class DesConnectorSpec extends ConnectorSpec {
 
     val url = s"$baseUrl/income-tax/income-sources/nino/${nino.nino}/uk-property/$from/$to/declaration"
 
+    val correlationId = "x1234id"
+
     "return a None" when {
       "the http client returns None" in new Test {
-        MockedHttpClient.postEmpty[Option[DesError]](url)
-          .returns(Future.successful(None))
+        MockedHttpClient.postEmpty[EopsDeclarationOutcome](url)
+          .returns(Future.successful(Right(correlationId)))
 
-        val result: Option[DesError] = await(connector.submitEOPSDeclaration(nino, from, to))
-        result shouldBe None
+        val result: EopsDeclarationOutcome = await(connector.submitEOPSDeclaration(nino, from, to))
+        result shouldBe Right(correlationId)
       }
     }
 
@@ -104,11 +107,11 @@ class DesConnectorSpec extends ConnectorSpec {
       "the http client returns an error response" in new Test {
         val errorResponse = SingleError(InvalidNinoError)
 
-        MockedHttpClient.postEmpty[Option[DesError]](url)
-          .returns(Future.successful(Some(errorResponse)))
+        MockedHttpClient.postEmpty[EopsDeclarationOutcome](url)
+          .returns(Future.successful(Left(errorResponse)))
 
-        val result: Option[DesError] = await(connector.submitEOPSDeclaration(nino, from, to))
-        result shouldBe Some(errorResponse)
+        val result: EopsDeclarationOutcome = await(connector.submitEOPSDeclaration(nino, from, to))
+        result shouldBe Left(errorResponse)
       }
     }
   }
