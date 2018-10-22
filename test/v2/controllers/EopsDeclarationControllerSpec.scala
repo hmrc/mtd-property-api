@@ -145,7 +145,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
       val eopsErrors = Seq(
         InvalidStartDateError,
         InvalidEndDateError,
-        InvalidRangeError,
+        RangeToDateBeforeFromDateError,
         BadRequestError,
         NinoFormatError
       )
@@ -194,13 +194,13 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
         val eopsDeclarationRequestData = EopsDeclarationRequestData(nino, from, to, AnyContentAsJson(Json.parse(invalidRequestJson)))
 
         MockedEopsDeclarationRequestDataParser.parseRequest(eopsDeclarationRequestData)
-          .returns(Left(ErrorWrapper(BadRequestError, Some(Seq(InvalidStartDateError, InvalidRangeError)))))
+          .returns(Left(ErrorWrapper(BadRequestError, Some(Seq(InvalidStartDateError, RangeToDateBeforeFromDateError)))))
 
         private val response: Future[Result] =
           testController.submit(nino, from, to)(fakePostRequest[JsValue](Json.parse(invalidRequestJson)))
 
         status(response) shouldBe BAD_REQUEST
-        contentAsJson(response) shouldBe Json.toJson(ErrorWrapper(BadRequestError, Some(Seq(InvalidStartDateError, InvalidRangeError))))
+        contentAsJson(response) shouldBe Json.toJson(ErrorWrapper(BadRequestError, Some(Seq(InvalidStartDateError, RangeToDateBeforeFromDateError))))
       }
     }
 

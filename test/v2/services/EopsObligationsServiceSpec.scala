@@ -284,7 +284,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-12-31"
         val to: String = "2018-01-01"
 
-        val expectedErrorResponse = ErrorWrapper(InvalidRangeErrorGetEops, None)
+        val expectedErrorResponse = ErrorWrapper(RangeToDateBeforeFromDateError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
@@ -295,7 +295,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-01-01"
         val to: String = "2018-01-01"
 
-        val expectedErrorResponse = ErrorWrapper(InvalidRangeErrorGetEops, None)
+        val expectedErrorResponse = ErrorWrapper(RangeToDateBeforeFromDateError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)

@@ -24,7 +24,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
 import v2.models.errors.GetEopsObligationsErrors._
-import v2.models.errors.{BadRequestError, DownstreamError, MtdError, ErrorWrapper, NinoFormatError, NotFoundError}
+import v2.models.errors._
 import v2.models.outcomes.EopsObligationsOutcome
 import v2.models.{Obligation, ObligationDetails}
 
@@ -121,7 +121,7 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
       case (None, None) =>
         val fromDate = LocalDate.parse(from)
         val toDate = LocalDate.parse(to)
-        validateDateRange(fromDate, toDate, MAX_DATE_RANGE_IN_DAYS, InvalidRangeErrorGetEops, RangeTooBigError)
+        validateDateRange(fromDate, toDate, MAX_DATE_RANGE_IN_DAYS, RangeToDateBeforeFromDateError, RangeTooBigError)
       case _ => None
     }
 

@@ -18,14 +18,13 @@ package v2.controllers.requestParsers.validators.validations
 
 import java.time.LocalDate
 
-import v2.models.errors.{InvalidRangeError, MtdError}
+import v2.models.errors.{RangeToDateBeforeFromDateError, MtdError}
 import v2.validations.NoValidationErrors
 
 object DateRangeValidation {
 
-  // TODO rename from / to
-  def validate(start: LocalDate, end: LocalDate): List[MtdError] = {
-    if (end.isBefore(start)) List(InvalidRangeError) else NoValidationErrors
+  def validate(from: LocalDate, to: LocalDate): List[MtdError] = {
+    if (to.isBefore(from)) List(RangeToDateBeforeFromDateError) else NoValidationErrors
   }
 
 }

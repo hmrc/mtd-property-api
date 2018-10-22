@@ -54,7 +54,7 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
     errorResponse.error match {
       case InvalidStartDateError
            | InvalidEndDateError
-           | InvalidRangeError
+           | RangeToDateBeforeFromDateError
            | BadRequestError
            | NinoFormatError
            | EarlySubmissionError
