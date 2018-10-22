@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-package v2.models
+package v2.models.inbound
 
-import play.api.libs.json.{Json, Reads, Writes}
-
-
-case class EopsDeclaration(finalised: Boolean)
-
-object EopsDeclaration {
-  implicit val format: Reads[EopsDeclaration] = Json.reads[EopsDeclaration]
-}
-
-
+trait InputData
