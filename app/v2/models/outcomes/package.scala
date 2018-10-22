@@ -16,7 +16,7 @@
 
 package v2.models
 
-import v2.models.errors.{Error, ErrorResponse, MtdError}
+import v2.models.errors.{DesError, Error, ErrorResponse, MtdError}
 
 package object outcomes {
 
@@ -24,5 +24,6 @@ package object outcomes {
   type MtdIdLookupOutcome = Either[MtdError, String]
   type ObligationsOutcome = Either[Seq[Error], Seq[ObligationDetails]]
   type EopsObligationsOutcome = Either[ErrorResponse, Seq[Obligation]]
+  type EopsDeclarationOutcome = Either[DesError, String]
 
 }

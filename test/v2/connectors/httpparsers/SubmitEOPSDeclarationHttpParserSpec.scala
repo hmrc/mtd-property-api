@@ -16,7 +16,6 @@
 
 package v2.connectors.httpparsers
 
-import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
 import v2.connectors.httpparsers.SubmitEOPSDeclarationHttpParser.submitEOPSDeclarationHttpReads
@@ -27,9 +26,11 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
   "read" should {
     "return a None" when {
       "the http response contains a 204" in {
-        val httpResponse = HttpResponse(NO_CONTENT)
+        val correlationId = "x1234id"
+        val httpResponse = HttpResponse(NO_CONTENT, None, Map("CorrelationId" -> Seq(correlationId)))
+
         val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
-        result shouldBe None
+        result shouldBe Right(correlationId)
       }
     }
 
@@ -46,7 +47,7 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
 
         val httpResponse = HttpResponse(BAD_REQUEST, Some(errorResponseJson))
         val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
-        result shouldBe Some(expected)
+        result shouldBe Left(expected)
       }
 
       def genericError(status: Int, error: Error): Unit = {
@@ -55,7 +56,7 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
 
           val httpResponse = HttpResponse(status, Some(Json.toJson(error)))
           val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
-          result shouldBe Some(expected)
+          result shouldBe Left(expected)
         }
       }
 
@@ -86,7 +87,7 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
 
           val httpResponse = HttpResponse(status, Some(errorResponseJson))
           val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
-          result shouldBe Some(expected)
+          result shouldBe Left(expected)
         }
       }
       testMultipleError(BAD_REQUEST)
@@ -119,7 +120,7 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
 
         val httpResponse = HttpResponse(BAD_REQUEST, Some(errorResponseJson))
         val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
-        result shouldBe Some(expected)
+        result shouldBe Left(expected)
       }
     }
   }
