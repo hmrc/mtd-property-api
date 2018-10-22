@@ -20,4 +20,4 @@ import java.time.LocalDate
 
 import uk.gov.hmrc.domain.Nino
 
-case class EopsDeclarationSubmission(nino: Nino, from: LocalDate, to: LocalDate)
+case class EopsDeclarationSubmission(nino: Nino, start: LocalDate, end: LocalDate)

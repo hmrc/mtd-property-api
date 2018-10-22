@@ -25,6 +25,7 @@ object MissingEndDateError extends MtdError("MISSING_END_DATE", "Missing account
 object InvalidStartDateError extends MtdError("FORMAT_START_DATE", "Invalid account period start date")
 object InvalidEndDateError extends MtdError("FORMAT_END_DATE", "Invalid account period end date")
 object RangeToDateBeforeFromDateError extends MtdError("RANGE_TO_DATE_BEFORE_FROM_DATE", "The To date must be after the From date")
+object RangeEndDateBeforeStartDateError extends MtdError("RANGE_END_DATE_BEFORE_START_DATE", "The End date must be after the Start date")
 
 
 // TODO Check where this should live - EOPSDeclaration specific

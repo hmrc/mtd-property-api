@@ -34,8 +34,8 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
 
     val logger: Logger = Logger(this.getClass)
 
-    connector.submitEOPSDeclaration(eopsDeclarationSubmission.nino, eopsDeclarationSubmission.from,
-      eopsDeclarationSubmission.to).map {
+    connector.submitEOPSDeclaration(eopsDeclarationSubmission.nino, eopsDeclarationSubmission.start,
+      eopsDeclarationSubmission.end).map {
       case Left(SingleError(error)) =>
         Some(ErrorWrapper(desErrorToMtdError(error.code), None))
       case Left(MultipleErrors(errors)) =>

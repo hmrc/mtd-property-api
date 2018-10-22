@@ -29,16 +29,16 @@ class EopsDeclarationInputDataValidator extends Validator[EopsDeclarationRequest
   private def levelOneValidations: EopsDeclarationRequestData => List[List[MtdError]] = (data: EopsDeclarationRequestData) => {
     List(
       NinoValidation.validate(data.nino),
-      NonEmptyValidation.validate(data.from, MissingStartDateError),
-      NonEmptyValidation.validate(data.to, MissingEndDateError),
-      DateFormatValidation.validate(data.from, InvalidStartDateError),
-      DateFormatValidation.validate(data.to, InvalidEndDateError)
+      NonEmptyValidation.validate(data.start, MissingStartDateError),
+      NonEmptyValidation.validate(data.end, MissingEndDateError),
+      DateFormatValidation.validate(data.start, InvalidStartDateError),
+      DateFormatValidation.validate(data.end, InvalidEndDateError)
     )
   }
 
   private def levelTwoValidations: EopsDeclarationRequestData => List[List[MtdError]] = (data: EopsDeclarationRequestData) => {
     List(
-      DateRangeValidation.validate(LocalDate.parse(data.from), LocalDate.parse(data.to)),
+      DateRangeValidation.validate(LocalDate.parse(data.start), LocalDate.parse(data.end)),
       JsonFormatValidation.validate[EopsDeclaration](data.body)
     )
   }

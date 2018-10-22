@@ -30,7 +30,7 @@ class EopsDeclarationRequestDataParser @Inject()(validator: EopsDeclarationInput
   def parseRequest(data: EopsDeclarationRequestData): Either[ErrorWrapper, EopsDeclarationSubmission] = {
 
     lazy val eopsDeclarationSubmission =
-      EopsDeclarationSubmission(Nino(data.nino), LocalDate.parse(data.from), LocalDate.parse(data.to))
+      EopsDeclarationSubmission(Nino(data.nino), LocalDate.parse(data.start), LocalDate.parse(data.end))
 
     validator.validate(data) match {
       case Nil => Right(eopsDeclarationSubmission)

@@ -105,7 +105,7 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
       val eopsErrors = Seq(
         MissingFromDateError, MissingToDateError,
         InvalidFromDateError, InvalidToDateError,
-        RangeToDateBeforeFromDateError, RangeTooBigError,
+        RangeEndDateBeforeStartDateError, RangeTooBigError,
         BadRequestError, NinoFormatError)
 
       for (error <- eopsErrors){

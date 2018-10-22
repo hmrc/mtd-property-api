@@ -19,7 +19,7 @@ package v2.controllers.requestParsers.validators.validations
 import java.time.LocalDate
 
 import support.UnitSpec
-import v2.models.errors.{RangeToDateBeforeFromDateError, NinoFormatError}
+import v2.models.errors.RangeEndDateBeforeStartDateError
 import v2.models.utils.JsonErrorValidators
 
 class DateRangeValidationSpec extends UnitSpec with JsonErrorValidators {
@@ -44,7 +44,7 @@ class DateRangeValidationSpec extends UnitSpec with JsonErrorValidators {
         val validationResult = DateRangeValidation.validate(fromDate, toDate)
         validationResult.isEmpty shouldBe false
         validationResult.length shouldBe 1
-        validationResult.head shouldBe RangeToDateBeforeFromDateError
+        validationResult.head shouldBe RangeEndDateBeforeStartDateError
 
       }
     }

@@ -34,10 +34,10 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
                                           val requestDataParser: EopsDeclarationRequestDataParser,
                                           val service: EopsDeclarationService) extends AuthorisedController {
 
-  def submit(nino: String, from: String, to: String): Action[JsValue] =
+  def submit(nino: String, start: String, end: String): Action[JsValue] =
     authorisedAction(nino).async(parse.json) { implicit request =>
 
-      requestDataParser.parseRequest(EopsDeclarationRequestData(nino, from, to, AnyContentAsJson(request.body))) match {
+      requestDataParser.parseRequest(EopsDeclarationRequestData(nino, start, end, AnyContentAsJson(request.body))) match {
         case Right(eopsDeclarationSubmission) =>
           service.submit(eopsDeclarationSubmission).map {
             case None => NoContent
@@ -55,6 +55,7 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
       case InvalidStartDateError
            | InvalidEndDateError
            | RangeToDateBeforeFromDateError
+           | RangeEndDateBeforeStartDateError
            | BadRequestError
            | NinoFormatError
            | EarlySubmissionError
