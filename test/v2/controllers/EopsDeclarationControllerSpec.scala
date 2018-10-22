@@ -37,8 +37,6 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
   with MockMtdIdLookupService
   with MockEopsDeclarationRequestDataParser {
 
-  // TODO Reimplement properly based on new validation structure
-
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
