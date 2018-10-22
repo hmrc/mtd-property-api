@@ -24,7 +24,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
 import v2.models.errors.GetEopsObligationsErrors._
-import v2.models.errors.{BadRequestError, DownstreamError, MtdError, ErrorWrapper, InvalidNinoError, NotFoundError}
+import v2.models.errors.{BadRequestError, DownstreamError, MtdError, ErrorWrapper, NinoFormatError, NotFoundError}
 import v2.models.outcomes.EopsObligationsOutcome
 import v2.models.{Obligation, ObligationDetails}
 
@@ -78,7 +78,7 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
   val desErrorToMtdError: Map[String, MtdError] = Map(
     "NOT_FOUND" -> NotFoundError,
     "INVALID_IDTYPE" -> NotFoundError,
-    "INVALID_IDNUMBER" -> InvalidNinoError,
+    "INVALID_IDNUMBER" -> NinoFormatError,
     "INVALID_DATE_TO" -> InvalidToDateError,
     "INVALID_DATE_FROM" -> InvalidFromDateError,
     "INVALID_DATE_RANGE" -> RangeTooBigError,
@@ -111,7 +111,7 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
 
     val MAX_DATE_RANGE_IN_DAYS = 366
 
-    val ninoError: Option[InvalidNinoError.type] = if (!Nino.isValid(nino)) Some(InvalidNinoError) else None
+    val ninoError: Option[NinoFormatError.type] = if (!Nino.isValid(nino)) Some(NinoFormatError) else None
 
     val fromDateError: Option[MtdError] = validateDate(from, MissingFromDateError, InvalidFromDateError)
 
@@ -121,7 +121,7 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
       case (None, None) =>
         val fromDate = LocalDate.parse(from)
         val toDate = LocalDate.parse(to)
-        validateDateRange(fromDate, toDate, MAX_DATE_RANGE_IN_DAYS, InvalidRangeError, RangeTooBigError)
+        validateDateRange(fromDate, toDate, MAX_DATE_RANGE_IN_DAYS, InvalidRangeErrorGetEops, RangeTooBigError)
       case _ => None
     }
 

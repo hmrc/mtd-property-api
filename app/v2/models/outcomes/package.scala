@@ -22,7 +22,7 @@ package object outcomes {
 
   type AuthOutcome = Either[MtdError, Boolean]
   type MtdIdLookupOutcome = Either[MtdError, String]
-  type ObligationsOutcome = Either[Seq[Error], Seq[ObligationDetails]]
+  type ObligationsOutcome = Either[Seq[MtdError], Seq[ObligationDetails]]
   type EopsObligationsOutcome = Either[ErrorWrapper, Seq[Obligation]]
   type EopsDeclarationOutcome = Either[DesError, String]
 

@@ -24,7 +24,8 @@ object GetEopsObligationsErrors {
   object MissingToDateError extends MtdError("MISSING_TO_DATE", "The To date parameter is missing")
   object InvalidToDateError extends MtdError("FORMAT_TO_DATE", "The format of the To date is invalid")
 
-  object InvalidRangeError extends MtdError("RANGE_TO_DATE_BEFORE_FROM_DATE", "The To date must be after the From date")
+  // TODO Check with Scott which one to keep
+  object InvalidRangeErrorGetEops extends MtdError("RANGE_TO_DATE_BEFORE_FROM_DATE", "The To date must be after the From date")
   object RangeTooBigError extends MtdError("RANGE_DATE_TOO_LONG", "The date range is too long")
 
 }

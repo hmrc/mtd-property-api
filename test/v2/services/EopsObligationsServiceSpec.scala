@@ -198,7 +198,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-01-01"
         val to: String = "2018-12-31"
 
-        val expectedErrorResponse = ErrorWrapper(InvalidNinoError, None)
+        val expectedErrorResponse = ErrorWrapper(NinoFormatError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
@@ -284,7 +284,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-12-31"
         val to: String = "2018-01-01"
 
-        val expectedErrorResponse = ErrorWrapper(InvalidRangeError, None)
+        val expectedErrorResponse = ErrorWrapper(InvalidRangeErrorGetEops, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
@@ -295,7 +295,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-01-01"
         val to: String = "2018-01-01"
 
-        val expectedErrorResponse = ErrorWrapper(InvalidRangeError, None)
+        val expectedErrorResponse = ErrorWrapper(InvalidRangeErrorGetEops, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
@@ -381,7 +381,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
       ("SERVICE_UNAVAILABLE", "service unavailable", DownstreamError),
       ("SERVER_ERROR", "downstream", DownstreamError),
       ("INVALID_IDTYPE", "not found", NotFoundError),
-      ("INVALID_IDNUMBER", "invalid nino", InvalidNinoError),
+      ("INVALID_IDNUMBER", "invalid nino", NinoFormatError),
       ("INVALID_STATUS", "downstream", DownstreamError),
       ("INVALID_REGIME", "downstream", DownstreamError),
       ("INVALID_DATE_TO", "invalid to date", InvalidToDateError),

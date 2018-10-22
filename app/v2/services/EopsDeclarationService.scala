@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
-import v2.controllers.validators.EopsDeclarationSubmission
+import v2.models.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 
@@ -64,7 +64,7 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
   private val desErrorToMtdError: Map[String, MtdError] = Map(
     "NOT_FOUND" -> NotFoundError,
     "INVALID_IDTYPE" -> DownstreamError,
-    "INVALID_IDVALUE" -> InvalidNinoError,
+    "INVALID_IDVALUE" -> NinoFormatError,
     "INVALID_ACCOUNTINGPERIODSTARTDATE" -> InvalidStartDateError,
     "INVALID_ACCOUNTINGPERIODENDDATE" -> InvalidEndDateError,
     "CONFLICT" -> ConflictError,

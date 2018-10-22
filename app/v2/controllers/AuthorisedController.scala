@@ -58,7 +58,7 @@ abstract class AuthorisedController extends BaseController {
 
       lookupService.lookup(nino).flatMap[Result] {
         case Right(mtdId) => invokeBlockWithAuthCheck(mtdId, request, block)
-        case Left(InvalidNinoError) => Future.successful(BadRequest(Json.toJson(InvalidNinoError)))
+        case Left(NinoFormatError) => Future.successful(BadRequest(Json.toJson(NinoFormatError)))
         case Left(UnauthorisedError) => Future.successful(Forbidden(Json.toJson(UnauthorisedError)))
         case Left(_) => Future.successful(InternalServerError(Json.toJson(DownstreamError)))
       }

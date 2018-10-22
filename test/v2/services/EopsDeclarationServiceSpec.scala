@@ -20,8 +20,8 @@ import java.time.LocalDate
 
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpResponse
-import v2.controllers.validators.EopsDeclarationSubmission
 import v2.mocks.connectors.MockDesConnector
+import v2.models.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 import v2.models.outcomes.EopsDeclarationOutcome
@@ -132,7 +132,7 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
       ("INVALID_IDTYPE", "downstream", DownstreamError),
       ("SERVICE_UNAVAILABLE", "service unavailable", ServiceUnavailableError),
       ("SERVER_ERROR", "downstream", DownstreamError),
-      ("INVALID_IDVALUE", "invalid nino", InvalidNinoError),
+      ("INVALID_IDVALUE", "invalid nino", NinoFormatError),
       ("INVALID_ACCOUNTINGPERIODENDDATE", "invalid end date", InvalidEndDateError),
       ("INVALID_ACCOUNTINGPERIODSTARTDATE", "invalid start date", InvalidStartDateError),
       ("CONFLICT", "duplicate submission", ConflictError),
@@ -148,7 +148,7 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
             val error: EopsDeclarationOutcome = Left(SingleError(MtdError(desCode, "")))
 
             MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
-              .returns(error)
+              .returns(Future.successful(error))
 
             val result: Option[ErrorWrapper] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
               LocalDate.parse(start), LocalDate.parse(end))))

@@ -83,7 +83,7 @@ class AuthorisedControllerSpec extends ControllerBaseSpec {
       "return a 400" in new Test {
 
         MockedMtdIdLookupService.lookup(nino)
-          .returns(Future.successful(Left(InvalidNinoError)))
+          .returns(Future.successful(Left(NinoFormatError)))
 
         private val result = target.action(nino)(fakeGetRequest)
         status(result) shouldBe BAD_REQUEST

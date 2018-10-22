@@ -19,7 +19,7 @@ package v2.mocks.services
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
-import v2.controllers.validators.EopsDeclarationSubmission
+import v2.models.EopsDeclarationSubmission
 import v2.models.errors.ErrorWrapper
 import v2.services.EopsDeclarationService
 

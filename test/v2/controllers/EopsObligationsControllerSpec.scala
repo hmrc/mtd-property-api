@@ -22,7 +22,6 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.mocks.services.{MockEnrolmentsAuthService, MockEopsObligationsService, MockMtdIdLookupService}
-import v2.mocks.validators.MockEopsDeclarationValidator
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
 import v2.models.{FulfilledObligation, Obligation}
@@ -106,8 +105,8 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
       val eopsErrors = Seq(
         MissingFromDateError, MissingToDateError,
         InvalidFromDateError, InvalidToDateError,
-        InvalidRangeError, RangeTooBigError,
-        BadRequestError, InvalidNinoError)
+        InvalidRangeErrorGetEops, RangeTooBigError,
+        BadRequestError, NinoFormatError)
 
       for (error <- eopsErrors){
         eopsErrorTest(error, BAD_REQUEST)

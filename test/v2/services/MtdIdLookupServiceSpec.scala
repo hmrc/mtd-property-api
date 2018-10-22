@@ -17,7 +17,7 @@
 package v2.services
 
 import v2.mocks.connectors.MockMtdIdLookupConnector
-import v2.models.errors.{DownstreamError, InvalidNinoError, UnauthorisedError}
+import v2.models.errors.{DownstreamError, NinoFormatError, UnauthorisedError}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -36,7 +36,7 @@ class MtdIdLookupServiceSpec extends ServiceSpec {
     "an invalid NINO is passed in" should {
       "return a valid mtdId" in new Test {
 
-        val expected = Left(InvalidNinoError)
+        val expected = Left(NinoFormatError)
 
         // should not call the connector
         MockedMtdIdLookupConnector.lookup(invalidNino)

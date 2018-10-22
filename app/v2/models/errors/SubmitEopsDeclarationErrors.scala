@@ -18,14 +18,14 @@ package v2.models.errors
 
 object SubmitEopsDeclarationErrors {
 
-  object MissingStartDateError extends MtdError("MISSING_START_DATE", "Missing account period start date")
-  object InvalidStartDateError extends MtdError("FORMAT_START_DATE", "Invalid account period start date")
+//  object MissingStartDateError extends MtdError("MISSING_START_DATE", "Missing account period start date")
+//  object InvalidStartDateError extends MtdError("FORMAT_START_DATE", "Invalid account period start date")
 
-  object MissingEndDateError extends MtdError("MISSING_END_DATE", "Missing account period end date")
-  object InvalidEndDateError extends MtdError("FORMAT_END_DATE", "Invalid account period end date")
-  object InvalidRangeError extends MtdError("RANGE_INVALID", "The start date must be the same day or before the from date")
+//  object MissingEndDateError extends MtdError("MISSING_END_DATE", "Missing account period end date")
+//  object InvalidEndDateError extends MtdError("FORMAT_END_DATE", "Invalid account period end date")
+//  object InvalidRangeError extends MtdError("RANGE_INVALID", "The start date must be the same day or before the from date")
 
-  object NotFinalisedDeclaration extends MtdError("RULE_NOT_FINALISED", "The statement cannot be accepted without a declaration that it is finalised.")
+//  object NotFinalisedDeclaration extends MtdError("RULE_NOT_FINALISED", "The statement cannot be accepted without a declaration that it is finalised.")
 
   object ConflictError extends MtdError("RULE_ALREADY_SUBMITTED", "You cannot submit a statement for the same accounting period twice")
   object EarlySubmissionError extends MtdError("RULE_EARLY_SUBMISSION", "You cannot submit a statement before the end of your accounting period")

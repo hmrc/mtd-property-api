@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.MtdIdLookupConnector
-import v2.models.errors.InvalidNinoError
+import v2.models.errors.NinoFormatError
 import v2.models.outcomes.MtdIdLookupOutcome
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -32,7 +32,7 @@ class MtdIdLookupService @Inject()(val connector: MtdIdLookupConnector) {
     if (Nino.isValid(nino)) {
       connector.getMtdId(nino)
     } else {
-      Future.successful(Left(InvalidNinoError))
+      Future.successful(Left(NinoFormatError))
     }
   }
 }
