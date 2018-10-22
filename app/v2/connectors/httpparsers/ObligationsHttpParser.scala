@@ -21,22 +21,22 @@ import play.api.http.Status.OK
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import v2.models.ObligationDetails
-import v2.models.errors.{DownstreamError, Error}
+import v2.models.errors.{DownstreamError, MtdError}
 import v2.models.outcomes.ObligationsOutcome
 
 object ObligationsHttpParser extends HttpParser {
 
   private val obligationsJsonReads: Reads[Seq[ObligationDetails]] = (__ \ "obligations").read[Seq[ObligationDetails]]
-  private val multipleErrorJsonReads: Reads[Seq[Error]] = (__ \ "failures").read[Seq[Error]]
+  private val multipleErrorJsonReads: Reads[Seq[MtdError]] = (__ \ "failures").read[Seq[MtdError]]
 
   implicit val  obligationsHttpReads: HttpReads[ObligationsOutcome] = new HttpReads[ObligationsOutcome] {
     override def read(method: String, url: String, response: HttpResponse): ObligationsOutcome = {
 
       val loggingPrefix = "[ObligationsHttpParser][obligationsHttpReads][read]"
 
-      def parseErrors(response: HttpResponse): Seq[Error] = {
-        val singleError = response.validateJson[Error].map(Seq(_))
-        lazy val multipleErrors = response.validateJson[Seq[Error]](multipleErrorJsonReads)
+      def parseErrors(response: HttpResponse): Seq[MtdError] = {
+        val singleError = response.validateJson[MtdError].map(Seq(_))
+        lazy val multipleErrors = response.validateJson[Seq[MtdError]](multipleErrorJsonReads)
         lazy val unableToParseJsonError = {
           Logger.warn(s"$loggingPrefix Unable to parse errors: ${response.body}")
           Seq(DownstreamError)

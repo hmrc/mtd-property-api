@@ -14,6 +14,22 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.controllers.requestParsers.validators.validations
 
-object UnauthorisedError extends Error("CLIENT_OR_AGENT_NOT_AUTHORISED", "The client and/or agent is not authorised.")
+import play.api.libs.json._
+import play.api.mvc.AnyContentAsJson
+import v2.models.errors.{BadRequestError, MtdError}
+import v2.validations.NoValidationErrors
+
+object JsonFormatValidation {
+
+  def validate[A](data: AnyContentAsJson)(implicit reads: Reads[A]): List[MtdError] = {
+
+    data.json.validate[A] match {
+      case JsSuccess(_, _) => NoValidationErrors
+      case _ => List(BadRequestError)
+    }
+
+  }
+
+}

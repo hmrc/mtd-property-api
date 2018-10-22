@@ -43,14 +43,14 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
             |  "reason": "some reason"
             |}
           """.stripMargin)
-        val expected = SingleError(Error("TEST_CODE", "some reason"))
+        val expected = SingleError(MtdError("TEST_CODE", "some reason"))
 
         val httpResponse = HttpResponse(BAD_REQUEST, Some(errorResponseJson))
         val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
         result shouldBe Left(expected)
       }
 
-      def genericError(status: Int, error: Error): Unit = {
+      def genericError(status: Int, error: MtdError): Unit = {
         s"the http response has a status of $status with any body" in {
           val expected = GenericError(error)
 
@@ -83,7 +83,7 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
               |  ]
               |}
             """.stripMargin)
-          val expected = MultipleErrors(Seq(Error("TEST_CODE_1", "some reason"), Error("TEST_CODE_2", "some reason")))
+          val expected = MultipleErrors(Seq(MtdError("TEST_CODE_1", "some reason"), MtdError("TEST_CODE_2", "some reason")))
 
           val httpResponse = HttpResponse(status, Some(errorResponseJson))
           val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
@@ -116,7 +116,7 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
             |  }
             |}
           """.stripMargin)
-        val expected = BVRErrors(Seq(Error("TEST_ID_1", ""), Error("TEST_ID_2", "")))
+        val expected = BVRErrors(Seq(MtdError("TEST_ID_1", ""), MtdError("TEST_ID_2", "")))
 
         val httpResponse = HttpResponse(BAD_REQUEST, Some(errorResponseJson))
         val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)

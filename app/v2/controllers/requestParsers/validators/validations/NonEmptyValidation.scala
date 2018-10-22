@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-package v2.models
+package v2.controllers.requestParsers.validators.validations
 
-import play.api.libs.json._
+import v2.models.errors.MtdError
+import v2.validations.NoValidationErrors
 
-case class Declaration(finalised: Boolean)
+object NonEmptyValidation {
 
-object Declaration {
-  implicit val read: Reads[Declaration] = Json.reads[Declaration]
+  def validate(str: String, specificError: MtdError): List[MtdError] = {
+
+    if (str.nonEmpty) NoValidationErrors else List(specificError)
+
+  }
+
 }

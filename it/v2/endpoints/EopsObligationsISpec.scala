@@ -23,7 +23,7 @@ import play.api.libs.ws.{WSRequest, WSResponse}
 import support.IntegrationBaseSpec
 import v2.fixtures.EopsObligationsFixture
 import v2.models.errors.GetEopsObligationsErrors.{MissingFromDateError, MissingToDateError}
-import v2.models.errors.{BadRequestError, DownstreamError, ErrorResponse}
+import v2.models.errors.{BadRequestError, DownstreamError, ErrorWrapper}
 import v2.stubs.{AuditStub, AuthStub, EopsObligationsStub, MtdIdLookupStub}
 
 class EopsObligationsISpec extends IntegrationBaseSpec {
@@ -92,7 +92,7 @@ class EopsObligationsISpec extends IntegrationBaseSpec {
           buildRequest(s"/2.0/ni/$nino/uk-properties/end-of-period-statements/obligations")
         }
 
-        val multiDateErrorJson: JsValue = Json.toJson(ErrorResponse(BadRequestError, Some(Seq(MissingFromDateError, MissingToDateError))))
+        val multiDateErrorJson: JsValue = Json.toJson(ErrorWrapper(BadRequestError, Some(Seq(MissingFromDateError, MissingToDateError))))
 
         val response: WSResponse = await(request().get())
         response.status shouldBe Status.BAD_REQUEST

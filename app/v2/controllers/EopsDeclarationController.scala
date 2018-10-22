@@ -17,12 +17,12 @@
 package v2.controllers
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.Action
-import v2.controllers.validators.EopsDeclarationValidator
+import play.api.mvc.{Action, AnyContentAsJson}
+import v2.controllers.requestParsers.EopsDeclarationRequestDataParser
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
+import v2.models.inbound.EopsDeclarationRequestData
 import v2.services.{EnrolmentsAuthService, EopsDeclarationService, MtdIdLookupService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -30,29 +30,34 @@ import scala.concurrent.Future
 
 @Singleton
 class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService,
-                                         val lookupService: MtdIdLookupService,
-                                         val validator: EopsDeclarationValidator,
-                                         val service: EopsDeclarationService) extends AuthorisedController {
+                                          val lookupService: MtdIdLookupService,
+                                          val requestDataParser: EopsDeclarationRequestDataParser,
+                                          val service: EopsDeclarationService) extends AuthorisedController {
 
-  def submit(nino: String, from: String, to: String): Action[JsValue] =
+  def submit(nino: String, start: String, end: String): Action[JsValue] =
     authorisedAction(nino).async(parse.json) { implicit request =>
-      validator.validateSubmit(nino, from, to, request.body) match {
-        case Left(errorResponse) => Future {processError(errorResponse)}
+
+      requestDataParser.parseRequest(EopsDeclarationRequestData(nino, start, end, AnyContentAsJson(request.body))) match {
         case Right(eopsDeclarationSubmission) =>
           service.submit(eopsDeclarationSubmission).map {
             case None => NoContent
-            case Some(result) => processError(result)
+            case Some(errorResponse) => processError(errorResponse)
           }
+        case Left(validationErrorResponse) => Future {
+          processError(validationErrorResponse)
+        }
       }
+
     }
 
-  private def processError(errorResponse: ErrorResponse) = {
+  private def processError(errorResponse: ErrorWrapper) = {
     errorResponse.error match {
       case InvalidStartDateError
            | InvalidEndDateError
-           | InvalidRangeError
+           | RangeToDateBeforeFromDateError
+           | RangeEndDateBeforeStartDateError
            | BadRequestError
-           | InvalidNinoError
+           | NinoFormatError
            | EarlySubmissionError
            | LateSubmissionError =>
         BadRequest(Json.toJson(errorResponse))

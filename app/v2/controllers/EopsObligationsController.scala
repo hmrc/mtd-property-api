@@ -19,13 +19,11 @@ package v2.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
-import v2.controllers.validators.EopsDeclarationValidator
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
 import v2.services.{EnrolmentsAuthService, EopsObligationsService, MtdIdLookupService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 @Singleton
 class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService,
@@ -40,12 +38,12 @@ class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService
       }
     }
 
-  private def processError(errorResponse: ErrorResponse) = {
+  private def processError(errorResponse: ErrorWrapper) = {
     errorResponse.error match {
       case MissingFromDateError | MissingToDateError
            | InvalidFromDateError | InvalidToDateError
-           | InvalidRangeError | RangeTooBigError
-           | BadRequestError | InvalidNinoError =>
+           | RangeToDateBeforeFromDateError | RangeEndDateBeforeStartDateError | RangeTooBigError
+           | BadRequestError | NinoFormatError =>
         BadRequest(Json.toJson(errorResponse))
       case NotFoundError => NotFound(Json.toJson(errorResponse))
       case DownstreamError => InternalServerError(Json.toJson(errorResponse))

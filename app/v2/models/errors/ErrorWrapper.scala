@@ -16,16 +16,24 @@
 
 package v2.models.errors
 
-object GetEopsObligationsErrors {
+import play.api.libs.json.{JsValue, Json, Writes}
 
-  object MissingFromDateError extends MtdError("MISSING_FROM_DATE", "The From date parameter is missing")
+case class ErrorWrapper(error: MtdError, errors: Option[Seq[MtdError]])
 
-  object InvalidFromDateError extends MtdError("FORMAT_FROM_DATE", "The format of the From date is invalid")
+object ErrorWrapper {
+  implicit val writes: Writes[ErrorWrapper] = new Writes[ErrorWrapper] {
+    override def writes(errorResponse: ErrorWrapper): JsValue = {
 
-  object MissingToDateError extends MtdError("MISSING_TO_DATE", "The To date parameter is missing")
+      val json = Json.obj(
+        "code" -> errorResponse.error.code,
+        "message" -> errorResponse.error.message
+      )
 
-  object InvalidToDateError extends MtdError("FORMAT_TO_DATE", "The format of the To date is invalid")
+      errorResponse.errors match {
+        case Some(errors) if errors.nonEmpty => json + ("errors" -> Json.toJson(errors))
+        case _ => json
+      }
 
-  object RangeTooBigError extends MtdError("RANGE_DATE_TOO_LONG", "The date range is too long")
-
+    }
+  }
 }

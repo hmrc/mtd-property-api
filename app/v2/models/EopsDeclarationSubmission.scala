@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.models
 
-object GetEopsObligationsErrors {
+import java.time.LocalDate
 
-  object MissingFromDateError extends MtdError("MISSING_FROM_DATE", "The From date parameter is missing")
+import uk.gov.hmrc.domain.Nino
 
-  object InvalidFromDateError extends MtdError("FORMAT_FROM_DATE", "The format of the From date is invalid")
-
-  object MissingToDateError extends MtdError("MISSING_TO_DATE", "The To date parameter is missing")
-
-  object InvalidToDateError extends MtdError("FORMAT_TO_DATE", "The format of the To date is invalid")
-
-  object RangeTooBigError extends MtdError("RANGE_DATE_TOO_LONG", "The date range is too long")
-
-}
+case class EopsDeclarationSubmission(nino: Nino, start: LocalDate, end: LocalDate)

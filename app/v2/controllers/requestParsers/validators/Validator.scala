@@ -14,18 +14,26 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.controllers.requestParsers.validators
 
-object GetEopsObligationsErrors {
+import v2.models.errors.MtdError
+import v2.models.inbound.InputData
 
-  object MissingFromDateError extends MtdError("MISSING_FROM_DATE", "The From date parameter is missing")
+trait Validator[A <: InputData] {
 
-  object InvalidFromDateError extends MtdError("FORMAT_FROM_DATE", "The format of the From date is invalid")
+  type ValidationLevel[T] = T => List[MtdError]
 
-  object MissingToDateError extends MtdError("MISSING_TO_DATE", "The To date parameter is missing")
+  def validate(data: A): List[MtdError]
 
-  object InvalidToDateError extends MtdError("FORMAT_TO_DATE", "The format of the To date is invalid")
+  def run(validationSet: List[A => List[List[MtdError]]], data: A): List[MtdError] = {
 
-  object RangeTooBigError extends MtdError("RANGE_DATE_TOO_LONG", "The date range is too long")
+    validationSet match {
+      case Nil => List()
+      case thisLevel :: remainingLevels => thisLevel(data).flatten match {
+        case x if x.isEmpty => run(remainingLevels, data)
+        case x if x.nonEmpty => x
+      }
+    }
+  }
 
 }

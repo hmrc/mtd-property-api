@@ -19,7 +19,7 @@ package v2.connectors.httpparsers
 import play.api.http.Status.{FORBIDDEN, OK}
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
-import v2.models.errors.{DownstreamError, InvalidNinoError}
+import v2.models.errors.{DownstreamError, NinoFormatError}
 import v2.models.outcomes.MtdIdLookupOutcome
 
 object MtdIdLookupHttpParser extends HttpParser {
@@ -33,7 +33,7 @@ object MtdIdLookupHttpParser extends HttpParser {
           case Some(mtdId) => Right(mtdId)
           case None => Left(DownstreamError)
         }
-        case FORBIDDEN => Left(InvalidNinoError)
+        case FORBIDDEN => Left(NinoFormatError)
         case _ => Left(DownstreamError)
       }
     }

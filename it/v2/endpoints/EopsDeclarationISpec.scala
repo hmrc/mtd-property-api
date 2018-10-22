@@ -80,7 +80,7 @@ class EopsDeclarationISpec extends IntegrationBaseSpec with Status{
 
         val response: WSResponse = await(request().post(requestJson))
         response.status shouldBe FORBIDDEN
-        response.json shouldBe Json.toJson(ErrorResponse(ConflictError, None))
+        response.json shouldBe Json.toJson(ErrorWrapper(ConflictError, None))
       }
     }
 
@@ -94,7 +94,7 @@ class EopsDeclarationISpec extends IntegrationBaseSpec with Status{
           EopsDeclarationStub.unSuccessfulEopsDeclaration(nino, from, to, FORBIDDEN, "BVR")
         }
 
-        val expected = ErrorResponse(BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge)))
+        val expected = ErrorWrapper(BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge)))
 
         val response: WSResponse = await(request().post(requestJson))
         response.status shouldBe FORBIDDEN
@@ -112,7 +112,7 @@ class EopsDeclarationISpec extends IntegrationBaseSpec with Status{
           EopsDeclarationStub.unSuccessfulEopsDeclaration(nino, from, to, BAD_REQUEST, "MULTIPLE_ERROR")
         }
 
-        val expected = ErrorResponse(BadRequestError, Some(Seq(InvalidStartDateError, InvalidEndDateError)))
+        val expected = ErrorWrapper(BadRequestError, Some(Seq(InvalidStartDateError, InvalidEndDateError)))
 
         val response: WSResponse = await(request().post(requestJson))
         response.status shouldBe BAD_REQUEST

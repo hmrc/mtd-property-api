@@ -14,26 +14,6 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.models.inbound
 
-import play.api.libs.json.{JsValue, Json, Writes}
-
-case class ErrorResponse(error: Error, errors: Option[Seq[Error]])
-
-object ErrorResponse {
-  implicit val writes: Writes[ErrorResponse] = new Writes[ErrorResponse] {
-    override def writes(errorResponse: ErrorResponse): JsValue = {
-
-      val json = Json.obj(
-        "code" -> errorResponse.error.code,
-        "message" -> errorResponse.error.message
-      )
-
-      errorResponse.errors match {
-        case Some(errors) if errors.nonEmpty => json + ("errors" -> Json.toJson(errors))
-        case _ => json
-      }
-
-    }
-  }
-}
+trait InputData

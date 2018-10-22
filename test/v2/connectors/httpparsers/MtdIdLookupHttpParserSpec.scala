@@ -22,7 +22,7 @@ import play.api.test.Helpers.{FORBIDDEN, INTERNAL_SERVER_ERROR, OK}
 import support.UnitSpec
 import uk.gov.hmrc.http.HttpResponse
 import v2.connectors.httpparsers.MtdIdLookupHttpParser.mtdIdLookupHttpReads
-import v2.models.errors.{DownstreamError, InvalidNinoError}
+import v2.models.errors.{DownstreamError, NinoFormatError}
 import v2.models.outcomes.MtdIdLookupOutcome
 
 class MtdIdLookupHttpParserSpec extends UnitSpec {
@@ -72,7 +72,7 @@ class MtdIdLookupHttpParserSpec extends UnitSpec {
         val response = HttpResponse(FORBIDDEN)
         val result: MtdIdLookupOutcome = mtdIdLookupHttpReads.read(method, url, response)
 
-        result shouldBe Left(InvalidNinoError)
+        result shouldBe Left(NinoFormatError)
       }
     }
 

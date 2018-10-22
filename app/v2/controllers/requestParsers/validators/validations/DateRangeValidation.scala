@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.controllers.requestParsers.validators.validations
 
-object InvalidNinoError extends Error("FORMAT_NINO", "The NINO format is invalid")
-object DownstreamError extends Error("INTERNAL_SERVER_ERROR", "An internal server error occurred")
-object NotFoundError extends Error("MATCHING_RESOURCE_NOT_FOUND", "Matching resource not found")
-object BadRequestError extends Error("INVALID_REQUEST", "Invalid request")
-object BVRError extends Error("BUSINESS_ERROR", "Business validation error")
-object ServiceUnavailableError extends Error("SERVICE_UNAVAILABLE", "Internal server error")
+import java.time.LocalDate
+
+import v2.models.errors.{MtdError, RangeEndDateBeforeStartDateError}
+import v2.validations.NoValidationErrors
+
+object DateRangeValidation {
+
+  def validate(from: LocalDate, to: LocalDate): List[MtdError] = {
+    if (to.isBefore(from)) List(RangeEndDateBeforeStartDateError) else NoValidationErrors
+  }
+
+}

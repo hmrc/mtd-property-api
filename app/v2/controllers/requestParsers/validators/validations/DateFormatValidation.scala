@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.controllers.requestParsers.validators.validations
 
-sealed trait DesError
+import v2.models.errors.MtdError
+import v2.validations.NoValidationErrors
 
-case class SingleError(error: Error) extends DesError
-case class MultipleErrors(errors: Seq[Error]) extends DesError
-case class BVRErrors(errors: Seq[Error]) extends DesError
-case class GenericError(error: Error) extends DesError
+object DateFormatValidation extends Validation {
+
+  private val dateRegex = "([0-9]{4}\\-[0-9]{2}\\-[0-9]{2})"
+
+  def validate(date: String, dateError: MtdError): List[MtdError] = {
+
+    if (date.matches(dateRegex)) NoValidationErrors else List(dateError)
+
+  }
+
+}

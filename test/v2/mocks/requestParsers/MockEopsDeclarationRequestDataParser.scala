@@ -14,25 +14,23 @@
  * limitations under the License.
  */
 
-package v2.mocks.services
+package v2.mocks.requestParsers
 
-import org.scalamock.handlers.CallHandler
+import org.scalamock.handlers.CallHandler1
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.http.HeaderCarrier
+import v2.controllers.requestParsers.EopsDeclarationRequestDataParser
 import v2.models.EopsDeclarationSubmission
 import v2.models.errors.ErrorWrapper
-import v2.services.EopsDeclarationService
+import v2.models.inbound.EopsDeclarationRequestData
 
-import scala.concurrent.{ExecutionContext, Future}
+trait MockEopsDeclarationRequestDataParser extends MockFactory {
 
-trait MockEopsDeclarationService extends MockFactory {
+  val mockRequestDataParser = mock[EopsDeclarationRequestDataParser]
 
-  val mockEopsDeclarationService: EopsDeclarationService = mock[EopsDeclarationService]
-
-  object MockedEopsDeclarationService {
-    def submitDeclaration(eopsDeclarationSubmission: EopsDeclarationSubmission): CallHandler[Future[Option[ErrorWrapper]]] = {
-      (mockEopsDeclarationService.submit(_: EopsDeclarationSubmission)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(eopsDeclarationSubmission, *, *)
+  object MockedEopsDeclarationRequestDataParser {
+    def parseRequest(data: EopsDeclarationRequestData): CallHandler1[EopsDeclarationRequestData, Either[ErrorWrapper, EopsDeclarationSubmission]] = {
+      (mockRequestDataParser.parseRequest(_: EopsDeclarationRequestData))
+        .expects(data)
     }
   }
 }

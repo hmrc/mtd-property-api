@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package v2.models
+package v2.controllers.requestParsers.validators.validations
 
-import play.api.libs.json.{Json, Reads, Writes}
+import play.api.mvc.AnyContentAsJson
+import v2.models.errors.{MtdError, NotFinalisedDeclaration}
+import v2.validations.NoValidationErrors
 
+object EopsDeclarationRequestDataValidation {
 
-case class EopsDeclaration(finalised: Boolean)
+  def validate(data: AnyContentAsJson): List[MtdError] = {
 
-object EopsDeclaration {
-  implicit val format: Reads[EopsDeclaration] = Json.reads[EopsDeclaration]
+    (data.json \ "finalised").asOpt[Boolean] match {
+      case Some(trueValue) if trueValue => NoValidationErrors
+      case _ => List(NotFinalisedDeclaration)
+    }
+
+  }
+
 }
-
-

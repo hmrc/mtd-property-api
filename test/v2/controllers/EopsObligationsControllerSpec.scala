@@ -22,7 +22,6 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.mocks.services.{MockEnrolmentsAuthService, MockEopsObligationsService, MockMtdIdLookupService}
-import v2.mocks.validators.MockEopsDeclarationValidator
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
 import v2.models.{FulfilledObligation, Obligation}
@@ -61,11 +60,11 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
   val from: String = "2018-01-01"
   val to: String = "2018-12-31"
 
-  def eopsErrorTest(error: v2.models.errors.Error, expectedStatus: Int): Unit =
+  def eopsErrorTest(error: v2.models.errors.MtdError, expectedStatus: Int): Unit =
     {
       s"returned a ${error.code} error" in new Test {
         MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
-          .returns(Future.successful(Left(ErrorResponse(error, None))))
+          .returns(Future.successful(Left(ErrorWrapper(error, None))))
 
         val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
         status(response) shouldBe expectedStatus
@@ -106,8 +105,8 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
       val eopsErrors = Seq(
         MissingFromDateError, MissingToDateError,
         InvalidFromDateError, InvalidToDateError,
-        InvalidRangeError, RangeTooBigError,
-        BadRequestError, InvalidNinoError)
+        RangeEndDateBeforeStartDateError, RangeTooBigError,
+        BadRequestError, NinoFormatError)
 
       for (error <- eopsErrors){
         eopsErrorTest(error, BAD_REQUEST)
