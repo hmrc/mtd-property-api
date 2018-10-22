@@ -20,7 +20,7 @@ import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.controllers.validators.EopsDeclarationSubmission
-import v2.models.errors.ErrorResponse
+import v2.models.errors.ErrorWrapper
 import v2.services.EopsDeclarationService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,7 +30,7 @@ trait MockEopsDeclarationService extends MockFactory {
   val mockEopsDeclarationService: EopsDeclarationService = mock[EopsDeclarationService]
 
   object MockedEopsDeclarationService {
-    def submitDeclaration(eopsDeclarationSubmission: EopsDeclarationSubmission): CallHandler[Future[Option[ErrorResponse]]] = {
+    def submitDeclaration(eopsDeclarationSubmission: EopsDeclarationSubmission): CallHandler[Future[Option[ErrorWrapper]]] = {
       (mockEopsDeclarationService.submit(_: EopsDeclarationSubmission)(_: HeaderCarrier, _: ExecutionContext))
         .expects(eopsDeclarationSubmission, *, *)
     }

@@ -14,6 +14,26 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.controllers.requestParsers.validators
 
-object UnauthorisedError extends MtdError("CLIENT_OR_AGENT_NOT_AUTHORISED", "The client and/or agent is not authorised.")
+import v2.models.errors.MtdError
+import v2.models.inbound.InputData
+
+trait Validator[A <: InputData] {
+
+  type ValidationLevel[T] = T => List[MtdError]
+
+  def validate(data: A): List[MtdError]
+
+  def run(validationSet: List[A => List[List[MtdError]]], data: A): List[MtdError] = {
+
+    validationSet match {
+      case Nil => List()
+      case thisLevel :: remainingLevels => thisLevel(data).flatten match {
+        case x if x.isEmpty => run(remainingLevels, data)
+        case x if x.nonEmpty => x
+      }
+    }
+  }
+
+}

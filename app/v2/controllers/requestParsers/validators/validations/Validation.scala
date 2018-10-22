@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.controllers.requestParsers.validators.validations
 
-object UnauthorisedError extends MtdError("CLIENT_OR_AGENT_NOT_AUTHORISED", "The client and/or agent is not authorised.")
+trait Validation

@@ -19,10 +19,10 @@ package v2.models.errors
 import play.api.libs.json.Json
 import support.UnitSpec
 
-class ErrorResponseSpec extends UnitSpec {
+class ErrorWrapperSpec extends UnitSpec {
 
   "Rendering a error response with one error" should {
-    val error = ErrorResponse(Error("CODE", "Message"), None)
+    val error = ErrorWrapper(MtdError("CODE", "Message"), None)
 
     val json = Json.parse(
       """
@@ -39,7 +39,7 @@ class ErrorResponseSpec extends UnitSpec {
   }
 
   "Rendering a error response with one error and an empty sequence of errors" should {
-    val error = ErrorResponse(Error("CODE", "Message"), Some(Seq.empty))
+    val error = ErrorWrapper(MtdError("CODE", "Message"), Some(Seq.empty))
 
     val json = Json.parse(
       """
@@ -56,12 +56,12 @@ class ErrorResponseSpec extends UnitSpec {
   }
 
   "Rendering a error response with two errors" should {
-    val error = ErrorResponse(
-      Error("CODE", "Message"),
+    val error = ErrorWrapper(
+      MtdError("CODE", "Message"),
       Some (
         Seq(
-          Error("CODE2", "Message 2"),
-          Error("CODE3", "Message 3")
+          MtdError("CODE2", "Message 2"),
+          MtdError("CODE3", "Message 3")
         )
       )
     )

@@ -23,3 +23,5 @@ case class Declaration(finalised: Boolean)
 object Declaration {
   implicit val read: Reads[Declaration] = Json.reads[Declaration]
 }
+
+// TODO possibly delete as not used?

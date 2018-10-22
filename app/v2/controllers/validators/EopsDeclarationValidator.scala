@@ -23,13 +23,13 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.domain.Nino
 import v2.models.Declaration
 import v2.models.errors.SubmitEopsDeclarationErrors.NotFinalisedDeclaration
-import v2.models.errors.{BadRequestError, Error, ErrorResponse}
+import v2.models.errors.{BadRequestError, MtdError, ErrorWrapper}
 
 
 @Singleton
 class EopsDeclarationValidator extends Validator {
 
-  def validateSubmit(nino: String, from: String, to: String, requestBody: JsValue): Either[ErrorResponse, EopsDeclarationSubmission] = {
+  def validateSubmit(nino: String, from: String, to: String, requestBody: JsValue): Either[ErrorWrapper, EopsDeclarationSubmission] = {
     validationErrors(
       validateNino(nino),
       fromDateError(from),
@@ -38,15 +38,15 @@ class EopsDeclarationValidator extends Validator {
         dateRangeError(LocalDate.parse(from), LocalDate.parse(to)) match {
           case None => validateDeclarationBody(requestBody) match {
             case None => Right(EopsDeclarationSubmission(new Nino(nino), LocalDate.parse(from), LocalDate.parse(to)))
-            case Some(bodyParseError) => Left(ErrorResponse(bodyParseError, None))
+            case Some(bodyParseError) => Left(ErrorWrapper(bodyParseError, None))
           }
-          case Some(dateRangeErr) => Left(ErrorResponse(dateRangeErr, None))
+          case Some(dateRangeErr) => Left(ErrorWrapper(dateRangeErr, None))
         }
       case Some(paramsErr) => Left(paramsErr)
     }
   }
 
-    def validateDeclarationBody(requestBody: JsValue): Option[Error] =
+    def validateDeclarationBody(requestBody: JsValue): Option[MtdError] =
       requestBody.asOpt[Declaration] match {
         case Some(declaration) if declaration.finalised => None
         case Some(declaration) if !declaration.finalised => Some(NotFinalisedDeclaration)

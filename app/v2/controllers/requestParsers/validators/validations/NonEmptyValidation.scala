@@ -14,26 +14,17 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.controllers.requestParsers.validators.validations
 
-import play.api.libs.json.{JsValue, Json, Writes}
+import v2.models.errors.MtdError
+import v2.validations.NoValidationErrors
 
-case class ErrorResponse(error: Error, errors: Option[Seq[Error]])
+object NonEmptyValidation {
 
-object ErrorResponse {
-  implicit val writes: Writes[ErrorResponse] = new Writes[ErrorResponse] {
-    override def writes(errorResponse: ErrorResponse): JsValue = {
+  def validate(str: String, specificError: MtdError): List[MtdError] = {
 
-      val json = Json.obj(
-        "code" -> errorResponse.error.code,
-        "message" -> errorResponse.error.message
-      )
+    if (str.nonEmpty) NoValidationErrors else List(specificError)
 
-      errorResponse.errors match {
-        case Some(errors) if errors.nonEmpty => json + ("errors" -> Json.toJson(errors))
-        case _ => json
-      }
-
-    }
   }
+
 }

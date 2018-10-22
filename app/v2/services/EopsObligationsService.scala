@@ -24,7 +24,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
 import v2.models.errors.GetEopsObligationsErrors._
-import v2.models.errors.{BadRequestError, DownstreamError, Error, ErrorResponse, InvalidNinoError, NotFoundError}
+import v2.models.errors.{BadRequestError, DownstreamError, MtdError, ErrorWrapper, InvalidNinoError, NotFoundError}
 import v2.models.outcomes.EopsObligationsOutcome
 import v2.models.{Obligation, ObligationDetails}
 
@@ -48,14 +48,14 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
                                      (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsObligationsOutcome] = {
 
     connector.getObligations(nino, from, to).map {
-      case Left(singleError :: Nil) => Left(ErrorResponse(desErrorToMtdError(singleError.code), None))
-      case Left(errors) => Left(ErrorResponse(BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
+      case Left(singleError :: Nil) => Left(ErrorWrapper(desErrorToMtdError(singleError.code), None))
+      case Left(errors) => Left(ErrorWrapper(BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
       case Right(obligations) =>
         val eopsObligations = filterEopsObligations(obligations)
         if (eopsObligations.nonEmpty) {
           Right(eopsObligations)
         } else {
-          Left(ErrorResponse(NotFoundError, None))
+          Left(ErrorWrapper(NotFoundError, None))
         }
     }
 
@@ -68,14 +68,14 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
   }
 
   private def validateDate(date: String,
-                           missingDateError: Error,
-                           invalidDateError: Error): Option[Error] = date.trim match {
+                           missingDateError: MtdError,
+                           invalidDateError: MtdError): Option[MtdError] = date.trim match {
     case "" => Some(missingDateError)
     case _ if Try(LocalDate.parse(date)).isFailure => Some(invalidDateError)
     case _ => None
   }
 
-  val desErrorToMtdError: Map[String, Error] = Map(
+  val desErrorToMtdError: Map[String, MtdError] = Map(
     "NOT_FOUND" -> NotFoundError,
     "INVALID_IDTYPE" -> NotFoundError,
     "INVALID_IDNUMBER" -> InvalidNinoError,
@@ -93,8 +93,8 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
   private def validateDateRange(from: LocalDate,
                                 to: LocalDate,
                                 maxRangeInDays: Int,
-                                invalidRangeError: Error,
-                                rangeExceededError: Error): Option[Error] = {
+                                invalidRangeError: MtdError,
+                                rangeExceededError: MtdError): Option[MtdError] = {
 
     if (to.isBefore(from) || to == from) {
       Some(invalidRangeError)
@@ -107,17 +107,17 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
 
   private def validateGetEopsObligationsArgs(nino: String,
                                              from: String,
-                                             to: String): Either[ErrorResponse, (LocalDate, LocalDate)] = {
+                                             to: String): Either[ErrorWrapper, (LocalDate, LocalDate)] = {
 
     val MAX_DATE_RANGE_IN_DAYS = 366
 
     val ninoError: Option[InvalidNinoError.type] = if (!Nino.isValid(nino)) Some(InvalidNinoError) else None
 
-    val fromDateError: Option[Error] = validateDate(from, MissingFromDateError, InvalidFromDateError)
+    val fromDateError: Option[MtdError] = validateDate(from, MissingFromDateError, InvalidFromDateError)
 
-    val toDateError: Option[Error] = validateDate(to, MissingToDateError, InvalidToDateError)
+    val toDateError: Option[MtdError] = validateDate(to, MissingToDateError, InvalidToDateError)
 
-    val invalidRangeError: Option[Error] = (fromDateError, toDateError) match {
+    val invalidRangeError: Option[MtdError] = (fromDateError, toDateError) match {
       case (None, None) =>
         val fromDate = LocalDate.parse(from)
         val toDate = LocalDate.parse(to)
@@ -125,7 +125,7 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
       case _ => None
     }
 
-      val validationErrors: Seq[Option[Error]] = Seq(
+      val validationErrors: Seq[Option[MtdError]] = Seq(
         ninoError,
         fromDateError,
         toDateError,
@@ -134,8 +134,8 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
 
     validationErrors.flatten match {
       case List() => Right((LocalDate.parse(from), LocalDate.parse(to)))
-      case error :: Nil => Left(ErrorResponse(error, None))
-      case errors => Left(ErrorResponse(BadRequestError, Some(errors)))
+      case error :: Nil => Left(ErrorWrapper(error, None))
+      case errors => Left(ErrorWrapper(BadRequestError, Some(errors)))
     }
   }
 }

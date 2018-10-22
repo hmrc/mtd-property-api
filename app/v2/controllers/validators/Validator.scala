@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import uk.gov.hmrc.domain.Nino
 import v2.models.errors.SubmitEopsDeclarationErrors.{InvalidRangeError, _}
-import v2.models.errors.{BadRequestError, Error, ErrorResponse, InvalidNinoError}
+import v2.models.errors.{BadRequestError, MtdError, ErrorWrapper, InvalidNinoError}
 
 import scala.util.{Failure, Try}
 
@@ -28,15 +28,15 @@ trait Validator {
 
   def validateNino(nino: String): Option[InvalidNinoError.type] = if (!Nino.isValid(nino)) Some(InvalidNinoError) else None
 
-  def fromDateError(from: String): Option[Error] = validateDate(from, MissingStartDateError, InvalidStartDateError)
+  def fromDateError(from: String): Option[MtdError] = validateDate(from, MissingStartDateError, InvalidStartDateError)
 
-  def toDateError(to: String): Option[Error] = validateDate(to, MissingEndDateError, InvalidEndDateError)
+  def toDateError(to: String): Option[MtdError] = validateDate(to, MissingEndDateError, InvalidEndDateError)
 
-  def dateRangeError(from: LocalDate, to: LocalDate): Option[Error] = if (from.isAfter(to)) Some(InvalidRangeError) else None
+  def dateRangeError(from: LocalDate, to: LocalDate): Option[MtdError] = if (from.isAfter(to)) Some(InvalidRangeError) else None
 
   private def validateDate(date: String,
-                           missingDateError: Error,
-                           invalidDateError: Error): Option[Error] = {
+                           missingDateError: MtdError,
+                           invalidDateError: MtdError): Option[MtdError] = {
     val dateRegex = "([0-9]{4}\\-[0-9]{2}\\-[0-9]{2})"
 
     date.trim match {
@@ -46,11 +46,11 @@ trait Validator {
     }
   }
 
-  def validationErrors(errors: Option[Error]*): Option[ErrorResponse] = {
+  def validationErrors(errors: Option[MtdError]*): Option[ErrorWrapper] = {
     errors.flatten match {
       case Seq() => None
-      case err +: Nil => Some(ErrorResponse(err, None))
-      case errs => Some(ErrorResponse(BadRequestError, Some(errs)))
+      case err +: Nil => Some(ErrorWrapper(err, None))
+      case errs => Some(ErrorWrapper(BadRequestError, Some(errs)))
     }
   }
 

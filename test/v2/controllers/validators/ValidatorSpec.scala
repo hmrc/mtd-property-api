@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import support.UnitSpec
 import v2.models.errors.SubmitEopsDeclarationErrors._
-import v2.models.errors.{BadRequestError, ErrorResponse, InvalidNinoError}
+import v2.models.errors.{BadRequestError, ErrorWrapper, InvalidNinoError}
 
 class ValidatorSpec extends UnitSpec {
 
@@ -100,11 +100,11 @@ class ValidatorSpec extends UnitSpec {
     "return a list of errors" when {
       "more than one error is returned" in new Test {
         TestValidator.validationErrors(Some(MissingEndDateError), Some(InvalidStartDateError), Some(InvalidNinoError)) shouldBe
-          Some(ErrorResponse(BadRequestError, Some(Seq(MissingEndDateError, InvalidStartDateError, InvalidNinoError))))
+          Some(ErrorWrapper(BadRequestError, Some(Seq(MissingEndDateError, InvalidStartDateError, InvalidNinoError))))
       }
       "return the correct error" when {
         "a single error is returned" in new Test {
-          TestValidator.validationErrors(Some(InvalidEndDateError)) shouldBe Some(ErrorResponse(InvalidEndDateError, None))
+          TestValidator.validationErrors(Some(InvalidEndDateError)) shouldBe Some(ErrorWrapper(InvalidEndDateError, None))
         }
       }
       "return nothing" when {

@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.models
 
-object UnauthorisedError extends MtdError("CLIENT_OR_AGENT_NOT_AUTHORISED", "The client and/or agent is not authorised.")
+import java.time.LocalDate
+
+import uk.gov.hmrc.domain.Nino
+
+case class EopsDeclarationSubmission(nino: Nino, from: LocalDate, to: LocalDate)

@@ -20,7 +20,7 @@ import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.models.Obligation
-import v2.models.errors.ErrorResponse
+import v2.models.errors.ErrorWrapper
 import v2.services.EopsObligationsService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,7 +30,7 @@ trait MockEopsObligationsService extends MockFactory {
   val mockEopsObligationsService: EopsObligationsService = mock[EopsObligationsService]
 
   object MockedEopsObligationsService {
-    def retrieveEopsObligations(nino: String, from: String, to: String): CallHandler[Future[Either[ErrorResponse, Seq[Obligation]]]] = {
+    def retrieveEopsObligations(nino: String, from: String, to: String): CallHandler[Future[Either[ErrorWrapper, Seq[Obligation]]]] = {
       (mockEopsObligationsService.retrieveEopsObligations(_: String, _:String, _:String)(_: HeaderCarrier, _: ExecutionContext))
         .expects(nino, from, to, *, *)
     }

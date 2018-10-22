@@ -19,7 +19,7 @@ package v2.connectors.httpparsers
 import play.api.Logger
 import play.api.libs.json._
 import uk.gov.hmrc.http.HttpResponse
-import v2.models.errors.{DesError, DownstreamError, Error, GenericError, BVRErrors, MultipleErrors, SingleError}
+import v2.models.errors.{DesError, DownstreamError, MtdError, GenericError, BVRErrors, MultipleErrors, SingleError}
 
 import scala.util.{Success, Try}
 
@@ -44,14 +44,14 @@ trait HttpParser {
     }
   }
 
-  private val multipleErrorReads: Reads[Seq[Error]] = (__ \ "failures").read[Seq[Error]]
-  private val bvrErrorReads: Reads[Seq[Error]] = {
-    implicit val errorIdReads: Reads[Error] = (__ \ "id").read[String].map(Error(_, ""))
-      (__ \ "bvrfailureResponseElement" \ "validationRuleFailures").read[Seq[Error]]
+  private val multipleErrorReads: Reads[Seq[MtdError]] = (__ \ "failures").read[Seq[MtdError]]
+  private val bvrErrorReads: Reads[Seq[MtdError]] = {
+    implicit val errorIdReads: Reads[MtdError] = (__ \ "id").read[String].map(MtdError(_, ""))
+      (__ \ "bvrfailureResponseElement" \ "validationRuleFailures").read[Seq[MtdError]]
     }
 
     def parseErrors(response: HttpResponse): DesError = {
-    val singleError = response.validateJson[Error].map(SingleError)
+    val singleError = response.validateJson[MtdError].map(SingleError)
     lazy val multipleErrors = response.validateJson(multipleErrorReads).map(MultipleErrors)
     lazy val bvrErrors = response.validateJson(bvrErrorReads).map(BVRErrors)
 

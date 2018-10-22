@@ -30,30 +30,30 @@ import scala.concurrent.{ExecutionContext, Future}
 class EopsDeclarationService @Inject()(connector: DesConnector) {
 
   def submit(eopsDeclarationSubmission: EopsDeclarationSubmission)
-            (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ErrorResponse]] = {
+            (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ErrorWrapper]] = {
 
     val logger: Logger = Logger(this.getClass)
 
     connector.submitEOPSDeclaration(eopsDeclarationSubmission.nino, eopsDeclarationSubmission.from,
       eopsDeclarationSubmission.to).map {
       case Left(SingleError(error)) =>
-        Some(ErrorResponse(desErrorToMtdError(error.code), None))
+        Some(ErrorWrapper(desErrorToMtdError(error.code), None))
       case Left(MultipleErrors(errors)) =>
         val mtdErrors = errors.map(error => desErrorToMtdError(error.code))
         if (mtdErrors.contains(DownstreamError)) {
           logger.info("[EopsDeclarationService] [submit] - downstream returned INVALID_IDTYPE. Revert to ISE")
-          Some(ErrorResponse(DownstreamError, None))
+          Some(ErrorWrapper(DownstreamError, None))
         }
         else {
-          Some(ErrorResponse(BadRequestError, Some(mtdErrors)))
+          Some(ErrorWrapper(BadRequestError, Some(mtdErrors)))
         }
       case Left(BVRErrors(errors)) =>
         if(errors.size == 1){
-          Some(ErrorResponse(desBvrErrorToMtdError(errors.head.code), None))
+          Some(ErrorWrapper(desBvrErrorToMtdError(errors.head.code), None))
         }else {
-          Some(ErrorResponse(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
+          Some(ErrorWrapper(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
         }
-      case Left(GenericError(error)) => Some(ErrorResponse(error, None))
+      case Left(GenericError(error)) => Some(ErrorWrapper(error, None))
       case Right(correlationId) =>
         //audit
         // @TODO Audit implementation
@@ -61,7 +61,7 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
     }
   }
 
-  private val desErrorToMtdError: Map[String, Error] = Map(
+  private val desErrorToMtdError: Map[String, MtdError] = Map(
     "NOT_FOUND" -> NotFoundError,
     "INVALID_IDTYPE" -> DownstreamError,
     "INVALID_IDVALUE" -> InvalidNinoError,
@@ -74,7 +74,7 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
     "SERVICE_UNAVAILABLE" -> ServiceUnavailableError
   )
 
-  private val desBvrErrorToMtdError: Map[String, Error] = Map(
+  private val desBvrErrorToMtdError: Map[String, MtdError] = Map(
     "C55317" -> RuleClass4Over16,
     "C55318" -> RuleClass4PensionAge,
     "C55501" -> RuleFhlPrivateUseAdjustment,

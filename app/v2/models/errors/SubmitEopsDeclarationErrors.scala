@@ -18,38 +18,38 @@ package v2.models.errors
 
 object SubmitEopsDeclarationErrors {
 
-  object MissingStartDateError extends Error("MISSING_START_DATE", "Missing account period start date")
-  object InvalidStartDateError extends Error("FORMAT_START_DATE", "Invalid account period start date")
+  object MissingStartDateError extends MtdError("MISSING_START_DATE", "Missing account period start date")
+  object InvalidStartDateError extends MtdError("FORMAT_START_DATE", "Invalid account period start date")
 
-  object MissingEndDateError extends Error("MISSING_END_DATE", "Missing account period end date")
-  object InvalidEndDateError extends Error("FORMAT_END_DATE", "Invalid account period end date")
-  object InvalidRangeError extends Error("RANGE_INVALID", "The start date must be the same day or before the from date")
+  object MissingEndDateError extends MtdError("MISSING_END_DATE", "Missing account period end date")
+  object InvalidEndDateError extends MtdError("FORMAT_END_DATE", "Invalid account period end date")
+  object InvalidRangeError extends MtdError("RANGE_INVALID", "The start date must be the same day or before the from date")
 
-  object NotFinalisedDeclaration extends Error("RULE_NOT_FINALISED", "The statement cannot be accepted without a declaration that it is finalised.")
+  object NotFinalisedDeclaration extends MtdError("RULE_NOT_FINALISED", "The statement cannot be accepted without a declaration that it is finalised.")
 
-  object ConflictError extends Error("RULE_ALREADY_SUBMITTED", "You cannot submit a statement for the same accounting period twice")
-  object EarlySubmissionError extends Error("RULE_EARLY_SUBMISSION", "You cannot submit a statement before the end of your accounting period")
-  object LateSubmissionError extends Error("RULE_LATE_SUBMISSION", "The period to finalise has passed")
+  object ConflictError extends MtdError("RULE_ALREADY_SUBMITTED", "You cannot submit a statement for the same accounting period twice")
+  object EarlySubmissionError extends MtdError("RULE_EARLY_SUBMISSION", "You cannot submit a statement before the end of your accounting period")
+  object LateSubmissionError extends MtdError("RULE_LATE_SUBMISSION", "The period to finalise has passed")
 
-  object RuleClass4Over16 extends Error("RULE_CLASS4_OVER_16",
+  object RuleClass4Over16 extends MtdError("RULE_CLASS4_OVER_16",
     "Class 4 exemption is not allowed because the individual's age is greater than or equal to 16 years old on the 6th April of the current tax year.")
 
-  object RuleClass4PensionAge extends Error("RULE_CLASS4_PENSION_AGE",
+  object RuleClass4PensionAge extends MtdError("RULE_CLASS4_PENSION_AGE",
     "Class 4 exemption is not allowed because the individual's age is less than their State Pension age on the 6th April of the current tax year.")
 
-  object RuleFhlPrivateUseAdjustment extends Error("RULE_FHL_PRIVATE_USE_ADJUSTMENT",
+  object RuleFhlPrivateUseAdjustment extends MtdError("RULE_FHL_PRIVATE_USE_ADJUSTMENT",
     "For UK Furnished Holiday Lettings, the private use adjustment must not exceed the total allowable expenses.")
 
-  object RuleNonFhlPrivateUseAdjustment extends Error("RULE_NON_FHL_PRIVATE_USE_ADJUSTMENT",
+  object RuleNonFhlPrivateUseAdjustment extends MtdError("RULE_NON_FHL_PRIVATE_USE_ADJUSTMENT",
     "For UK non-Furnished Holiday Lettings, the private use adjustment must not exceed the total allowable expenses.")
 
-  object RuleMismatchStartDate extends Error("RULE_MISMATCH_START_DATE",
+  object RuleMismatchStartDate extends MtdError("RULE_MISMATCH_START_DATE",
     "The period submission start date must match the accounting period start date.")
 
-  object RuleMismatchEndDate extends Error("RULE_MISMATCH_END_DATE",
+  object RuleMismatchEndDate extends MtdError("RULE_MISMATCH_END_DATE",
     "The period submission end date must match the accounting period end date.")
 
-  object RuleConsolidatedExpenses extends Error("RULE_CONSOLIDATED_EXPENSES",
+  object RuleConsolidatedExpenses extends MtdError("RULE_CONSOLIDATED_EXPENSES",
     "Consolidated expenses are not allowed if the cumulative turnover amount exceeds the threshold.")
 
 }

@@ -46,7 +46,7 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
       }
     }
 
-  private def processError(errorResponse: ErrorResponse) = {
+  private def processError(errorResponse: ErrorWrapper) = {
     errorResponse.error match {
       case InvalidStartDateError
            | InvalidEndDateError

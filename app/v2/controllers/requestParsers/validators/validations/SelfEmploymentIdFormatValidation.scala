@@ -14,6 +14,19 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.controllers.requestParsers.validators.validations
 
-object UnauthorisedError extends MtdError("CLIENT_OR_AGENT_NOT_AUTHORISED", "The client and/or agent is not authorised.")
+import v2.models.errors.{MtdError, SelfEmploymentIdError}
+import v2.validations.NoValidationErrors
+
+object SelfEmploymentIdFormatValidation extends Validation {
+
+  private val dateRegex = "^[A-Za-z0-9]{15}$"
+
+  def validate(selfEmploymentId: String): List[MtdError] = {
+
+    if (selfEmploymentId.matches(dateRegex)) NoValidationErrors else List(SelfEmploymentIdError)
+
+  }
+
+}

@@ -40,7 +40,7 @@ class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService
       }
     }
 
-  private def processError(errorResponse: ErrorResponse) = {
+  private def processError(errorResponse: ErrorWrapper) = {
     errorResponse.error match {
       case MissingFromDateError | MissingToDateError
            | InvalidFromDateError | InvalidToDateError

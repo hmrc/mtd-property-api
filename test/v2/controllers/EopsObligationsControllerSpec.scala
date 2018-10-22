@@ -61,11 +61,11 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
   val from: String = "2018-01-01"
   val to: String = "2018-12-31"
 
-  def eopsErrorTest(error: v2.models.errors.Error, expectedStatus: Int): Unit =
+  def eopsErrorTest(error: v2.models.errors.MtdError, expectedStatus: Int): Unit =
     {
       s"returned a ${error.code} error" in new Test {
         MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
-          .returns(Future.successful(Left(ErrorResponse(error, None))))
+          .returns(Future.successful(Left(ErrorWrapper(error, None))))
 
         val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
         status(response) shouldBe expectedStatus

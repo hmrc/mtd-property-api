@@ -14,6 +14,19 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.controllers.requestParsers.validators.validations
 
-object UnauthorisedError extends MtdError("CLIENT_OR_AGENT_NOT_AUTHORISED", "The client and/or agent is not authorised.")
+import v2.models.errors.MtdError
+import v2.validations.NoValidationErrors
+
+object DateFormatValidation extends Validation {
+
+  private val dateRegex = "([0-9]{4}\\-[0-9]{2}\\-[0-9]{2})"
+
+  def validate(date: String, dateError: MtdError): List[MtdError] = {
+
+    if (date.matches(dateRegex)) NoValidationErrors else List(dateError)
+
+  }
+
+}
