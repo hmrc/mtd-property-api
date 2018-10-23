@@ -49,7 +49,4 @@ object ServiceUnavailableError extends MtdError("SERVICE_UNAVAILABLE", "Internal
 
 
 //Authorisation Errors
-
-object UnauthenticatedError extends MtdError("UNAUTHENTICATED", "Not authenticated")
-
-object UnauthorisedError extends MtdError("UNAUTHORIZED", "Bearer token is missing or not authorized")
+object UnauthorisedError extends MtdError("CLIENT_OR_AGENT_NOT_AUTHORISED", "The client and/or agent is not authorised.")
