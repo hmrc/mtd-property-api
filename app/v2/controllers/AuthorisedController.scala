@@ -47,9 +47,7 @@ abstract class AuthorisedController extends BaseController {
                                     block: UserRequest[A] => Future[Result])
                                    (implicit headerCarrier: HeaderCarrier): Future[Result] = {
       authService.authorised(predicate(mtdId)).flatMap[Result] {
-        case Right(userDetails) =>
-          userDetails.copy(mtdId = mtdId)
-          block(UserRequest(userDetails, request))
+        case Right(userDetails) => block(UserRequest(userDetails.copy(mtdId = mtdId), request))
         case Left(UnauthorisedError) => Future.successful(Forbidden(Json.toJson(UnauthorisedError)))
         case Left(_) => Future.successful(InternalServerError(Json.toJson(DownstreamError)))
       }

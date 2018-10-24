@@ -23,6 +23,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import v2.connectors.DesConnector
 import v2.models.EopsDeclarationSubmission
 import v2.models.audit.{AuditEvent, EopsDeclarationAuditDetail}
+import v2.models.auth.UserDetails
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 
@@ -32,7 +33,9 @@ import scala.concurrent.{ExecutionContext, Future}
 class EopsDeclarationService @Inject()(auditService: AuditService, connector: DesConnector) {
 
   def submit(submission: EopsDeclarationSubmission)
-            (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Option[ErrorWrapper]] = {
+            (implicit hc: HeaderCarrier,
+             ec: ExecutionContext,
+             userDetails: UserDetails): Future[Option[ErrorWrapper]] = {
 
     val logger: Logger = Logger(this.getClass)
 
@@ -64,10 +67,11 @@ class EopsDeclarationService @Inject()(auditService: AuditService, connector: De
 
   private def auditSuccessfulSubmission(submission: EopsDeclarationSubmission,
                                         correlationId: String)
-                                       (implicit ec: ExecutionContext): Future[AuditResult] = {
+                                       (implicit ec: ExecutionContext,
+                                        userDetails: UserDetails): Future[AuditResult] = {
     val details = EopsDeclarationAuditDetail(
-      "individual",
-      None,
+      userDetails.userType,
+      userDetails.agentReferenceNumber,
       submission.nino.toString(),
       submission.start.toString,
       submission.end.toString,
