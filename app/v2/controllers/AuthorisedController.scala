@@ -22,6 +22,7 @@ import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import v2.models.auth.UserDetails
 import v2.models.errors._
 import v2.services.{EnrolmentsAuthService, MtdIdLookupService}
 
@@ -33,7 +34,7 @@ abstract class AuthorisedController extends BaseController {
   val authService: EnrolmentsAuthService
   val lookupService: MtdIdLookupService
 
-  case class UserRequest[A](mtdId: String, request: Request[A]) extends WrappedRequest[A](request)
+  case class UserRequest[A](userDetails: UserDetails, request: Request[A]) extends WrappedRequest[A](request)
 
   def authorisedAction(nino: String): ActionBuilder[UserRequest] = new ActionBuilder[UserRequest] {
 
@@ -46,7 +47,7 @@ abstract class AuthorisedController extends BaseController {
                                     block: UserRequest[A] => Future[Result])
                                    (implicit headerCarrier: HeaderCarrier): Future[Result] = {
       authService.authorised(predicate(mtdId)).flatMap[Result] {
-        case Right(_) => block(UserRequest(mtdId, request))
+        case Right(userDetails) => block(UserRequest(userDetails.copy(mtdId = mtdId), request))
         case Left(UnauthorisedError) => Future.successful(Forbidden(Json.toJson(UnauthorisedError)))
         case Left(_) => Future.successful(InternalServerError(Json.toJson(DownstreamError)))
       }

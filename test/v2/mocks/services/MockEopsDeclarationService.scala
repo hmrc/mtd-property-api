@@ -20,6 +20,7 @@ import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.models.EopsDeclarationSubmission
+import v2.models.auth.UserDetails
 import v2.models.errors.ErrorWrapper
 import v2.services.EopsDeclarationService
 
@@ -31,8 +32,9 @@ trait MockEopsDeclarationService extends MockFactory {
 
   object MockedEopsDeclarationService {
     def submitDeclaration(eopsDeclarationSubmission: EopsDeclarationSubmission): CallHandler[Future[Option[ErrorWrapper]]] = {
-      (mockEopsDeclarationService.submit(_: EopsDeclarationSubmission)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(eopsDeclarationSubmission, *, *)
+      (mockEopsDeclarationService.submit(_: EopsDeclarationSubmission)
+      (_: HeaderCarrier, _: ExecutionContext, _: UserDetails))
+        .expects(eopsDeclarationSubmission, *, *, *)
     }
   }
 }

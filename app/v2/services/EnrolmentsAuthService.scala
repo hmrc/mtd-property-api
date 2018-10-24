@@ -17,11 +17,14 @@
 package v2.services
 
 import javax.inject.{Inject, Singleton}
-
 import play.api.Logger
+import uk.gov.hmrc.auth.core.AffinityGroup.{Agent, Individual, Organisation}
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisationException, AuthorisedFunctions, MissingBearerToken}
+import uk.gov.hmrc.auth.core.retrieve.Retrievals._
+import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.http.HeaderCarrier
+import v2.models.auth.UserDetails
 import v2.models.errors.{DownstreamError, UnauthorisedError}
 import v2.models.outcomes.AuthOutcome
 
@@ -34,9 +37,28 @@ class EnrolmentsAuthService @Inject()(val connector: AuthConnector) {
     override def authConnector: AuthConnector = connector
   }
 
+  def getAgentReferenceFromEnrolments(enrolments: Enrolments): Option[String] = enrolments
+    .getEnrolment("HMRC-AS-AGENT")
+    .flatMap(_.getIdentifier("AgentReferenceNumber"))
+    .map(_.value)
+
   def authorised(predicate: Predicate)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[AuthOutcome] = {
-    authFunction.authorised(predicate) {
-      Future.successful(Right(true))
+    authFunction.authorised(predicate).retrieve(affinityGroup and authorisedEnrolments) {
+      case Some(Individual) ~ _ =>
+        val user = UserDetails("", "Individual", None)
+        Future.successful(Right(user))
+      case Some(Organisation) ~ _ =>
+        val user = UserDetails("", "Organisation", None)
+        Future.successful(Right(user))
+      case Some(Agent) ~ enrolments =>
+        getAgentReferenceFromEnrolments(enrolments) match {
+          case arn@Some(_) =>
+            val user: AuthOutcome = Right(UserDetails("", "Agent", arn))
+            Future.successful(user)
+          case None =>
+            Logger.warn(s"[EnrolmentsAuthService][authorised] No AgentReferenceNumber defined on agent enrolment.")
+            Future.successful(Left(DownstreamError))
+        }
     } recoverWith {
       case _: MissingBearerToken => Future.successful(Left(UnauthorisedError))
       case _: AuthorisationException => Future.successful(Left(UnauthorisedError))
