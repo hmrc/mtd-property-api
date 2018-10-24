@@ -20,6 +20,7 @@ import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.http.HeaderCarrier
+import v2.models.auth.UserDetails
 import v2.models.outcomes.AuthOutcome
 import v2.services.EnrolmentsAuthService
 
@@ -33,7 +34,7 @@ trait MockEnrolmentsAuthService extends MockFactory {
     def authoriseUser(): Unit = {
       (mockEnrolmentsAuthService.authorised(_: Predicate)(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *, *)
-        .returns(Future.successful(Right(true)))
+        .returns(Future.successful(Right(UserDetails("mtd-id", "Individual", None))))
     }
 
     def authorised(predicate: Predicate): CallHandler[Future[AuthOutcome]] = {
