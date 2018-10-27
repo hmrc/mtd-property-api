@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuditService @Inject()(auditConnector: AuditConnector,
                              val appNameConfiguration: Configuration) extends AppName {
 
-  def auditEvent[T](event: AuditEvent[T])(implicit hc: HeaderCarrier = HeaderCarrier(), ec: ExecutionContext, writer: Writes[T]): Future[AuditResult] = {
+  def auditEvent[T](event: AuditEvent[T])(implicit hc: HeaderCarrier, ec: ExecutionContext, writer: Writes[T]): Future[AuditResult] = {
 
     val eventTags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags() +
       ("transactionName" -> event.transactionName)
