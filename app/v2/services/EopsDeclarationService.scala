@@ -68,6 +68,7 @@ class EopsDeclarationService @Inject()(auditService: AuditService, connector: De
   private def auditSuccessfulSubmission(submission: EopsDeclarationSubmission,
                                         correlationId: String)
                                        (implicit ec: ExecutionContext,
+                                        hc: HeaderCarrier,
                                         userDetails: UserDetails): Future[AuditResult] = {
     val details = EopsDeclarationAuditDetail(
       userDetails.userType,
