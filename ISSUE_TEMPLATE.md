@@ -17,8 +17,8 @@ If your issue falls into any of the below categories please contact SDST at SDST
   - [ ] Feature request
   - [ ] Support request
 
-* **What is the current behavior?**
+* **What is the current behaviour?**
 
-* **What is the expected behavior?**
+* **What is the expected behaviour?**
 
 * **Other information** (e.g. detailed explanation, screenshots, stacktraces, related issues, suggestions how to fix, links for us to have context, eg. stackoverflow, gitter, etc)
