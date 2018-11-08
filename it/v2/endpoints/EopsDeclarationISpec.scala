@@ -68,6 +68,22 @@ class EopsDeclarationISpec extends IntegrationBaseSpec with Status{
       }
     }
 
+    "return a 204 for an agent" when {
+
+      "agent submitted with valid data" in new Test {
+
+        override def setupStubs(): StubMapping = {
+          AuditStub.audit()
+          AuthStub.authorisedAgent()
+          MtdIdLookupStub.ninoFound(nino)
+          EopsDeclarationStub.successfulEopsDeclaration(nino, from, to)
+        }
+
+        val response: WSResponse = await(request().post(requestJson))
+        response.status shouldBe NO_CONTENT
+      }
+    }
+
     "return single error 403 (Forbidden)" when {
       "submitted with valid data" in new Test {
 

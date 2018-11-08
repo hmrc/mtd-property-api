@@ -35,9 +35,24 @@ object AuthStub extends WireMockMethods {
     )
   )
 
+  private val agentEnrolment: JsObject = Json.obj(
+    "key" -> "HMRC-AS-AGENT",
+    "identifiers" -> Json.arr(
+      Json.obj(
+        "key" -> "AgentReferenceNumber",
+        "value" -> "NARN0198593"
+      )
+    )
+  )
+
   def authorised(): StubMapping = {
     when(method = POST, uri = authoriseUri)
       .thenReturn(status = OK, body = successfulAuthResponse(mtdEnrolment))
+  }
+
+  def authorisedAgent(): StubMapping = {
+    when(method = POST, uri = authoriseUri)
+      .thenReturn(status = OK, body = successfulAuthResponse(agentEnrolment))
   }
 
   def unauthorisedNotLoggedIn(): StubMapping = {
