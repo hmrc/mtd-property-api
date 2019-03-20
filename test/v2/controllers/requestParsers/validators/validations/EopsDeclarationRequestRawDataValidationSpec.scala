@@ -22,7 +22,7 @@ import support.UnitSpec
 import v2.models.errors.NotFinalisedDeclaration
 import v2.models.utils.JsonErrorValidators
 
-class EopsDeclarationRequestDataValidationSpec extends UnitSpec with JsonErrorValidators {
+class EopsDeclarationRequestRawDataValidationSpec extends UnitSpec with JsonErrorValidators {
 
   case class TestDataObject(fieldOne: String, fieldTwo: String)
 

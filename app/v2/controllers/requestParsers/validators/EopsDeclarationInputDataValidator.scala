@@ -20,13 +20,13 @@ import java.time.LocalDate
 
 import v2.controllers.requestParsers.validators.validations._
 import v2.models.errors._
-import v2.models.inbound.{EopsDeclaration, EopsDeclarationRequestData}
+import v2.models.inbound.{EopsDeclarationRequest, EopsDeclarationRawData}
 
-class EopsDeclarationInputDataValidator extends Validator[EopsDeclarationRequestData] {
+class EopsDeclarationInputDataValidator extends Validator[EopsDeclarationRawData] {
 
   private val validationSet = List(levelOneValidations, levelTwoValidations, levelThreeValidations)
 
-  private def levelOneValidations: EopsDeclarationRequestData => List[List[MtdError]] = (data: EopsDeclarationRequestData) => {
+  private def levelOneValidations: EopsDeclarationRawData => List[List[Error]] = (data: EopsDeclarationRawData) => {
     List(
       NinoValidation.validate(data.nino),
       NonEmptyValidation.validate(data.start, MissingStartDateError),
@@ -36,20 +36,20 @@ class EopsDeclarationInputDataValidator extends Validator[EopsDeclarationRequest
     )
   }
 
-  private def levelTwoValidations: EopsDeclarationRequestData => List[List[MtdError]] = (data: EopsDeclarationRequestData) => {
+  private def levelTwoValidations: EopsDeclarationRawData => List[List[Error]] = (data: EopsDeclarationRawData) => {
     List(
       DateRangeValidation.validate(LocalDate.parse(data.start), LocalDate.parse(data.end)),
-      JsonFormatValidation.validate[EopsDeclaration](data.body)
+      JsonFormatValidation.validate[EopsDeclarationRequest](data.body)
     )
   }
 
-  private def levelThreeValidations: EopsDeclarationRequestData => List[List[MtdError]] = (data: EopsDeclarationRequestData) => {
+  private def levelThreeValidations: EopsDeclarationRawData => List[List[Error]] = (data: EopsDeclarationRawData) => {
     List(
       EopsDeclarationRequestDataValidation.validate(data.body)
     )
   }
 
-  override def validate(data: EopsDeclarationRequestData): List[MtdError] = {
+  override def validate(data: EopsDeclarationRawData): List[Error] = {
     run(validationSet, data)
   }
 

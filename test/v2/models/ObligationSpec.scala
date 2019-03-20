@@ -22,6 +22,7 @@ import org.scalatest.Assertion
 import play.api.data.validation.ValidationError
 import play.api.libs.json.{JsResultException, Json}
 import support.UnitSpec
+import v2.models.domain.{FulfilledObligation, Obligation, ObligationStatus, OpenObligation}
 
 import scala.util.{Failure, Success, Try}
 

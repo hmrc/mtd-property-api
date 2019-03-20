@@ -22,16 +22,16 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpResponse
 import v2.mocks.connectors.MockDesConnector
 import v2.mocks.services.MockAuditService
-import v2.models.EopsDeclarationSubmission
 import v2.models.audit.AuditEvent
 import v2.models.auth.UserDetails
+import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 import v2.models.outcomes.EopsDeclarationOutcome
 
 import scala.concurrent.Future
 
-class EopsDeclarationServiceSpec extends ServiceSpec {
+class EopsDeclarationRequestServiceSpec extends ServiceSpec {
 
   private trait Test extends MockAuditService with MockDesConnector {
     implicit val userDetails: UserDetails = UserDetails("123456890", "Individual", None)
@@ -66,8 +66,8 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
     "return multiple errors " when {
       "des connector returns sequence of errors" in new Test {
 
-        val desResponse = MultipleErrors(Seq(MtdError("INVALID_ACCOUNTINGPERIODENDDATE", "some reason"),
-          MtdError("INVALID_ACCOUNTINGPERIODSTARTDATE", "some reason")))
+        val desResponse = MultipleErrors(Seq(Error("INVALID_ACCOUNTINGPERIODENDDATE", "some reason"),
+          Error("INVALID_ACCOUNTINGPERIODSTARTDATE", "some reason")))
 
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
           .returns(Future.successful(Left(desResponse)))
@@ -83,8 +83,8 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
     "return a single 500 (ISE) error" when {
       "multiple errors are returned that includes an INVALID_IDTYPE" in new Test {
 
-        val desResponse = MultipleErrors(Seq(MtdError("INVALID_ACCOUNTINGPERIODENDDATE", "some reason"),
-          MtdError("INVALID_IDTYPE", "'nino' type submitted is incorrect")))
+        val desResponse = MultipleErrors(Seq(Error("INVALID_ACCOUNTINGPERIODENDDATE", "some reason"),
+          Error("INVALID_IDTYPE", "'nino' type submitted is incorrect")))
 
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
           .returns(Future.successful(Left(desResponse)))
@@ -101,8 +101,8 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
     "return multiple bvr errors " when {
       "des connector returns sequence of bvr errors" in new Test {
 
-        val desResponse = BVRErrors(Seq(MtdError("C55317", "some reason"),
-          MtdError("C55318", "some reason")))
+        val desResponse = BVRErrors(Seq(Error("C55317", "some reason"),
+          Error("C55318", "some reason")))
 
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
           .returns(Future.successful(Left(desResponse)))
@@ -119,7 +119,7 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
     "return single bvr error " when {
       "des connector returns single of bvr error" in new Test {
 
-        val desResponse = BVRErrors(Seq(MtdError("C55317", "some reason")))
+        val desResponse = BVRErrors(Seq(Error("C55317", "some reason")))
 
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
           .returns(Future.successful(Left(desResponse)))
@@ -133,7 +133,7 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
       }
     }
 
-    val possibleDesErrors: Seq[(String, String, MtdError)] = Seq(
+    val possibleDesErrors: Seq[(String, String, Error)] = Seq(
       ("NOT_FOUND", "not found", NotFoundError),
       ("INVALID_IDTYPE", "downstream", DownstreamError),
       ("SERVICE_UNAVAILABLE", "service unavailable", ServiceUnavailableError),
@@ -151,7 +151,7 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
         s"return a $description error" when {
           s"the DES connector returns a $desCode code" in new Test {
 
-            val error: EopsDeclarationOutcome = Left(SingleError(MtdError(desCode, "")))
+            val error: EopsDeclarationOutcome = Left(SingleError(Error(desCode, "")))
 
             MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
               .returns(Future.successful(error))

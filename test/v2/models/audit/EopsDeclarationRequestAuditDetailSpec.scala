@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 import support.UnitSpec
 import v2.models.utils.JsonErrorValidators
 
-class EopsDeclarationAuditDetailSpec extends UnitSpec with JsonErrorValidators {
+class EopsDeclarationRequestAuditDetailSpec extends UnitSpec with JsonErrorValidators {
 
   val nino: String = "MA123456D"
   val from: String = "2017-06-04"

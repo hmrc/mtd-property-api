@@ -16,13 +16,7 @@
 
 package v2.models.inbound
 
-import play.api.libs.json.{Json, Reads}
+import play.api.mvc.AnyContentAsJson
 
-
-case class EopsDeclaration(finalised: Boolean)
-
-object EopsDeclaration {
-  implicit val format: Reads[EopsDeclaration] = Json.reads[EopsDeclaration]
-}
-
+case class EopsDeclarationRawData(nino: String, start: String, end: String, body: AnyContentAsJson) extends RawData
 

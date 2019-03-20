@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package v2.models.errors
+package v2.models.domain
 
 import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import play.api.libs.json.{Reads, __}
 
-case class MtdError(code: String, message: String)
+case class ObligationDetails(incomeSourceType : Option[String],
+                             obligations: Seq[Obligation])
 
-object MtdError {
-  implicit val writes: Writes[MtdError] = Json.writes[MtdError]
-  implicit val reads: Reads[MtdError] = (
-    (__ \ "code").read[String] and
-      (__ \ "reason").read[String]
-    ) (MtdError.apply _)
+object ObligationDetails {
+  implicit val reads: Reads[ObligationDetails] = (
+    (__ \\ "incomeSourceType").readNullable[String] and
+      (__ \ "obligationDetails").read[Seq[Obligation]]
+    ) (ObligationDetails.apply _)
 }

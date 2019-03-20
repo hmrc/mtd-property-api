@@ -17,13 +17,14 @@
 package v2.models
 
 import v2.models.auth.UserDetails
-import v2.models.errors.{DesError, ErrorWrapper, MtdError}
+import v2.models.domain.{Obligation, ObligationDetails}
+import v2.models.errors.{DesError, Error, ErrorWrapper}
 
 package object outcomes {
 
-  type AuthOutcome = Either[MtdError, UserDetails]
-  type MtdIdLookupOutcome = Either[MtdError, String]
-  type ObligationsOutcome = Either[Seq[MtdError], Seq[ObligationDetails]]
+  type AuthOutcome = Either[Error, UserDetails]
+  type MtdIdLookupOutcome = Either[Error, String]
+  type ObligationsOutcome = Either[Seq[Error], Seq[ObligationDetails]]
   type EopsObligationsOutcome = Either[ErrorWrapper, Seq[Obligation]]
   type EopsDeclarationOutcome = Either[DesError, String]
 

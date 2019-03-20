@@ -14,17 +14,6 @@
  * limitations under the License.
  */
 
-package v2.models
+package v2.models.inbound
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{Reads, __}
-
-case class ObligationDetails(incomeSourceType : Option[String],
-                             obligations: Seq[Obligation])
-
-object ObligationDetails {
-  implicit val reads: Reads[ObligationDetails] = (
-    (__ \\ "incomeSourceType").readNullable[String] and
-      (__ \ "obligationDetails").read[Seq[Obligation]]
-    ) (ObligationDetails.apply _)
-}
+trait RawData

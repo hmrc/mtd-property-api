@@ -21,13 +21,13 @@ import java.time.LocalDate
 import javax.inject.Inject
 import uk.gov.hmrc.domain.Nino
 import v2.controllers.requestParsers.validators.EopsDeclarationInputDataValidator
-import v2.models.EopsDeclarationSubmission
+import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.{BadRequestError, ErrorWrapper}
-import v2.models.inbound.EopsDeclarationRequestData
+import v2.models.inbound.EopsDeclarationRawData
 
 class EopsDeclarationRequestDataParser @Inject()(validator: EopsDeclarationInputDataValidator) {
 
-  def parseRequest(data: EopsDeclarationRequestData): Either[ErrorWrapper, EopsDeclarationSubmission] = {
+  def parseRequest(data: EopsDeclarationRawData): Either[ErrorWrapper, EopsDeclarationSubmission] = {
 
     lazy val eopsDeclarationSubmission =
       EopsDeclarationSubmission(Nino(data.nino), LocalDate.parse(data.start), LocalDate.parse(data.end))

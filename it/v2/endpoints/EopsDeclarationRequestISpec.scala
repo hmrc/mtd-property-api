@@ -27,7 +27,7 @@ import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 import v2.stubs._
 
-class EopsDeclarationISpec extends IntegrationBaseSpec with Status{
+class EopsDeclarationRequestISpec extends IntegrationBaseSpec with Status{
 
   private trait Test {
 

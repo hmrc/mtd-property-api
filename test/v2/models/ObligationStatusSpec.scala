@@ -18,6 +18,7 @@ package v2.models
 
 import play.api.libs.json.{JsString, Json}
 import support.UnitSpec
+import v2.models.domain.{FulfilledObligation, ObligationStatus, OpenObligation}
 
 import scala.util.{Failure, Success, Try}
 

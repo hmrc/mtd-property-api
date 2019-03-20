@@ -19,17 +19,17 @@ package v2.mocks.requestParsers
 import org.scalamock.handlers.CallHandler1
 import org.scalamock.scalatest.MockFactory
 import v2.controllers.requestParsers.EopsDeclarationRequestDataParser
-import v2.models.EopsDeclarationSubmission
+import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.ErrorWrapper
-import v2.models.inbound.EopsDeclarationRequestData
+import v2.models.inbound.EopsDeclarationRawData
 
-trait MockEopsDeclarationRequestDataParser extends MockFactory {
+trait MockEopsDeclarationRequestRawDataParser extends MockFactory {
 
   val mockRequestDataParser = mock[EopsDeclarationRequestDataParser]
 
   object MockedEopsDeclarationRequestDataParser {
-    def parseRequest(data: EopsDeclarationRequestData): CallHandler1[EopsDeclarationRequestData, Either[ErrorWrapper, EopsDeclarationSubmission]] = {
-      (mockRequestDataParser.parseRequest(_: EopsDeclarationRequestData))
+    def parseRequest(data: EopsDeclarationRawData): CallHandler1[EopsDeclarationRawData, Either[ErrorWrapper, EopsDeclarationSubmission]] = {
+      (mockRequestDataParser.parseRequest(_: EopsDeclarationRawData))
         .expects(data)
     }
   }

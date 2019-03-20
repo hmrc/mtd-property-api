@@ -20,9 +20,9 @@ import play.api.libs.json.Json
 import play.api.mvc.AnyContentAsJson
 import support.UnitSpec
 import v2.models.errors._
-import v2.models.inbound.EopsDeclarationRequestData
+import v2.models.inbound.EopsDeclarationRawData
 
-class EopsDeclarationRequestDataValidatorSpec extends UnitSpec {
+class EopsDeclarationRequestRawDataValidatorSpec extends UnitSpec {
 
   val validNino = "AA123456A"
   val validFromDate = "2018-01-01"
@@ -37,7 +37,7 @@ class EopsDeclarationRequestDataValidatorSpec extends UnitSpec {
 
     "return no errors" when {
       "when the uri is valid and the JSON payload is Valid" in new Test {
-        val inputData = EopsDeclarationRequestData(validNino, validFromDate, validToDate, validJsonBody)
+        val inputData = EopsDeclarationRawData(validNino, validFromDate, validToDate, validJsonBody)
 
         val result = validator.validate(inputData)
         result.isEmpty shouldBe true
@@ -48,7 +48,7 @@ class EopsDeclarationRequestDataValidatorSpec extends UnitSpec {
 
       "when an invalid NINO is supplied" in new Test {
         val invalidNino = "ABCDEFGHIJKLM"
-        val inputData = EopsDeclarationRequestData(invalidNino, validFromDate, validToDate, validJsonBody)
+        val inputData = EopsDeclarationRawData(invalidNino, validFromDate, validToDate, validJsonBody)
 
         val result = validator.validate(inputData)
         result.size shouldBe 1
@@ -57,7 +57,7 @@ class EopsDeclarationRequestDataValidatorSpec extends UnitSpec {
 
       "when a from date with an invalid format is supplied " in new Test {
         val invalidFormatFromDate = "ABCDEFGHIJKLM"
-        val inputData = EopsDeclarationRequestData(validNino, invalidFormatFromDate, validToDate, validJsonBody)
+        val inputData = EopsDeclarationRawData(validNino, invalidFormatFromDate, validToDate, validJsonBody)
 
         val result = validator.validate(inputData)
         result.size shouldBe 1
@@ -66,7 +66,7 @@ class EopsDeclarationRequestDataValidatorSpec extends UnitSpec {
 
       "when a to date with an invalid format is supplied " in new Test {
         val invalidFormatToDate = "ABCDEFGHIJKLM"
-        val inputData = EopsDeclarationRequestData(validNino, validFromDate, invalidFormatToDate, validJsonBody)
+        val inputData = EopsDeclarationRawData(validNino, validFromDate, invalidFormatToDate, validJsonBody)
 
         val result = validator.validate(inputData)
         result.size shouldBe 1
@@ -75,7 +75,7 @@ class EopsDeclarationRequestDataValidatorSpec extends UnitSpec {
 
       "when the declaration has not been finalised" in new Test {
         val invalidJson = AnyContentAsJson(Json.obj("finalised" -> false))
-        val inputData = EopsDeclarationRequestData(validNino, validFromDate, validToDate, invalidJson)
+        val inputData = EopsDeclarationRawData(validNino, validFromDate, validToDate, invalidJson)
 
         val result = validator.validate(inputData)
         result.isEmpty shouldBe false
@@ -87,7 +87,7 @@ class EopsDeclarationRequestDataValidatorSpec extends UnitSpec {
     "return multiple errors" when {
       "when the from date is missing " in new Test {
         val emptyFromDate = ""
-        val inputData = EopsDeclarationRequestData(validNino, emptyFromDate, validToDate, validJsonBody)
+        val inputData = EopsDeclarationRawData(validNino, emptyFromDate, validToDate, validJsonBody)
 
         val result = validator.validate(inputData)
         result.size shouldBe 2
@@ -97,7 +97,7 @@ class EopsDeclarationRequestDataValidatorSpec extends UnitSpec {
 
       "when the to date is missing " in new Test {
         val emptyToDate = ""
-        val inputData = EopsDeclarationRequestData(validNino, validFromDate, emptyToDate, validJsonBody)
+        val inputData = EopsDeclarationRawData(validNino, validFromDate, emptyToDate, validJsonBody)
 
         val result = validator.validate(inputData)
         result.size shouldBe 2
@@ -109,7 +109,7 @@ class EopsDeclarationRequestDataValidatorSpec extends UnitSpec {
     "should run level 2 validations" when {
       "when all level 1 validations pass" in new Test {
         val invalidValuesInJson = AnyContentAsJson(Json.obj("fin" -> 123))
-        val inputData = EopsDeclarationRequestData(validNino, validFromDate, validToDate, invalidValuesInJson)
+        val inputData = EopsDeclarationRawData(validNino, validFromDate, validToDate, invalidValuesInJson)
 
         val result = validator.validate(inputData)
         result.isEmpty shouldBe false
@@ -124,7 +124,7 @@ class EopsDeclarationRequestDataValidatorSpec extends UnitSpec {
         // Level 2 error
         val invalidJson = AnyContentAsJson(Json.obj("finalised" -> false))
 
-        val inputData = EopsDeclarationRequestData(validNino, validFromDate, invalidFormatToDate, invalidJson)
+        val inputData = EopsDeclarationRawData(validNino, validFromDate, invalidFormatToDate, invalidJson)
 
         val result = validator.validate(inputData)
         result.size shouldBe 1
@@ -139,7 +139,7 @@ class EopsDeclarationRequestDataValidatorSpec extends UnitSpec {
         // Level 2 error exists
         val invalidJson = AnyContentAsJson(Json.obj("someMadeUpField" -> false))
 
-        val inputData = EopsDeclarationRequestData(validNino, validFromDate, validToDate, invalidJson)
+        val inputData = EopsDeclarationRawData(validNino, validFromDate, validToDate, invalidJson)
 
         val result = validator.validate(inputData)
         result.size shouldBe 1

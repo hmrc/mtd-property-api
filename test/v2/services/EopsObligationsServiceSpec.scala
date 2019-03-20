@@ -19,10 +19,10 @@ package v2.services
 import java.time.LocalDate
 
 import v2.mocks.connectors.MockDesConnector
+import v2.models.domain.{FulfilledObligation, Obligation, ObligationDetails}
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
 import v2.models.outcomes.{EopsObligationsOutcome, ObligationsOutcome}
-import v2.models.{FulfilledObligation, Obligation, ObligationDetails}
 
 import scala.concurrent.Future
 
@@ -374,7 +374,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
       }
     }
 
-    val possibleDesErrors: Seq[(String, String, MtdError)] = Seq(
+    val possibleDesErrors: Seq[(String, String, Error)] = Seq(
       (DownstreamError.code, "downstream", DownstreamError),
       ("NOT_FOUND", "not found", NotFoundError),
       ("NOT_FOUND_BPKEY", "downstream", DownstreamError),
@@ -397,7 +397,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
             val from: String = "2018-01-01"
             val to: String = "2018-12-31"
 
-            val error: Future[ObligationsOutcome] = Future.successful(Left(Seq(MtdError(desCode, ""))))
+            val error: Future[ObligationsOutcome] = Future.successful(Left(Seq(Error(desCode, ""))))
 
             MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
               .returns(error)

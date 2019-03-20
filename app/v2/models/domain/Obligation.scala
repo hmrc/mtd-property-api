@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package v2.models
+package v2.models.domain
 
 import java.time.LocalDate
 
