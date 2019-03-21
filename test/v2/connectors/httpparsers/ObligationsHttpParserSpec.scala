@@ -23,9 +23,9 @@ import play.api.test.Helpers._
 import support.UnitSpec
 import uk.gov.hmrc.http.HttpResponse
 import v2.connectors.httpparsers.ObligationsHttpParser.obligationsHttpReads
-import v2.models.errors.{DownstreamError, MtdError}
+import v2.models.domain.{FulfilledObligation, Obligation, ObligationDetails}
+import v2.models.errors.{DownstreamError, Error}
 import v2.models.outcomes.ObligationsOutcome
-import v2.models.{FulfilledObligation, Obligation, ObligationDetails}
 
 class ObligationsHttpParserSpec extends UnitSpec {
 
@@ -121,9 +121,9 @@ class ObligationsHttpParserSpec extends UnitSpec {
           |""".stripMargin
       )
 
-      val expectedErrors: Seq[MtdError] = Seq(
-        MtdError("CODE_1", "error message"),
-        MtdError("CODE_2", "error message")
+      val expectedErrors: Seq[Error] = Seq(
+        Error("CODE_1", "error message"),
+        Error("CODE_2", "error message")
       )
 
       "the HttpResponse has a 400 status and a multiple error response body" in {

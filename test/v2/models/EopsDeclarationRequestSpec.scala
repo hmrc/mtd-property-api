@@ -18,10 +18,10 @@ package v2.models
 
 import play.api.libs.json.Json
 import support.UnitSpec
-import v2.models.inbound.EopsDeclaration
+import v2.models.inbound.EopsDeclarationRequest
 import v2.models.utils.JsonErrorValidators
 
-class eopsDeclarationSpec extends UnitSpec with JsonErrorValidators{
+class EopsDeclarationRequestSpec extends UnitSpec with JsonErrorValidators{
 
   val eopsDeclarationRequestJson =
     """
@@ -30,16 +30,16 @@ class eopsDeclarationSpec extends UnitSpec with JsonErrorValidators{
       |}
     """.stripMargin
 
-  val eopsDeclarationRequest = EopsDeclaration(finalised = true)
+  val eopsDeclarationRequest = EopsDeclarationRequest(finalised = true)
 
   "eopsDeclaration reads" should {
 
     import JsonError._
 
     "return correct validation errors" when {
-      testMandatoryProperty[EopsDeclaration](eopsDeclarationRequestJson)(property = "finalised")
+      testMandatoryProperty[EopsDeclarationRequest](eopsDeclarationRequestJson)(property = "finalised")
 
-      testPropertyType[EopsDeclaration](eopsDeclarationRequestJson)(
+      testPropertyType[EopsDeclarationRequest](eopsDeclarationRequestJson)(
         property = "finalised",
         invalidValue = "6",
         errorPathAndError = "/incomeSourceID" -> BOOLEAN_FORMAT_EXCEPTION
@@ -48,7 +48,7 @@ class eopsDeclarationSpec extends UnitSpec with JsonErrorValidators{
 
     "return a successfully read uk-property eopsDeclaration model" when {
       "all fields exist" in {
-        Json.parse(eopsDeclarationRequestJson).as[EopsDeclaration] shouldBe eopsDeclarationRequest
+        Json.parse(eopsDeclarationRequestJson).as[EopsDeclarationRequest] shouldBe eopsDeclarationRequest
       }
 
     }

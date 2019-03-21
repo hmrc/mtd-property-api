@@ -22,9 +22,9 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.mocks.services.{MockEnrolmentsAuthService, MockEopsObligationsService, MockMtdIdLookupService}
+import v2.models.domain.{FulfilledObligation, Obligation}
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
-import v2.models.{FulfilledObligation, Obligation}
 
 import scala.concurrent.Future
 
@@ -60,7 +60,7 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
   val from: String = "2018-01-01"
   val to: String = "2018-12-31"
 
-  def eopsErrorTest(error: v2.models.errors.MtdError, expectedStatus: Int): Unit =
+  def eopsErrorTest(error: v2.models.errors.Error, expectedStatus: Int): Unit =
     {
       s"returned a ${error.code} error" in new Test {
         MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)

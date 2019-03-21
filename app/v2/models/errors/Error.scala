@@ -14,10 +14,17 @@
  * limitations under the License.
  */
 
-package v2.models
+package v2.models.errors
 
-import java.time.LocalDate
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
 
-import uk.gov.hmrc.domain.Nino
+case class Error(code: String, message: String)
 
-case class EopsDeclarationSubmission(nino: Nino, start: LocalDate, end: LocalDate)
+object Error {
+  implicit val writes: Writes[Error] = Json.writes[Error]
+  implicit val reads: Reads[Error] = (
+    (__ \ "code").read[String] and
+      (__ \ "reason").read[String]
+    ) (Error.apply _)
+}

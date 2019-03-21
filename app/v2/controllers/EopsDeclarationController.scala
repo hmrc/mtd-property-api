@@ -22,7 +22,7 @@ import play.api.mvc.{Action, AnyContentAsJson}
 import v2.controllers.requestParsers.EopsDeclarationRequestDataParser
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
-import v2.models.inbound.EopsDeclarationRequestData
+import v2.models.inbound.EopsDeclarationRawData
 import v2.services.{EnrolmentsAuthService, EopsDeclarationService, MtdIdLookupService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,7 +38,7 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
     authorisedAction(nino).async(parse.json) { implicit request =>
 
       implicit val userDetails = request.userDetails
-      requestDataParser.parseRequest(EopsDeclarationRequestData(nino, start, end, AnyContentAsJson(request.body))) match {
+      requestDataParser.parseRequest(EopsDeclarationRawData(nino, start, end, AnyContentAsJson(request.body))) match {
         case Right(eopsDeclarationSubmission) =>
           service.submit(eopsDeclarationSubmission).map {
             case None => NoContent
@@ -58,9 +58,7 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
            | RangeToDateBeforeFromDateError
            | RangeEndDateBeforeStartDateError
            | BadRequestError
-           | NinoFormatError
-           | EarlySubmissionError
-           | LateSubmissionError =>
+           | NinoFormatError =>
         BadRequest(Json.toJson(errorResponse))
       case ConflictError
            | NotFinalisedDeclaration
@@ -71,6 +69,8 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
            | RuleMismatchStartDate
            | RuleMismatchEndDate
            | RuleConsolidatedExpenses
+           | EarlySubmissionError
+           | LateSubmissionError
            | BVRError =>
         Forbidden(Json.toJson(errorResponse))
       case NotFoundError => NotFound(Json.toJson(errorResponse))

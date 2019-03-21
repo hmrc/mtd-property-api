@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package v2.models.inbound
+package v2.models.domain
 
-import play.api.mvc.AnyContentAsJson
+import java.time.LocalDate
 
-case class EopsDeclarationRequestData(nino: String, start: String, end: String, body: AnyContentAsJson) extends InputData
+import uk.gov.hmrc.domain.Nino
 
+case class EopsDeclarationSubmission(nino: Nino, start: LocalDate, end: LocalDate)

@@ -21,9 +21,9 @@ import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import v2.connectors.DesConnector
-import v2.models.EopsDeclarationSubmission
 import v2.models.audit.{AuditEvent, EopsDeclarationAuditDetail}
 import v2.models.auth.UserDetails
+import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 
@@ -85,7 +85,7 @@ class EopsDeclarationService @Inject()(auditService: AuditService, connector: De
     auditService.auditEvent(event)
   }
 
-  private val desErrorToMtdError: Map[String, MtdError] = Map(
+  private val desErrorToMtdError: Map[String, Error] = Map(
     "NOT_FOUND" -> NotFoundError,
     "INVALID_IDTYPE" -> DownstreamError,
     "INVALID_IDVALUE" -> NinoFormatError,
@@ -98,7 +98,7 @@ class EopsDeclarationService @Inject()(auditService: AuditService, connector: De
     "SERVICE_UNAVAILABLE" -> ServiceUnavailableError
   )
 
-  private val desBvrErrorToMtdError: Map[String, MtdError] = Map(
+  private val desBvrErrorToMtdError: Map[String, Error] = Map(
     "C55317" -> RuleClass4Over16,
     "C55318" -> RuleClass4PensionAge,
     "C55501" -> RuleFhlPrivateUseAdjustment,

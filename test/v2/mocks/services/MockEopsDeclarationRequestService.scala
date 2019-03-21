@@ -19,14 +19,14 @@ package v2.mocks.services
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.http.HeaderCarrier
-import v2.models.EopsDeclarationSubmission
 import v2.models.auth.UserDetails
+import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.ErrorWrapper
 import v2.services.EopsDeclarationService
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MockEopsDeclarationService extends MockFactory {
+trait MockEopsDeclarationRequestService extends MockFactory {
 
   val mockEopsDeclarationService: EopsDeclarationService = mock[EopsDeclarationService]
 

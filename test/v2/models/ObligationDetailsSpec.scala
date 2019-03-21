@@ -18,6 +18,7 @@ package v2.models
 
 import play.api.libs.json.Json
 import support.UnitSpec
+import v2.models.domain.ObligationDetails
 
 class ObligationDetailsSpec extends UnitSpec {
 

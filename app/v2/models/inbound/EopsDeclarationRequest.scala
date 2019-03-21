@@ -16,4 +16,13 @@
 
 package v2.models.inbound
 
-trait InputData
+import play.api.libs.json.{Json, Reads}
+
+
+case class EopsDeclarationRequest(finalised: Boolean)
+
+object EopsDeclarationRequest {
+  implicit val format: Reads[EopsDeclarationRequest] = Json.reads[EopsDeclarationRequest]
+}
+
+
