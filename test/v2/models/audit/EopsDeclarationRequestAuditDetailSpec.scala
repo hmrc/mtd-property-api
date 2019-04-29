@@ -16,6 +16,7 @@
 
 package v2.models.audit
 
+import play.api.http.Status
 import play.api.libs.json.Json
 import support.UnitSpec
 import v2.models.utils.JsonErrorValidators
@@ -26,43 +27,59 @@ class EopsDeclarationRequestAuditDetailSpec extends UnitSpec with JsonErrorValid
   val from: String = "2017-06-04"
   val to: String = "2018-06-04"
 
-  val eopsDeclarationAuditDetail =
-    EopsDeclarationAuditDetail("Agent", Some("123456780"), nino, from, to, true, "5b85344c1100008e00c6a181")
-
-  val eopsDeclarationAuditDetailAgentJson =
-    """
-      |{
-      | "userType": "Agent",
-      | "agentReferenceNumber": "123456780",
-      | "nino": "MA123456D",
-      | "from": "2017-06-04",
-      | "to": "2018-06-04",
-      | "finalised": true,
-      | "X-CorrelationId": "5b85344c1100008e00c6a181"
-      |}
-    """.stripMargin
-
-  val eopsDeclarationAuditDetailIndivualJson =
-    """
-      |{
-      | "userType": "individual",
-      | "nino": "MA123456D",
-      | "from": "2017-06-04",
-      | "to": "2018-06-04",
-      | "finalised": true,
-      | "X-CorrelationId": "5b85344c1100008e00c6a181"
-      |}
-    """.stripMargin
+  private val responseSuccess = EopsDeclarationAuditResponse(Status.NO_CONTENT, None)
+  private val responseFail = EopsDeclarationAuditResponse(Status.BAD_REQUEST, Some(Seq(AuditError("FORMAT_NINO"))))
 
   "EopsDeclarationAuditDetail writes" should {
 
     "return a valid json with all the fields" in {
-      Json.toJson(eopsDeclarationAuditDetail) shouldBe Json.parse(eopsDeclarationAuditDetailAgentJson)
+      val model =
+        EopsDeclarationAuditDetail("Agent", Some("123456780"), nino, from, to, true, "5b85344c1100008e00c6a181", Some(responseFail))
+
+      val json =
+        """
+          |{
+          | "userType": "Agent",
+          | "agentReferenceNumber": "123456780",
+          | "nino": "MA123456D",
+          | "from": "2017-06-04",
+          | "to": "2018-06-04",
+          | "finalised": true,
+          | "X-CorrelationId": "5b85344c1100008e00c6a181",
+          | "response": {
+          |   "httpStatus": 400,
+          |   "errors": [
+          |     {
+          |       "errorCode": "FORMAT_NINO"
+          |     }
+          |   ]
+          | }
+          |}
+        """.stripMargin
+
+      Json.toJson(model) shouldBe Json.parse(json)
     }
 
     "return a valid json with only mandatory fields" in {
-      Json.toJson(eopsDeclarationAuditDetail.copy(userType = "individual", agentReferenceNumber = None)) shouldBe
-        Json.parse(eopsDeclarationAuditDetailIndivualJson)
+      val model =
+        EopsDeclarationAuditDetail("Individual", None, nino, from, to, true, "5b85344c1100008e00c6a181", Some(responseSuccess))
+
+      val json =
+        """
+          |{
+          | "userType": "Individual",
+          | "nino": "MA123456D",
+          | "from": "2017-06-04",
+          | "to": "2018-06-04",
+          | "finalised": true,
+          | "X-CorrelationId": "5b85344c1100008e00c6a181",
+          | "response": {
+          |   "httpStatus": 204
+          | }
+          |}
+        """.stripMargin
+
+      Json.toJson(model) shouldBe Json.parse(json)
     }
   }
 }

@@ -25,7 +25,8 @@ case class EopsDeclarationAuditDetail(
                                        from: String,
                                        to: String,
                                        finalised: Boolean,
-                                       `X-CorrelationId`: String
+                                       `X-CorrelationId`: String,
+                                       response: Option[EopsDeclarationAuditResponse] = None
                                      )
 
 object EopsDeclarationAuditDetail {
