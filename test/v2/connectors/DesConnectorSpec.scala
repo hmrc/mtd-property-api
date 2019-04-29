@@ -23,7 +23,6 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpResponse
 import v2.mocks.{MockAppConfig, MockHttpClient}
 import v2.models.errors._
-import v2.models.outcomes.{EopsDeclarationOutcome, ObligationsOutcome}
 
 import scala.concurrent.Future
 
@@ -64,20 +63,20 @@ class DesConnectorSpec extends ConnectorSpec {
     "return a collection of obligation details" when {
       "the http client returns a collection of obligations" in new Test {
 
-        MockedHttpClient.get[ObligationsOutcome](baseUrl + urlPath)
+        MockedHttpClient.get[ObligationsConnectorOutcome](baseUrl + urlPath)
           .returns(Future.successful(Right(Seq.empty)))
 
-        val result: ObligationsOutcome = await(connector.getObligations(nino, from, to))
+        val result: ObligationsConnectorOutcome = await(connector.getObligations(nino, from, to))
         result shouldBe Right(Seq.empty)
       }
     }
 
     "return a DownstreamError" when {
       "the http client returns a DownstreamError" in new Test {
-        MockedHttpClient.get[ObligationsOutcome](baseUrl + urlPath)
+        MockedHttpClient.get[ObligationsConnectorOutcome](baseUrl + urlPath)
           .returns(Future.successful(Left(Seq(DownstreamError))))
 
-        val result: ObligationsOutcome = await(connector.getObligations(nino, from, to))
+        val result: ObligationsConnectorOutcome = await(connector.getObligations(nino, from, to))
         result shouldBe Left(Seq(DownstreamError))
       }
     }
@@ -95,10 +94,10 @@ class DesConnectorSpec extends ConnectorSpec {
 
     "return a None" when {
       "the http client returns None" in new Test {
-        MockedHttpClient.postEmpty[EopsDeclarationOutcome](url)
+        MockedHttpClient.postEmpty[EopsDeclarationConnectorOutcome](url)
           .returns(Future.successful(Right(correlationId)))
 
-        val result: EopsDeclarationOutcome = await(connector.submitEOPSDeclaration(nino, from, to))
+        val result: EopsDeclarationConnectorOutcome = await(connector.submitEOPSDeclaration(nino, from, to))
         result shouldBe Right(correlationId)
       }
     }
@@ -107,10 +106,10 @@ class DesConnectorSpec extends ConnectorSpec {
       "the http client returns an error response" in new Test {
         val errorResponse = SingleError(NinoFormatError)
 
-        MockedHttpClient.postEmpty[EopsDeclarationOutcome](url)
+        MockedHttpClient.postEmpty[EopsDeclarationConnectorOutcome](url)
           .returns(Future.successful(Left(errorResponse)))
 
-        val result: EopsDeclarationOutcome = await(connector.submitEOPSDeclaration(nino, from, to))
+        val result: EopsDeclarationConnectorOutcome = await(connector.submitEOPSDeclaration(nino, from, to))
         result shouldBe Left(errorResponse)
       }
     }

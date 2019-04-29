@@ -20,6 +20,7 @@ import java.time.LocalDate
 
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpResponse
+import v2.connectors.EopsDeclarationConnectorOutcome
 import v2.mocks.connectors.MockDesConnector
 import v2.mocks.services.MockAuditService
 import v2.models.audit.AuditEvent
@@ -27,11 +28,10 @@ import v2.models.auth.UserDetails
 import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
-import v2.models.outcomes.EopsDeclarationOutcome
 
 import scala.concurrent.Future
 
-class EopsDeclarationRequestServiceSpec extends ServiceSpec {
+class EopsDeclarationServiceSpec extends ServiceSpec {
 
   private trait Test extends MockAuditService with MockDesConnector {
     implicit val userDetails: UserDetails = UserDetails("123456890", "Individual", None)
@@ -56,10 +56,10 @@ class EopsDeclarationRequestServiceSpec extends ServiceSpec {
           .returns(Future.successful(Right(correlationId)))
 
         MockedAuditService.auditEventSucceeds(AuditEvent("auditType", "tx-name", "some details"))
-        val result: Option[ErrorWrapper] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
+        val result: EopsDeclarationOutcome = await(service.submit(EopsDeclarationSubmission(Nino(nino),
           LocalDate.parse(start), LocalDate.parse(end))))
 
-        result shouldBe None
+        result shouldBe Right(())
       }
     }
 
@@ -74,9 +74,9 @@ class EopsDeclarationRequestServiceSpec extends ServiceSpec {
 
         val expected = ErrorWrapper(BadRequestError, Some(Seq(InvalidEndDateError, InvalidStartDateError)))
 
-        val result: Option[ErrorWrapper] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
+        val result: EopsDeclarationOutcome = await(service.submit(EopsDeclarationSubmission(Nino(nino),
           LocalDate.parse(start), LocalDate.parse(end))))
-        result shouldBe Some(expected)
+        result shouldBe Left(expected)
       }
     }
 
@@ -91,10 +91,10 @@ class EopsDeclarationRequestServiceSpec extends ServiceSpec {
 
         val expected = ErrorWrapper(DownstreamError, None)
 
-        val result: Option[ErrorWrapper] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
+        val result: EopsDeclarationOutcome = await(service.submit(EopsDeclarationSubmission(Nino(nino),
           LocalDate.parse(start), LocalDate.parse(end))))
 
-        result shouldBe Some(expected)
+        result shouldBe Left(expected)
       }
     }
 
@@ -109,10 +109,10 @@ class EopsDeclarationRequestServiceSpec extends ServiceSpec {
 
         val expected = ErrorWrapper(BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge)))
 
-        val result: Option[ErrorWrapper] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
+        val result: EopsDeclarationOutcome = await(service.submit(EopsDeclarationSubmission(Nino(nino),
           LocalDate.parse(start), LocalDate.parse(end))))
 
-        result shouldBe Some(expected)
+        result shouldBe Left(expected)
       }
     }
 
@@ -126,10 +126,10 @@ class EopsDeclarationRequestServiceSpec extends ServiceSpec {
 
         val expected = ErrorWrapper(RuleClass4Over16, None)
 
-        val result: Option[ErrorWrapper] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
+        val result: EopsDeclarationOutcome = await(service.submit(EopsDeclarationSubmission(Nino(nino),
           LocalDate.parse(start), LocalDate.parse(end))))
 
-        result shouldBe Some(expected)
+        result shouldBe Left(expected)
       }
     }
 
@@ -151,15 +151,15 @@ class EopsDeclarationRequestServiceSpec extends ServiceSpec {
         s"return a $description error" when {
           s"the DES connector returns a $desCode code" in new Test {
 
-            val error: EopsDeclarationOutcome = Left(SingleError(Error(desCode, "")))
+            val error: EopsDeclarationConnectorOutcome = Left(SingleError(Error(desCode, "")))
 
             MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
               .returns(Future.successful(error))
 
-            val result: Option[ErrorWrapper] = await(service.submit(EopsDeclarationSubmission(Nino(nino),
+            val result: EopsDeclarationOutcome = await(service.submit(EopsDeclarationSubmission(Nino(nino),
               LocalDate.parse(start), LocalDate.parse(end))))
 
-            result shouldBe Some(ErrorWrapper(mtdError, None))
+            result shouldBe Left(ErrorWrapper(mtdError, None))
           }
         }
     }

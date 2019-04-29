@@ -18,11 +18,11 @@ package v2.services
 
 import java.time.LocalDate
 
+import v2.connectors.ObligationsConnectorOutcome
 import v2.mocks.connectors.MockDesConnector
 import v2.models.domain.{FulfilledObligation, Obligation, ObligationDetails}
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
-import v2.models.outcomes.{EopsObligationsOutcome, ObligationsOutcome}
 
 import scala.concurrent.Future
 
@@ -348,7 +348,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-01-01"
         val to: String = "2018-12-31"
 
-        val outcomesObligations: Future[ObligationsOutcome] = Future(Right(validObligationsData))
+        val outcomesObligations: Future[ObligationsConnectorOutcome] = Future(Right(validObligationsData))
 
         MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
           .returns(outcomesObligations)
@@ -364,7 +364,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-01-01"
         val to: String = "2018-12-31"
 
-        val outcomesObligations: Future[ObligationsOutcome] = Future(Right(validNonEopsObligationsData))
+        val outcomesObligations: Future[ObligationsConnectorOutcome] = Future(Right(validNonEopsObligationsData))
 
         MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
           .returns(outcomesObligations)
@@ -397,7 +397,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
             val from: String = "2018-01-01"
             val to: String = "2018-12-31"
 
-            val error: Future[ObligationsOutcome] = Future.successful(Left(Seq(Error(desCode, ""))))
+            val error: Future[ObligationsConnectorOutcome] = Future.successful(Left(Seq(Error(desCode, ""))))
 
             MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
               .returns(error)

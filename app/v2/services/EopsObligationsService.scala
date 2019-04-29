@@ -25,7 +25,6 @@ import v2.connectors.DesConnector
 import v2.models.domain.{Obligation, ObligationDetails}
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
-import v2.models.outcomes.EopsObligationsOutcome
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try

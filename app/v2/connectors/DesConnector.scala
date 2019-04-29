@@ -17,14 +17,13 @@
 package v2.connectors
 
 import java.time.LocalDate
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.logging.Authorization
 import uk.gov.hmrc.play.bootstrap.http.HttpClient
 import v2.config.AppConfig
-import v2.models.outcomes.{EopsDeclarationOutcome, ObligationsOutcome}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -37,20 +36,20 @@ class DesConnector @Inject()(http: HttpClient,
     .withExtraHeaders("Environment" -> appConfig.desEnv)
 
   def getObligations(nino: String, from: LocalDate, to: LocalDate)
-                    (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ObligationsOutcome] = {
+                    (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ObligationsConnectorOutcome] = {
     import v2.connectors.httpparsers.ObligationsHttpParser.obligationsHttpReads
 
     val urlPath = s"/enterprise/obligation-data/nino/$nino/ITSA?from=$from&to=$to"
 
-    http.GET[ObligationsOutcome](appConfig.desBaseUrl + urlPath)(implicitly, desHeaderCarrier, implicitly)
+    http.GET[ObligationsConnectorOutcome](appConfig.desBaseUrl + urlPath)(implicitly, desHeaderCarrier, implicitly)
   }
 
   def submitEOPSDeclaration(nino: Nino, from: LocalDate, to: LocalDate)
-                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsDeclarationOutcome] = {
+                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsDeclarationConnectorOutcome] = {
     import v2.connectors.httpparsers.SubmitEOPSDeclarationHttpParser.submitEOPSDeclarationHttpReads
 
     val url = s"${appConfig.desBaseUrl}/income-tax/income-sources/nino/${nino.nino}/uk-property/$from/$to/declaration"
 
-    http.POSTEmpty[EopsDeclarationOutcome](url)(submitEOPSDeclarationHttpReads, desHeaderCarrier, implicitly)
+    http.POSTEmpty[EopsDeclarationConnectorOutcome](url)(submitEOPSDeclarationHttpReads, desHeaderCarrier, implicitly)
   }
 }

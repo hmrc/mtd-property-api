@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContentAsJson}
 import v2.controllers.requestParsers.EopsDeclarationRequestDataParser
+import v2.models.auth.UserDetails
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 import v2.models.inbound.EopsDeclarationRawData
@@ -37,12 +38,12 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
   def submit(nino: String, start: String, end: String): Action[JsValue] =
     authorisedAction(nino).async(parse.json) { implicit request =>
 
-      implicit val userDetails = request.userDetails
+      implicit val userDetails: UserDetails = request.userDetails
       requestDataParser.parseRequest(EopsDeclarationRawData(nino, start, end, AnyContentAsJson(request.body))) match {
         case Right(eopsDeclarationSubmission) =>
           service.submit(eopsDeclarationSubmission).map {
-            case None => NoContent
-            case Some(errorResponse) => processError(errorResponse)
+            case Right(_)  => NoContent
+            case Left(errorResponse) => processError(errorResponse)
           }
         case Left(validationErrorResponse) => Future {
           processError(validationErrorResponse)

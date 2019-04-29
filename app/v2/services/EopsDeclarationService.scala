@@ -35,32 +35,32 @@ class EopsDeclarationService @Inject()(auditService: AuditService, connector: De
   def submit(submission: EopsDeclarationSubmission)
             (implicit hc: HeaderCarrier,
              ec: ExecutionContext,
-             userDetails: UserDetails): Future[Option[ErrorWrapper]] = {
+             userDetails: UserDetails): Future[EopsDeclarationOutcome] = {
 
     val logger: Logger = Logger(this.getClass)
 
     connector.submitEOPSDeclaration(submission.nino, submission.start, submission.end).map {
       case Left(SingleError(error)) =>
-        Some(ErrorWrapper(desErrorToMtdError(error.code), None))
+        Left(ErrorWrapper(desErrorToMtdError(error.code), None))
       case Left(MultipleErrors(errors)) =>
         val mtdErrors = errors.map(error => desErrorToMtdError(error.code))
         if (mtdErrors.contains(DownstreamError)) {
           logger.info("[EopsDeclarationService] [submit] - downstream returned INVALID_IDTYPE. Revert to ISE")
-          Some(ErrorWrapper(DownstreamError, None))
+          Left(ErrorWrapper(DownstreamError, None))
         }
         else {
-          Some(ErrorWrapper(BadRequestError, Some(mtdErrors)))
+          Left(ErrorWrapper(BadRequestError, Some(mtdErrors)))
         }
       case Left(BVRErrors(errors)) =>
         if (errors.size == 1) {
-          Some(ErrorWrapper(desBvrErrorToMtdError(errors.head.code), None))
+          Left(ErrorWrapper(desBvrErrorToMtdError(errors.head.code), None))
         } else {
-          Some(ErrorWrapper(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
+          Left(ErrorWrapper(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
         }
-      case Left(GenericError(error)) => Some(ErrorWrapper(error, None))
+      case Left(GenericError(error)) => Left(ErrorWrapper(error, None))
       case Right(correlationId) =>
         auditSuccessfulSubmission(submission, correlationId)
-        None
+        Right(())
     }
   }
 

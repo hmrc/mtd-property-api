@@ -19,16 +19,16 @@ package v2.connectors.httpparsers
 import play.api.Logger
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import v2.connectors.EopsDeclarationConnectorOutcome
 import v2.models.errors._
-import v2.models.outcomes.EopsDeclarationOutcome
 
 object SubmitEOPSDeclarationHttpParser extends HttpParser {
 
   val logger = Logger(this.getClass)
 
-  implicit val submitEOPSDeclarationHttpReads: HttpReads[EopsDeclarationOutcome] =
-    new HttpReads[EopsDeclarationOutcome] {
-      override def read(method: String, url: String, response: HttpResponse): EopsDeclarationOutcome = {
+  implicit val submitEOPSDeclarationHttpReads: HttpReads[EopsDeclarationConnectorOutcome] =
+    new HttpReads[EopsDeclarationConnectorOutcome] {
+      override def read(method: String, url: String, response: HttpResponse): EopsDeclarationConnectorOutcome = {
 
         if (response.status != NO_CONTENT) {
           logger.info("[SubmitEOPSDeclarationHttpParser][read] - " +

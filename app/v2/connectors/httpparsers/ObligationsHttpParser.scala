@@ -20,17 +20,17 @@ import play.api.Logger
 import play.api.http.Status.OK
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import v2.connectors.ObligationsConnectorOutcome
 import v2.models.domain.ObligationDetails
 import v2.models.errors.{DownstreamError, Error}
-import v2.models.outcomes.ObligationsOutcome
 
 object ObligationsHttpParser extends HttpParser {
 
   private val obligationsJsonReads: Reads[Seq[ObligationDetails]] = (__ \ "obligations").read[Seq[ObligationDetails]]
   private val multipleErrorJsonReads: Reads[Seq[Error]] = (__ \ "failures").read[Seq[Error]]
 
-  implicit val  obligationsHttpReads: HttpReads[ObligationsOutcome] = new HttpReads[ObligationsOutcome] {
-    override def read(method: String, url: String, response: HttpResponse): ObligationsOutcome = {
+  implicit val  obligationsHttpReads: HttpReads[ObligationsConnectorOutcome] = new HttpReads[ObligationsConnectorOutcome] {
+    override def read(method: String, url: String, response: HttpResponse): ObligationsConnectorOutcome = {
 
       val loggingPrefix = "[ObligationsHttpParser][obligationsHttpReads][read]"
 

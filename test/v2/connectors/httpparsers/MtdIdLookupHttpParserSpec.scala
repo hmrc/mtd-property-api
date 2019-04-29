@@ -21,9 +21,9 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{FORBIDDEN, INTERNAL_SERVER_ERROR, OK}
 import support.UnitSpec
 import uk.gov.hmrc.http.HttpResponse
+import v2.connectors.MtdIdLookupOutcome
 import v2.connectors.httpparsers.MtdIdLookupHttpParser.mtdIdLookupHttpReads
 import v2.models.errors.{DownstreamError, NinoFormatError}
-import v2.models.outcomes.MtdIdLookupOutcome
 
 class MtdIdLookupHttpParserSpec extends UnitSpec {
 

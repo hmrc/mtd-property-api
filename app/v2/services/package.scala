@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package v2.models
+package v2
 
 import v2.models.auth.UserDetails
-import v2.models.domain.{Obligation, ObligationDetails}
-import v2.models.errors.{DesError, Error, ErrorWrapper}
+import v2.models.domain.Obligation
+import v2.models.errors.{Error, ErrorWrapper}
 
-package object outcomes {
+package object services {
 
   type AuthOutcome = Either[Error, UserDetails]
-  type MtdIdLookupOutcome = Either[Error, String]
-  type ObligationsOutcome = Either[Seq[Error], Seq[ObligationDetails]]
-  type EopsObligationsOutcome = Either[ErrorWrapper, Seq[Obligation]]
-  type EopsDeclarationOutcome = Either[DesError, String]
 
+  type EopsObligationsOutcome = Either[ErrorWrapper, Seq[Obligation]]
+
+  type EopsDeclarationOutcome = Either[ErrorWrapper, Unit]
 }

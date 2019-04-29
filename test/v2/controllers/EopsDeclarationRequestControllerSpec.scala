@@ -81,7 +81,7 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
           .returns(Right(eopsDeclarationSubmission))
 
         MockedEopsDeclarationService.submitDeclaration(eopsDeclarationSubmission)
-          .returns(Future.successful(None))
+          .returns(Future.successful(Right(())))
 
         private val response: Future[Result] =
           testController.submit(nino, start, end)(fakePostRequest[JsValue](Json.parse(requestJson)))
@@ -100,7 +100,7 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
           .returns(Right(eopsDeclarationSubmission))
 
         MockedEopsDeclarationService.submitDeclaration(eopsDeclarationSubmission)
-          .returns(Future.successful(Some(ErrorWrapper(NotFinalisedDeclaration, None))))
+          .returns(Future.successful(Left(ErrorWrapper(NotFinalisedDeclaration, None))))
 
         private val response: Future[Result] =
           testController.submit(nino, start, end)(fakePostRequest[JsValue](Json.parse(invalidRequestJson)))
@@ -192,7 +192,7 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
           .returns(Right(eopsDeclarationSubmission))
 
         MockedEopsDeclarationService.submitDeclaration(eopsDeclarationSubmission)
-          .returns(Future.successful(Some(ErrorWrapper(BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge))))))
+          .returns(Future.successful(Left(ErrorWrapper(BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge))))))
 
         private val response: Future[Result] =
           testController.submit(nino, start, end)(fakePostRequest[JsValue](Json.parse(requestJson)))
@@ -211,7 +211,7 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
           .returns(Right(eopsDeclarationSubmission))
 
         MockedEopsDeclarationService.submitDeclaration(eopsDeclarationSubmission)
-          .returns(Future.successful(Some(ErrorWrapper(RuleClass4Over16, None))))
+          .returns(Future.successful(Left(ErrorWrapper(RuleClass4Over16, None))))
 
         private val response: Future[Result] =
           testController.submit(nino, start, end)(fakePostRequest[JsValue](Json.parse(requestJson)))
@@ -232,7 +232,7 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
         .returns(Right(eopsDeclarationSubmission))
 
       MockedEopsDeclarationService.submitDeclaration(eopsDeclarationSubmission)
-        .returns(Future.successful(Some(ErrorWrapper(error, None))))
+        .returns(Future.successful(Left(ErrorWrapper(error, None))))
 
       val response: Future[Result] = testController.submit(nino, start, end)(fakePostRequest[JsValue](Json.parse(requestJson)))
       status(response) shouldBe expectedStatus
@@ -252,7 +252,7 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
 
       MockedEopsDeclarationService.submitDeclaration(EopsDeclarationSubmission(Nino(nino),
         LocalDate.parse(start), LocalDate.parse(end)))
-        .returns(Future.successful(Some(ErrorWrapper(error, None))))
+        .returns(Future.successful(Left(ErrorWrapper(error, None))))
 
       val response: Future[Result] = testController.submit(nino, start, end)(fakePostRequest[JsValue](Json.parse(requestJson)))
       status(response) shouldBe expectedStatus
