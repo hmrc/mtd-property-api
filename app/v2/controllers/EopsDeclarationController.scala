@@ -57,15 +57,15 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
               NoContent
 
             case Left(errorWrapper) =>
-//              val correlationId = getCorrelationId(errorWrapper)
-//              auditSubmission(createAuditDetails(NO_CONTENT, correlationId, userDetails, true, eopsDeclarationSubmission, Some(errorWrapper)))
+              val correlationId = getCorrelationId(errorWrapper)
+              auditSubmission(createAuditDetails(NO_CONTENT, correlationId, userDetails, true, eopsDeclarationSubmission, Some(errorWrapper)))
               processError(errorWrapper)
           }
-        case Left(validationErrorResponse) => Future {
-          processError(validationErrorResponse)
-        }
+        case Left(errorWrapper) =>
+          val correlationId = getCorrelationId(errorWrapper)
+          auditSubmission(createAuditDetails(NO_CONTENT, correlationId, userDetails, true, ???, Some(errorWrapper)))
+          Future.successful(processError(errorWrapper))
       }
-
     }
 
   private def processError(errorResponse: ErrorWrapper) = {
@@ -95,19 +95,18 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
     }
   }
 
-    private def getCorrelationId(errorWrapper: ErrorWrapper): String = {
-      ???
-//      errorWrapper.correlationId match {
-//        case Some(correlationId) => logger.info("[EopsDeclarationController][getCorrelationId] - " +
-//          s"Error received from DES ${Json.toJson(errorWrapper)} with CorrelationId: $correlationId")
-//          correlationId
-//        case None =>
-//          val correlationId = UUID.randomUUID().toString
-//          logger.info("[EopsDeclarationController][getCorrelationId] - " +
-//            s"Validation error: ${Json.toJson(errorWrapper)} with CorrelationId: $correlationId")
-//          correlationId
-//      }
+  private def getCorrelationId(errorWrapper: ErrorWrapper): String = {
+    errorWrapper.correlationId match {
+      case Some(correlationId) => logger.info("[EopsDeclarationController][getCorrelationId] - " +
+        s"Error received from DES ${Json.toJson(errorWrapper)} with CorrelationId: $correlationId")
+        correlationId
+      case None =>
+        val correlationId = UUID.randomUUID().toString
+        logger.info("[EopsDeclarationController][getCorrelationId] - " +
+          s"Validation error: ${Json.toJson(errorWrapper)} with CorrelationId: $correlationId")
+        correlationId
     }
+  }
 
   private def createAuditDetails(
                                   statusCode: Int,
