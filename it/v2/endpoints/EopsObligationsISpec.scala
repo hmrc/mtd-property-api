@@ -36,7 +36,7 @@ class EopsObligationsISpec extends IntegrationBaseSpec {
 
     def request(): WSRequest = {
       setupStubs()
-        buildRequest(s"/2.0/ni/$nino/uk-properties/end-of-period-statements/obligations?from=2017-04-06&to=2018-04-05")
+      buildRequest(s"/2.0/ni/$nino/uk-properties/end-of-period-statements/obligations?from=2017-04-06&to=2018-04-05")
     }
   }
 
@@ -92,7 +92,7 @@ class EopsObligationsISpec extends IntegrationBaseSpec {
           buildRequest(s"/2.0/ni/$nino/uk-properties/end-of-period-statements/obligations")
         }
 
-        val multiDateErrorJson: JsValue = Json.toJson(ErrorWrapper(BadRequestError, Some(Seq(MissingFromDateError, MissingToDateError))))
+        val multiDateErrorJson: JsValue = Json.toJson(ErrorWrapper(None, BadRequestError, Some(Seq(MissingFromDateError, MissingToDateError))))
 
         val response: WSResponse = await(request().get())
         response.status shouldBe Status.BAD_REQUEST

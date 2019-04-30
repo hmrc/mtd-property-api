@@ -37,25 +37,25 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
     val logger: Logger = Logger(this.getClass)
 
     connector.submitEOPSDeclaration(submission.nino, submission.start, submission.end).map {
-      case Left(SingleError(error)) =>
-        Left(ErrorWrapper(desErrorToMtdError(error.code), None))
-      case Left(MultipleErrors(errors)) =>
+      case Left(DesResponse(correlationId, SingleError(error))) =>
+        Left(ErrorWrapper(Some(correlationId), desErrorToMtdError(error.code), None))
+      case Left(DesResponse(correlationId, MultipleErrors(errors))) =>
         val mtdErrors = errors.map(error => desErrorToMtdError(error.code))
         if (mtdErrors.contains(DownstreamError)) {
           logger.info("[EopsDeclarationService] [submit] - downstream returned INVALID_IDTYPE. Revert to ISE")
-          Left(ErrorWrapper(DownstreamError, None))
+          Left(ErrorWrapper(Some(correlationId), DownstreamError, None))
         }
         else {
-          Left(ErrorWrapper(BadRequestError, Some(mtdErrors)))
+          Left(ErrorWrapper(Some(correlationId), BadRequestError, Some(mtdErrors)))
         }
-      case Left(BVRErrors(errors)) =>
+      case Left(DesResponse(correlationId, BVRErrors(errors))) =>
         if (errors.size == 1) {
-          Left(ErrorWrapper(desBvrErrorToMtdError(errors.head.code), None))
+          Left(ErrorWrapper(Some(correlationId), desBvrErrorToMtdError(errors.head.code), None))
         } else {
-          Left(ErrorWrapper(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
+          Left(ErrorWrapper(Some(correlationId), BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
         }
-      case Left(GenericError(error)) => Left(ErrorWrapper(error, None))
-      case Right(correlationId) => Right(DesResponse(correlationId, ()))
+      case Left(DesResponse(correlationId, GenericError(error))) => Left(ErrorWrapper(Some(correlationId), error, None))
+      case Right(DesResponse(correlationId, _)) => Right(DesResponse(correlationId, ()))
     }
   }
 

@@ -23,10 +23,9 @@ package object connectors {
 
   type MtdIdLookupOutcome = Either[Error, String]
 
-
-
   type DesConnectorOutcome[A] = Either[DesResponse[DesError], DesResponse[A]]
 
-  type ObligationsConnectorOutcome = Either[Seq[Error], Seq[ObligationDetails]]
-  type EopsDeclarationConnectorOutcome = Either[DesError, String]
+  type ObligationsConnectorOutcome = Either[DesResponse[Seq[Error]], DesResponse[Seq[ObligationDetails]]]
+
+  type EopsDeclarationConnectorOutcome = DesConnectorOutcome[Unit]
 }

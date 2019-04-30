@@ -44,6 +44,8 @@ trait HttpParser {
     }
   }
 
+  def retrieveCorrelationId(response: HttpResponse): String = response.header("CorrelationId").getOrElse("")
+
   private val multipleErrorReads: Reads[Seq[Error]] = (__ \ "failures").read[Seq[Error]]
   private val bvrErrorReads: Reads[Seq[Error]] = {
     implicit val errorIdReads: Reads[Error] = (__ \ "id").read[String].map(Error(_, ""))

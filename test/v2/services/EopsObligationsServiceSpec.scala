@@ -23,6 +23,7 @@ import v2.mocks.connectors.MockDesConnector
 import v2.models.domain.{FulfilledObligation, Obligation, ObligationDetails}
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
+import v2.models.outcomes.DesResponse
 
 import scala.concurrent.Future
 
@@ -173,6 +174,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
   )
 
   val emptyEopsObligations: Seq[Obligation] = Seq.empty
+  val correlationId = "X-123"
 
   "calling filterEopsObligations" should {
 
@@ -198,7 +200,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-01-01"
         val to: String = "2018-12-31"
 
-        val expectedErrorResponse = ErrorWrapper(NinoFormatError, None)
+        val expectedErrorResponse = ErrorWrapper(None, NinoFormatError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
@@ -211,7 +213,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = ""
         val to: String = "2018-12-31"
 
-        val expectedErrorResponse = ErrorWrapper(MissingFromDateError, None)
+        val expectedErrorResponse = ErrorWrapper(None, MissingFromDateError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
@@ -225,7 +227,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
 
       "the from date is in the wrong format" in new Test {
         val from: String = "BOB"
-        val expectedErrorResponse = ErrorWrapper(InvalidFromDateError, None)
+        val expectedErrorResponse = ErrorWrapper(None, InvalidFromDateError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
 
@@ -234,7 +236,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
 
       "the from date is an invalid date" in new Test {
         val from: String = "9999-99-99"
-        val expectedErrorResponse = ErrorWrapper(InvalidFromDateError, None)
+        val expectedErrorResponse = ErrorWrapper(None, InvalidFromDateError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
 
@@ -247,7 +249,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val nino: String = "AA123456A"
         val from: String = "2018-01-01"
         val to: String = ""
-        val expectedErrorResponse = ErrorWrapper(MissingToDateError, None)
+        val expectedErrorResponse = ErrorWrapper(None, MissingToDateError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
 
@@ -261,7 +263,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
 
       "the to date is in the wrong format" in new Test {
         val to: String = "BOB"
-        val expectedErrorResponse = ErrorWrapper(InvalidToDateError, None)
+        val expectedErrorResponse = ErrorWrapper(None, InvalidToDateError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
 
@@ -270,7 +272,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
 
       "the from date is an invalid date" in new Test {
         val to: String = "9999-99-99"
-        val expectedErrorResponse = ErrorWrapper(InvalidToDateError, None)
+        val expectedErrorResponse = ErrorWrapper(None, InvalidToDateError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
 
@@ -284,7 +286,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-12-31"
         val to: String = "2018-01-01"
 
-        val expectedErrorResponse = ErrorWrapper(RangeToDateBeforeFromDateError, None)
+        val expectedErrorResponse = ErrorWrapper(None, RangeToDateBeforeFromDateError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
@@ -295,7 +297,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-01-01"
         val to: String = "2018-01-01"
 
-        val expectedErrorResponse = ErrorWrapper(RangeToDateBeforeFromDateError, None)
+        val expectedErrorResponse = ErrorWrapper(None, RangeToDateBeforeFromDateError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
@@ -308,7 +310,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-01-01"
         val to: String = "2019-01-03" // 367 days difference
 
-        val expectedErrorResponse = ErrorWrapper(RangeTooBigError, None)
+        val expectedErrorResponse = ErrorWrapper(None, RangeTooBigError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
@@ -319,7 +321,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-01-01"
         val to: String = "2019-01-04" // 368 days difference
 
-        val expectedErrorResponse = ErrorWrapper(RangeTooBigError, None)
+        val expectedErrorResponse = ErrorWrapper(None, RangeTooBigError, None)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
@@ -332,7 +334,7 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = ""
         val to: String = ""
 
-        val expectedErrorResponse = ErrorWrapper(BadRequestError, Some(Seq(MissingFromDateError, MissingToDateError)))
+        val expectedErrorResponse = ErrorWrapper(None, BadRequestError, Some(Seq(MissingFromDateError, MissingToDateError)))
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
         result shouldBe Left(expectedErrorResponse)
@@ -348,13 +350,13 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-01-01"
         val to: String = "2018-12-31"
 
-        val outcomesObligations: Future[ObligationsConnectorOutcome] = Future(Right(validObligationsData))
+        val outcomesObligations: Future[ObligationsConnectorOutcome] = Future(Right(DesResponse(correlationId, validObligationsData)))
 
         MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
           .returns(outcomesObligations)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
-        result shouldBe Right(successEopsObligations)
+        result shouldBe Right(DesResponse(correlationId, successEopsObligations))
       }
     }
 
@@ -364,13 +366,13 @@ class EopsObligationsServiceSpec extends ServiceSpec {
         val from: String = "2018-01-01"
         val to: String = "2018-12-31"
 
-        val outcomesObligations: Future[ObligationsConnectorOutcome] = Future(Right(validNonEopsObligationsData))
+        val outcomesObligations: Future[ObligationsConnectorOutcome] = Future(Right(DesResponse(correlationId, validNonEopsObligationsData)))
 
         MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
           .returns(outcomesObligations)
 
         val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
-        result shouldBe Left(ErrorWrapper(NotFoundError, None))
+        result shouldBe Left(ErrorWrapper(Some(correlationId), NotFoundError, None))
       }
     }
 
@@ -397,13 +399,13 @@ class EopsObligationsServiceSpec extends ServiceSpec {
             val from: String = "2018-01-01"
             val to: String = "2018-12-31"
 
-            val error: Future[ObligationsConnectorOutcome] = Future.successful(Left(Seq(Error(desCode, ""))))
+            val error: Future[ObligationsConnectorOutcome] = Future.successful(Left(DesResponse(correlationId, Seq(Error(desCode, "")))))
 
             MockedDesConnector.getObligations(nino, LocalDate.parse(from), LocalDate.parse(to))
               .returns(error)
 
             val result: EopsObligationsOutcome = await(service.retrieveEopsObligations(nino, from, to))
-            result shouldBe Left(ErrorWrapper(mtdError, None))
+            result shouldBe Left(ErrorWrapper(Some(correlationId), mtdError, None))
           }
         }
     }

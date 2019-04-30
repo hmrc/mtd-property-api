@@ -24,7 +24,7 @@ package object services {
 
   type AuthOutcome = Either[Error, UserDetails]
 
-  type EopsObligationsOutcome = Either[ErrorWrapper, Seq[Obligation]]
+  type EopsObligationsOutcome = Either[ErrorWrapper, DesResponse[Seq[Obligation]]]
 
   type EopsDeclarationOutcome = Either[ErrorWrapper, DesResponse[Unit]]
 }

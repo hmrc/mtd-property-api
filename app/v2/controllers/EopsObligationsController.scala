@@ -21,6 +21,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
+import v2.models.outcomes.DesResponse
 import v2.services.{EnrolmentsAuthService, EopsObligationsService, MtdIdLookupService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -34,7 +35,7 @@ class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService
     authorisedAction(nino).async { implicit request =>
       service.retrieveEopsObligations(nino, from, to).map {
         case Left(e) => processError(e)
-        case Right(success) => Ok(Json.obj("obligations" -> Json.toJson(success)))
+        case Right(DesResponse(_, success)) => Ok(Json.obj("obligations" -> Json.toJson(success)))
       }
     }
 
