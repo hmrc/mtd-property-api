@@ -98,6 +98,8 @@ class EopsDeclarationRequestISpec extends IntegrationBaseSpec with Status{
         response.status shouldBe FORBIDDEN
         response.json shouldBe Json.toJson(ErrorWrapper(ConflictError, None))
       }
+
+      "include correlationId in error responses???" in fail
     }
 
     "return bvr multiple errors 403" when {

@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 import support.UnitSpec
 import v2.models.utils.JsonErrorValidators
 
-class EopsDeclarationRequestAuditDetailSpec extends UnitSpec with JsonErrorValidators {
+class EopsDeclarationAuditDetailSpec extends UnitSpec with JsonErrorValidators {
 
   val nino: String = "MA123456D"
   val from: String = "2017-06-04"
@@ -34,7 +34,7 @@ class EopsDeclarationRequestAuditDetailSpec extends UnitSpec with JsonErrorValid
 
     "return a valid json with all the fields" in {
       val model =
-        EopsDeclarationAuditDetail("Agent", Some("123456780"), nino, from, to, true, "5b85344c1100008e00c6a181", Some(responseFail))
+        EopsDeclarationAuditDetail("Agent", Some("123456780"), nino, from, to, finalised = true, "5b85344c1100008e00c6a181", responseFail)
 
       val json =
         """
@@ -62,7 +62,7 @@ class EopsDeclarationRequestAuditDetailSpec extends UnitSpec with JsonErrorValid
 
     "return a valid json with only mandatory fields" in {
       val model =
-        EopsDeclarationAuditDetail("Individual", None, nino, from, to, true, "5b85344c1100008e00c6a181", Some(responseSuccess))
+        EopsDeclarationAuditDetail("Individual", None, nino, from, to, finalised = true, "5b85344c1100008e00c6a181", responseSuccess)
 
       val json =
         """

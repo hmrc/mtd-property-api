@@ -19,10 +19,7 @@ package v2.services
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import v2.connectors.DesConnector
-import v2.models.audit.{AuditEvent, EopsDeclarationAuditDetail}
-import v2.models.auth.UserDetails
 import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
@@ -31,12 +28,11 @@ import v2.models.outcomes.DesResponse
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EopsDeclarationService @Inject()(auditService: AuditService, connector: DesConnector) {
+class EopsDeclarationService @Inject()(connector: DesConnector) {
 
   def submit(submission: EopsDeclarationSubmission)
             (implicit hc: HeaderCarrier,
-             ec: ExecutionContext,
-             userDetails: UserDetails): Future[EopsDeclarationOutcome] = {
+             ec: ExecutionContext): Future[EopsDeclarationOutcome] = {
 
     val logger: Logger = Logger(this.getClass)
 
@@ -59,31 +55,8 @@ class EopsDeclarationService @Inject()(auditService: AuditService, connector: De
           Left(ErrorWrapper(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
         }
       case Left(GenericError(error)) => Left(ErrorWrapper(error, None))
-      case Right(correlationId) =>
-        auditSuccessfulSubmission(submission, correlationId)
-        Right(DesResponse(correlationId, ()))
+      case Right(correlationId) => Right(DesResponse(correlationId, ()))
     }
-  }
-
-
-  private def auditSuccessfulSubmission(submission: EopsDeclarationSubmission,
-                                        correlationId: String)
-                                       (implicit ec: ExecutionContext,
-                                        hc: HeaderCarrier,
-                                        userDetails: UserDetails): Future[AuditResult] = {
-    val details = EopsDeclarationAuditDetail(
-      userDetails.userType,
-      userDetails.agentReferenceNumber,
-      submission.nino.toString(),
-      submission.start.toString,
-      submission.end.toString,
-      finalised = true,
-      correlationId
-    )
-
-    val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", details)
-
-    auditService.auditEvent(event)
   }
 
   private val desErrorToMtdError: Map[String, Error] = Map(

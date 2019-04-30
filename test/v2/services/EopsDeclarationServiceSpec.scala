@@ -22,8 +22,6 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpResponse
 import v2.connectors.EopsDeclarationConnectorOutcome
 import v2.mocks.connectors.MockDesConnector
-import v2.mocks.services.MockAuditService
-import v2.models.audit.AuditEvent
 import v2.models.auth.UserDetails
 import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
@@ -34,14 +32,14 @@ import scala.concurrent.Future
 
 class EopsDeclarationServiceSpec extends ServiceSpec {
 
-  private trait Test extends MockAuditService with MockDesConnector {
+  private trait Test extends  MockDesConnector {
     implicit val userDetails: UserDetails = UserDetails("123456890", "Individual", None)
 
     val nino: String = "AA123456A"
     val start: String = "2018-01-01"
     val end: String = "2018-12-31"
 
-    val service = new EopsDeclarationService(mockAuditService, mockDesConnector)
+    val service = new EopsDeclarationService( mockDesConnector)
   }
 
   val correlationId = "x1234id"
@@ -56,7 +54,6 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
           .returns(Future.successful(Right(correlationId)))
 
-        MockedAuditService.auditEventSucceeds(AuditEvent("auditType", "tx-name", "some details"))
         val result: EopsDeclarationOutcome = await(service.submit(EopsDeclarationSubmission(Nino(nino),
           LocalDate.parse(start), LocalDate.parse(end))))
 

@@ -17,10 +17,16 @@ package v2
 
 import v2.models.domain.ObligationDetails
 import v2.models.errors.{DesError, Error}
+import v2.models.outcomes.DesResponse
 
 package object connectors {
 
   type MtdIdLookupOutcome = Either[Error, String]
+
+
+
+  type DesConnectorOutcome[A] = Either[DesResponse[DesError], DesResponse[A]]
+
   type ObligationsConnectorOutcome = Either[Seq[Error], Seq[ObligationDetails]]
   type EopsDeclarationConnectorOutcome = Either[DesError, String]
 }

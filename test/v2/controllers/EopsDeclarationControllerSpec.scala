@@ -23,7 +23,8 @@ import play.api.mvc.{AnyContentAsJson, Result}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.mocks.requestParsers.MockEopsDeclarationRequestRawDataParser
-import v2.mocks.services.{MockEnrolmentsAuthService, MockEopsDeclarationRequestService, MockMtdIdLookupService}
+import v2.mocks.services.{MockAuditService, MockEnrolmentsAuthService, MockEopsDeclarationRequestService, MockMtdIdLookupService}
+import v2.models.audit.{AuditError, AuditEvent, EopsDeclarationAuditDetail, EopsDeclarationAuditResponse}
 import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
@@ -32,11 +33,12 @@ import v2.models.outcomes.DesResponse
 
 import scala.concurrent.Future
 
-class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
+class EopsDeclarationControllerSpec extends ControllerBaseSpec
   with MockEopsDeclarationRequestService
   with MockEnrolmentsAuthService
   with MockMtdIdLookupService
-  with MockEopsDeclarationRequestRawDataParser {
+  with MockEopsDeclarationRequestRawDataParser
+  with MockAuditService {
 
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -63,7 +65,8 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
     lazy val testController = new EopsDeclarationController(mockEnrolmentsAuthService,
       mockMtdIdLookupService,
       mockRequestDataParser,
-      mockEopsDeclarationService)
+      mockEopsDeclarationService,
+      mockAuditService)
   }
 
   val nino: String = "AA123456A"
@@ -89,7 +92,13 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
         private val response: Future[Result] =
           testController.submit(nino, start, end)(fakePostRequest[JsValue](Json.parse(requestJson)))
 
+
         status(response) shouldBe NO_CONTENT
+
+        val detail = EopsDeclarationAuditDetail("Individual", None, nino, start, end, finalised = true, correlationId,
+          EopsDeclarationAuditResponse(NO_CONTENT, None))
+        val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", detail)
+        MockedAuditService.verifyAuditEvent(event).once
       }
     }
 
@@ -110,6 +119,11 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
 
         status(response) shouldBe FORBIDDEN
         contentAsJson(response) shouldBe Json.toJson(NotFinalisedDeclaration)
+
+        val detail = EopsDeclarationAuditDetail("Individual", None, nino, start, end, finalised = false, correlationId,
+          EopsDeclarationAuditResponse(FORBIDDEN, Some(Seq(AuditError(NotFinalisedDeclaration.code)))))
+        val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", detail)
+        MockedAuditService.verifyAuditEvent(event).once
       }
     }
 
@@ -127,6 +141,11 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
 
         status(response) shouldBe BAD_REQUEST
         contentAsJson(response) shouldBe Json.toJson(BadRequestError)
+
+        val detail = EopsDeclarationAuditDetail("Individual", None, nino, start, end, finalised = ???, correlationId,
+          EopsDeclarationAuditResponse(BAD_REQUEST, Some(Seq(AuditError(BadRequestError.code)))))
+        val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", detail)
+        MockedAuditService.verifyAuditEvent(event).once
       }
     }
 
@@ -181,6 +200,11 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
 
         status(response) shouldBe BAD_REQUEST
         contentAsJson(response) shouldBe Json.toJson(ErrorWrapper(BadRequestError, Some(Seq(InvalidStartDateError, RangeEndDateBeforeStartDateError))))
+
+        val detail = EopsDeclarationAuditDetail("Individual", None, nino, start, end, finalised = false, correlationId,
+          EopsDeclarationAuditResponse(BAD_REQUEST, Some(Seq(AuditError(InvalidStartDateError.code),AuditError(RangeEndDateBeforeStartDateError.code)))))
+        val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", detail)
+        MockedAuditService.verifyAuditEvent(event).once
       }
     }
 
@@ -202,8 +226,14 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
 
         status(response) shouldBe FORBIDDEN
         contentAsJson(response) shouldBe Json.toJson(ErrorWrapper(BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge))))
+
+        val detail = EopsDeclarationAuditDetail("Individual", None, nino, start, end, finalised = true, correlationId,
+          EopsDeclarationAuditResponse(BAD_REQUEST, Some(Seq(AuditError(RuleClass4Over16.code),AuditError(RuleClass4PensionAge.code)))))
+        val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", detail)
+        MockedAuditService.verifyAuditEvent(event).once
       }
     }
+
     "return a single error with 403 (Forbidden)" when {
       "business validation has failed with just one error" in new Test {
 
@@ -221,6 +251,11 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
 
         status(response) shouldBe FORBIDDEN
         contentAsJson(response) shouldBe Json.toJson(ErrorWrapper(RuleClass4Over16, None))
+
+        val detail = EopsDeclarationAuditDetail("Individual", None, nino, start, end, finalised = true, correlationId,
+          EopsDeclarationAuditResponse(BAD_REQUEST, Some(Seq(AuditError(RuleClass4Over16.code)))))
+        val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", detail)
+        MockedAuditService.verifyAuditEvent(event).once
       }
     }
   }
@@ -240,6 +275,11 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
       val response: Future[Result] = testController.submit(nino, start, end)(fakePostRequest[JsValue](Json.parse(requestJson)))
       status(response) shouldBe expectedStatus
       contentAsJson(response) shouldBe Json.toJson(error)
+
+      val detail = EopsDeclarationAuditDetail("Individual", None, nino, start, end, finalised = true, correlationId,
+        EopsDeclarationAuditResponse(expectedStatus, Some(Seq(AuditError(error.code)))))
+      val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", detail)
+      MockedAuditService.verifyAuditEvent(event).once
     }
   }
 
@@ -260,6 +300,11 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
       val response: Future[Result] = testController.submit(nino, start, end)(fakePostRequest[JsValue](Json.parse(requestJson)))
       status(response) shouldBe expectedStatus
       contentAsJson(response) shouldBe Json.toJson(error)
+
+      val detail = EopsDeclarationAuditDetail("Individual", None, nino, start, end, finalised = true, correlationId,
+        EopsDeclarationAuditResponse(expectedStatus, Some(Seq(AuditError(error.code)))))
+      val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", detail)
+      MockedAuditService.verifyAuditEvent(event).once
     }
   }
 

@@ -34,7 +34,7 @@ class EopsDeclarationRequestDataParser @Inject()(validator: EopsDeclarationInput
 
     validator.validate(data) match {
       case Nil => Right(eopsDeclarationSubmission)
-      case err :: Nil => Left(ErrorWrapper(err, None))
+      case err :: Nil => Left(ErrorWrapper( err, None))
       case errs => Left(ErrorWrapper(BadRequestError, Some(errs)))
     }
   }
