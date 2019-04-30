@@ -18,6 +18,7 @@ package v2
 import v2.models.auth.UserDetails
 import v2.models.domain.Obligation
 import v2.models.errors.{Error, ErrorWrapper}
+import v2.models.outcomes.DesResponse
 
 package object services {
 
@@ -25,5 +26,5 @@ package object services {
 
   type EopsObligationsOutcome = Either[ErrorWrapper, Seq[Obligation]]
 
-  type EopsDeclarationOutcome = Either[ErrorWrapper, Unit]
+  type EopsDeclarationOutcome = Either[ErrorWrapper, DesResponse[Unit]]
 }

@@ -28,6 +28,7 @@ import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 import v2.models.inbound.EopsDeclarationRawData
+import v2.models.outcomes.DesResponse
 
 import scala.concurrent.Future
 
@@ -69,6 +70,8 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
   val start: String = "2018-01-01"
   val end: String = "2018-12-31"
 
+  val correlationId = "X-123"
+
   "Submit EOPS declaration" should {
 
     "return a 204 response" when {
@@ -81,7 +84,7 @@ class EopsDeclarationRequestControllerSpec extends ControllerBaseSpec
           .returns(Right(eopsDeclarationSubmission))
 
         MockedEopsDeclarationService.submitDeclaration(eopsDeclarationSubmission)
-          .returns(Future.successful(Right(())))
+          .returns(Future.successful(Right(DesResponse(correlationId, ()))))
 
         private val response: Future[Result] =
           testController.submit(nino, start, end)(fakePostRequest[JsValue](Json.parse(requestJson)))

@@ -28,6 +28,7 @@ import v2.models.auth.UserDetails
 import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
+import v2.models.outcomes.DesResponse
 
 import scala.concurrent.Future
 
@@ -59,7 +60,7 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
         val result: EopsDeclarationOutcome = await(service.submit(EopsDeclarationSubmission(Nino(nino),
           LocalDate.parse(start), LocalDate.parse(end))))
 
-        result shouldBe Right(())
+        result shouldBe Right(DesResponse(correlationId, ()))
       }
     }
 

@@ -26,6 +26,7 @@ import v2.models.auth.UserDetails
 import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
+import v2.models.outcomes.DesResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -60,7 +61,7 @@ class EopsDeclarationService @Inject()(auditService: AuditService, connector: De
       case Left(GenericError(error)) => Left(ErrorWrapper(error, None))
       case Right(correlationId) =>
         auditSuccessfulSubmission(submission, correlationId)
-        Right(())
+        Right(DesResponse(correlationId, ()))
     }
   }
 
