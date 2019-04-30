@@ -32,7 +32,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 @Singleton
 class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService,
                                           val lookupService: MtdIdLookupService,
-                                          val service: EopsObligationsService) extends AuthorisedController {
+                                          service: EopsObligationsService) extends AuthorisedController {
 
   val logger: Logger = Logger(this.getClass)
 
@@ -57,6 +57,7 @@ class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService
       case DownstreamError => InternalServerError(Json.toJson(errorResponse))
     }
   }
+
   private def getCorrelationId(errorWrapper: ErrorWrapper): String = {
     errorWrapper.correlationId match {
       case Some(correlationId) => logger.info("[EopsObligationsController][getCorrelationId] - " +

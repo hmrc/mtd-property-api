@@ -38,8 +38,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService,
                                           val lookupService: MtdIdLookupService,
-                                          val requestDataParser: EopsDeclarationRequestDataParser,
-                                          val service: EopsDeclarationService,
+                                          requestDataParser: EopsDeclarationRequestDataParser,
+                                          service: EopsDeclarationService,
                                           auditService: AuditService) extends AuthorisedController {
 
   val logger: Logger = Logger(this.getClass)
@@ -47,25 +47,22 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
   def submit(nino: String, start: String, end: String): Action[JsValue] =
     authorisedAction(nino).async(parse.json) { implicit request =>
 
-      implicit val userDetails: UserDetails = request.userDetails
       requestDataParser.parseRequest(EopsDeclarationRawData(nino, start, end, AnyContentAsJson(request.body))) match {
         case Right(eopsDeclarationSubmission) =>
           service.submit(eopsDeclarationSubmission).map {
             case Right(desResponse) =>
-              auditSubmission(createAuditDetails(nino, start, end, NO_CONTENT, request.request.body, desResponse.correlationId, userDetails, None))
+              auditSubmission(createAuditDetails(nino, start, end, NO_CONTENT, request.body, desResponse.correlationId, request.userDetails, None))
               NoContent.withHeaders("X-CorrelationId" -> desResponse.correlationId)
-
             case Left(errorWrapper) =>
               val correlationId = getCorrelationId(errorWrapper)
               val result = processError(errorWrapper)
-              auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.request.body, correlationId, userDetails, Some(errorWrapper)))
-
+              auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.body, correlationId, request.userDetails, Some(errorWrapper)))
               result.withHeaders("X-CorrelationId" -> correlationId)
           }
         case Left(errorWrapper) =>
           val correlationId = getCorrelationId(errorWrapper)
           val result = processError(errorWrapper)
-          auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.request.body, correlationId, userDetails, Some(errorWrapper)))
+          auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.body, correlationId, request.userDetails, Some(errorWrapper)))
           Future.successful(result.withHeaders("X-CorrelationId" -> correlationId))
       }
     }
