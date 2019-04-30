@@ -33,7 +33,7 @@ trait MockEnrolmentsAuthService extends MockFactory {
     def authoriseUser(): Unit = {
       (mockEnrolmentsAuthService.authorised(_: Predicate)(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *, *)
-        .returns(Future.successful(Right(UserDetails("mtd-id", "Individual", None))))
+        .returns(Future.successful(Right(UserDetails("mtd-id", "Agent", Some("agentId")))))
     }
 
     def authorised(predicate: Predicate): CallHandler[Future[AuthOutcome]] = {
