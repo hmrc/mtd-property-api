@@ -24,7 +24,7 @@ case class EopsDeclarationAuditDetail(
                                        nino: String,
                                        from: String,
                                        to: String,
-                                       finalised: Boolean,
+                                       request: JsValue,
                                        `X-CorrelationId`: String,
                                        response: EopsDeclarationAuditResponse
                                      )

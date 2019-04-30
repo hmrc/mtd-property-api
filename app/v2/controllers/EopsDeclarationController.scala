@@ -27,7 +27,6 @@ import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import v2.controllers.requestParsers.EopsDeclarationRequestDataParser
 import v2.models.audit.{AuditError, AuditEvent, EopsDeclarationAuditDetail, EopsDeclarationAuditResponse}
 import v2.models.auth.UserDetails
-import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 import v2.models.inbound.EopsDeclarationRawData
@@ -53,18 +52,21 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
         case Right(eopsDeclarationSubmission) =>
           service.submit(eopsDeclarationSubmission).map {
             case Right(desResponse) =>
-              auditSubmission(createAuditDetails(NO_CONTENT, desResponse.correlationId, userDetails, true, eopsDeclarationSubmission, None))
+              auditSubmission(createAuditDetails(nino, start, end, NO_CONTENT, request.request.body, desResponse.correlationId, userDetails, None))
               NoContent
 
             case Left(errorWrapper) =>
               val correlationId = getCorrelationId(errorWrapper)
-              auditSubmission(createAuditDetails(NO_CONTENT, correlationId, userDetails, true, eopsDeclarationSubmission, Some(errorWrapper)))
-              processError(errorWrapper)
+              val result = processError(errorWrapper)
+              auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.request.body, correlationId, userDetails, Some(errorWrapper)))
+
+              result
           }
         case Left(errorWrapper) =>
           val correlationId = getCorrelationId(errorWrapper)
-          auditSubmission(createAuditDetails(NO_CONTENT, correlationId, userDetails, true, ???, Some(errorWrapper)))
-          Future.successful(processError(errorWrapper))
+          val result = processError(errorWrapper)
+          auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.request.body, correlationId, userDetails, Some(errorWrapper)))
+          Future.successful(result)
       }
     }
 
@@ -108,13 +110,14 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
     }
   }
 
-  private def createAuditDetails(
-                                  statusCode: Int,
-                                  correlationId: String,
-                                  userDetails: UserDetails,
-                                  finalised: Boolean,
-                                  submission: EopsDeclarationSubmission,
-                                  errorWrapper: Option[ErrorWrapper] = None
+  private def createAuditDetails(nino: String,
+                                 start: String,
+                                 end: String,
+                                 statusCode: Int,
+                                 request: JsValue,
+                                 correlationId: String,
+                                 userDetails: UserDetails,
+                                 errorWrapper: Option[ErrorWrapper] = None
                                 ): EopsDeclarationAuditDetail = {
     val response = errorWrapper.map {
       wrapper =>
@@ -124,10 +127,10 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
     EopsDeclarationAuditDetail(
       userType = userDetails.userType,
       agentReferenceNumber = userDetails.agentReferenceNumber,
-      nino = submission.nino.toString,
-      from = submission.start.toString,
-      to = submission.end.toString,
-      finalised = finalised,
+      nino = nino,
+      from = start,
+      to = end,
+      request = request,
       `X-CorrelationId` = correlationId,
       response = response)
   }

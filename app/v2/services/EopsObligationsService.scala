@@ -47,8 +47,10 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
                                      (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsObligationsOutcome] = {
 
     connector.getObligations(nino, from, to).map {
-      case Left(DesResponse(correlationId, singleError :: Nil)) => Left(ErrorWrapper(Some(correlationId), desErrorToMtdError(singleError.code), None))
-      case Left(DesResponse(correlationId, errors)) => Left(ErrorWrapper(Some(correlationId), BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
+      case Left(DesResponse(correlationId, singleError :: Nil)) =>
+        Left(ErrorWrapper(Some(correlationId), desErrorToMtdError(singleError.code), None))
+      case Left(DesResponse(correlationId, errors)) =>
+        Left(ErrorWrapper(Some(correlationId), BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
       case Right(DesResponse(correlationId, obligations)) =>
         val eopsObligations = filterEopsObligations(obligations)
         if (eopsObligations.nonEmpty) {

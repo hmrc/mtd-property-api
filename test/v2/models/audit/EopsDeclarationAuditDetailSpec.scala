@@ -30,11 +30,17 @@ class EopsDeclarationAuditDetailSpec extends UnitSpec with JsonErrorValidators {
   private val responseSuccess = EopsDeclarationAuditResponse(Status.NO_CONTENT, None)
   private val responseFail = EopsDeclarationAuditResponse(Status.BAD_REQUEST, Some(Seq(AuditError("FORMAT_NINO"))))
 
+  val requestJson = Json.parse(
+    """{
+      |"finalised" : true
+      |}
+    """.stripMargin)
+
   "EopsDeclarationAuditDetail writes" should {
 
     "return a valid json with all the fields" in {
       val model =
-        EopsDeclarationAuditDetail("Agent", Some("123456780"), nino, from, to, finalised = true, "5b85344c1100008e00c6a181", responseFail)
+        EopsDeclarationAuditDetail("Agent", Some("123456780"), nino, from, to, requestJson, "5b85344c1100008e00c6a181", responseFail)
 
       val json =
         """
@@ -44,7 +50,9 @@ class EopsDeclarationAuditDetailSpec extends UnitSpec with JsonErrorValidators {
           | "nino": "MA123456D",
           | "from": "2017-06-04",
           | "to": "2018-06-04",
-          | "finalised": true,
+          | "request": {
+          |   "finalised": true
+          | },
           | "X-CorrelationId": "5b85344c1100008e00c6a181",
           | "response": {
           |   "httpStatus": 400,
@@ -62,7 +70,7 @@ class EopsDeclarationAuditDetailSpec extends UnitSpec with JsonErrorValidators {
 
     "return a valid json with only mandatory fields" in {
       val model =
-        EopsDeclarationAuditDetail("Individual", None, nino, from, to, finalised = true, "5b85344c1100008e00c6a181", responseSuccess)
+        EopsDeclarationAuditDetail("Individual", None, nino, from, to, requestJson, "5b85344c1100008e00c6a181", responseSuccess)
 
       val json =
         """
@@ -71,7 +79,9 @@ class EopsDeclarationAuditDetailSpec extends UnitSpec with JsonErrorValidators {
           | "nino": "MA123456D",
           | "from": "2017-06-04",
           | "to": "2018-06-04",
-          | "finalised": true,
+          | "request": {
+          |   "finalised": true
+          | },
           | "X-CorrelationId": "5b85344c1100008e00c6a181",
           | "response": {
           |   "httpStatus": 204
