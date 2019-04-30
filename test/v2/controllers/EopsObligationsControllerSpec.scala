@@ -70,6 +70,7 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
 
         val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
         status(response) shouldBe expectedStatus
+        header("X-CorrelationId", response) should not be empty
       }
     }
 
@@ -86,6 +87,7 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
 
         status(response) shouldBe OK
         contentAsJson(response) shouldBe expectedJson
+        header("X-CorrelationId", response) shouldBe Some(correlationId)
       }
     }
 
@@ -99,6 +101,7 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
         private val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
 
         contentAsJson(response) shouldBe expectedJson
+        header("X-CorrelationId", response) shouldBe Some(correlationId)
       }
     }
 

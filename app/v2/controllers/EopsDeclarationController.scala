@@ -53,20 +53,20 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
           service.submit(eopsDeclarationSubmission).map {
             case Right(desResponse) =>
               auditSubmission(createAuditDetails(nino, start, end, NO_CONTENT, request.request.body, desResponse.correlationId, userDetails, None))
-              NoContent
+              NoContent.withHeaders("X-CorrelationId" -> desResponse.correlationId)
 
             case Left(errorWrapper) =>
               val correlationId = getCorrelationId(errorWrapper)
               val result = processError(errorWrapper)
               auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.request.body, correlationId, userDetails, Some(errorWrapper)))
 
-              result
+              result.withHeaders("X-CorrelationId" -> correlationId)
           }
         case Left(errorWrapper) =>
           val correlationId = getCorrelationId(errorWrapper)
           val result = processError(errorWrapper)
           auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.request.body, correlationId, userDetails, Some(errorWrapper)))
-          Future.successful(result)
+          Future.successful(result.withHeaders("X-CorrelationId" -> correlationId))
       }
     }
 

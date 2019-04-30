@@ -91,8 +91,8 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
         private val response: Future[Result] =
           testController.submit(nino, start, end)(fakePostRequest[JsValue](requestJson))
 
-
         status(response) shouldBe NO_CONTENT
+        header("X-CorrelationId", response) shouldBe Some(correlationId)
 
         val detail = EopsDeclarationAuditDetail("Agent", Some("agentId"), nino, start, end, requestJson, correlationId,
           EopsDeclarationAuditResponse(NO_CONTENT, None))
@@ -118,6 +118,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
 
         status(response) shouldBe FORBIDDEN
         contentAsJson(response) shouldBe Json.toJson(NotFinalisedDeclaration)
+        header("X-CorrelationId", response) shouldBe Some(correlationId)
 
         val detail = EopsDeclarationAuditDetail("Agent", Some("agentId"), nino, start, end, invalidRequestJson, correlationId,
           EopsDeclarationAuditResponse(FORBIDDEN, Some(Seq(AuditError(NotFinalisedDeclaration.code)))))
@@ -133,15 +134,16 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
         val eopsDeclarationRequestData = EopsDeclarationRawData(nino, start, end, AnyContentAsJson(Json.obj()))
 
         MockedEopsDeclarationRequestDataParser.parseRequest(eopsDeclarationRequestData)
-          .returns(Left(ErrorWrapper(Some(correlationId), BadRequestError, None)))
+          .returns(Left(ErrorWrapper(None, BadRequestError, None)))
 
         private val response: Future[Result] =
           testController.submit(nino, start, end)(fakeRequest.withBody(Json.obj()))
 
         status(response) shouldBe BAD_REQUEST
         contentAsJson(response) shouldBe Json.toJson(BadRequestError)
+        header("X-CorrelationId", response) should not be empty
 
-        val detail = EopsDeclarationAuditDetail("Agent", Some("agentId"), nino, start, end, Json.obj(), correlationId,
+        val detail = EopsDeclarationAuditDetail("Agent", Some("agentId"), nino, start, end, Json.obj(), header("X-CorrelationId", response).get,
           EopsDeclarationAuditResponse(BAD_REQUEST, Some(Seq(AuditError(BadRequestError.code)))))
         val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", detail)
         MockedAuditService.verifyAuditEvent(event).once
@@ -192,7 +194,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
         val eopsDeclarationRequestData = EopsDeclarationRawData(nino, start, end, AnyContentAsJson(invalidRequestJson))
 
         MockedEopsDeclarationRequestDataParser.parseRequest(eopsDeclarationRequestData)
-          .returns(Left(ErrorWrapper(Some(correlationId), BadRequestError, Some(Seq(InvalidStartDateError, RangeEndDateBeforeStartDateError)))))
+          .returns(Left(ErrorWrapper(None, BadRequestError, Some(Seq(InvalidStartDateError, RangeEndDateBeforeStartDateError)))))
 
         private val response: Future[Result] =
           testController.submit(nino, start, end)(fakePostRequest[JsValue](invalidRequestJson))
@@ -201,8 +203,9 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
         contentAsJson(response) shouldBe
           Json.toJson(ErrorWrapper(Some(correlationId), BadRequestError,
             Some(Seq(InvalidStartDateError, RangeEndDateBeforeStartDateError))))
+        header("X-CorrelationId", response) should not be empty
 
-        val detail = EopsDeclarationAuditDetail("Agent", Some("agentId"), nino, start, end, invalidRequestJson, correlationId,
+        val detail = EopsDeclarationAuditDetail("Agent", Some("agentId"), nino, start, end, invalidRequestJson, header("X-CorrelationId", response).get,
           EopsDeclarationAuditResponse(BAD_REQUEST, Some(Seq(AuditError(InvalidStartDateError.code), AuditError(RangeEndDateBeforeStartDateError.code)))))
         val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", detail)
         MockedAuditService.verifyAuditEvent(event).once
@@ -227,6 +230,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
 
         status(response) shouldBe FORBIDDEN
         contentAsJson(response) shouldBe Json.toJson(ErrorWrapper(Some(correlationId), BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge))))
+        header("X-CorrelationId", response) shouldBe Some(correlationId)
 
         val detail = EopsDeclarationAuditDetail("Agent", Some("agentId"), nino, start, end, requestJson, correlationId,
           EopsDeclarationAuditResponse(FORBIDDEN, Some(Seq(AuditError(RuleClass4Over16.code), AuditError(RuleClass4PensionAge.code)))))
@@ -252,6 +256,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
 
         status(response) shouldBe FORBIDDEN
         contentAsJson(response) shouldBe Json.toJson(ErrorWrapper(Some(correlationId), RuleClass4Over16, None))
+        header("X-CorrelationId", response) shouldBe Some(correlationId)
 
         val detail = EopsDeclarationAuditDetail("Agent", Some("agentId"), nino, start, end, requestJson, correlationId,
           EopsDeclarationAuditResponse(FORBIDDEN, Some(Seq(AuditError(RuleClass4Over16.code)))))
@@ -276,6 +281,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
       val response: Future[Result] = testController.submit(nino, start, end)(fakePostRequest[JsValue](requestJson))
       status(response) shouldBe expectedStatus
       contentAsJson(response) shouldBe Json.toJson(error)
+      header("X-CorrelationId", response) shouldBe Some(correlationId)
 
       val detail = EopsDeclarationAuditDetail("Agent", Some("agentId"), nino, start, end, requestJson, correlationId,
         EopsDeclarationAuditResponse(expectedStatus, Some(Seq(AuditError(error.code)))))
@@ -301,6 +307,7 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
       val response: Future[Result] = testController.submit(nino, start, end)(fakePostRequest[JsValue](requestJson))
       status(response) shouldBe expectedStatus
       contentAsJson(response) shouldBe Json.toJson(error)
+      header("X-CorrelationId", response) shouldBe Some(correlationId)
 
       val detail = EopsDeclarationAuditDetail("Agent", Some("agentId"), nino, start, end, requestJson, correlationId,
         EopsDeclarationAuditResponse(expectedStatus, Some(Seq(AuditError(error.code)))))
