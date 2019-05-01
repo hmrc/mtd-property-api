@@ -14,25 +14,24 @@
  * limitations under the License.
  */
 
-package v2.mocks.services
+package v2.mocks.validators
 
-import org.scalamock.handlers.CallHandler
+import org.scalamock.handlers.CallHandler1
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.http.HeaderCarrier
-import v2.connectors.MtdIdLookupOutcome
-import v2.services.MtdIdLookupService
+import v2.controllers.requestParsers.validators.EopsDeclarationInputDataValidator
+import v2.models.errors.Error
+import v2.models.inbound.EopsDeclarationRawData
 
-import scala.concurrent.{ExecutionContext, Future}
+class MockEopsDeclarationInputDataValidator extends MockFactory {
 
-trait MockMtdIdLookupService extends MockFactory {
+  val mockValidator: EopsDeclarationInputDataValidator = mock[EopsDeclarationInputDataValidator]
 
-  val mockMtdIdLookupService: MtdIdLookupService = mock[MtdIdLookupService]
-
-  object MockedMtdIdLookupService {
-    def lookup(nino: String): CallHandler[Future[MtdIdLookupOutcome]] = {
-      (mockMtdIdLookupService.lookup(_: String)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(nino, *, *)
+  object MockedEopsDeclarationInputDataValidator {
+    def validate(data: EopsDeclarationRawData): CallHandler1[EopsDeclarationRawData, List[Error]] = {
+      (mockValidator.validate(_: EopsDeclarationRawData))
+        .expects(data)
     }
   }
 
 }
+

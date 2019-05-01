@@ -16,39 +16,55 @@
 
 package v2.controllers
 
+import java.util.UUID
+
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContentAsJson}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import v2.controllers.requestParsers.EopsDeclarationRequestDataParser
+import v2.models.audit.{AuditError, AuditEvent, EopsDeclarationAuditDetail, EopsDeclarationAuditResponse}
+import v2.models.auth.UserDetails
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 import v2.models.inbound.EopsDeclarationRawData
-import v2.services.{EnrolmentsAuthService, EopsDeclarationService, MtdIdLookupService}
+import v2.services.{AuditService, EnrolmentsAuthService, EopsDeclarationService, MtdIdLookupService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService,
                                           val lookupService: MtdIdLookupService,
-                                          val requestDataParser: EopsDeclarationRequestDataParser,
-                                          val service: EopsDeclarationService) extends AuthorisedController {
+                                          requestDataParser: EopsDeclarationRequestDataParser,
+                                          service: EopsDeclarationService,
+                                          auditService: AuditService) extends AuthorisedController {
+
+  val logger: Logger = Logger(this.getClass)
 
   def submit(nino: String, start: String, end: String): Action[JsValue] =
     authorisedAction(nino).async(parse.json) { implicit request =>
 
-      implicit val userDetails = request.userDetails
       requestDataParser.parseRequest(EopsDeclarationRawData(nino, start, end, AnyContentAsJson(request.body))) match {
         case Right(eopsDeclarationSubmission) =>
           service.submit(eopsDeclarationSubmission).map {
-            case None => NoContent
-            case Some(errorResponse) => processError(errorResponse)
+            case Right(desResponse) =>
+              auditSubmission(createAuditDetails(nino, start, end, NO_CONTENT, request.body, desResponse.correlationId, request.userDetails, None))
+              NoContent.withHeaders("X-CorrelationId" -> desResponse.correlationId)
+            case Left(errorWrapper) =>
+              val correlationId = getCorrelationId(errorWrapper)
+              val result = processError(errorWrapper)
+              auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.body, correlationId, request.userDetails, Some(errorWrapper)))
+              result.withHeaders("X-CorrelationId" -> correlationId)
           }
-        case Left(validationErrorResponse) => Future {
-          processError(validationErrorResponse)
-        }
+        case Left(errorWrapper) =>
+          val correlationId = getCorrelationId(errorWrapper)
+          val result = processError(errorWrapper)
+          auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.body, correlationId, request.userDetails, Some(errorWrapper)))
+          Future.successful(result.withHeaders("X-CorrelationId" -> correlationId))
       }
-
     }
 
   private def processError(errorResponse: ErrorWrapper) = {
@@ -76,5 +92,50 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
       case NotFoundError => NotFound(Json.toJson(errorResponse))
       case DownstreamError => InternalServerError(Json.toJson(errorResponse))
     }
+  }
+
+  private def getCorrelationId(errorWrapper: ErrorWrapper): String = {
+    errorWrapper.correlationId match {
+      case Some(correlationId) => logger.info("[EopsDeclarationController][getCorrelationId] - " +
+        s"Error received from DES ${Json.toJson(errorWrapper)} with CorrelationId: $correlationId")
+        correlationId
+      case None =>
+        val correlationId = UUID.randomUUID().toString
+        logger.info("[EopsDeclarationController][getCorrelationId] - " +
+          s"Validation error: ${Json.toJson(errorWrapper)} with CorrelationId: $correlationId")
+        correlationId
+    }
+  }
+
+  private def createAuditDetails(nino: String,
+                                 start: String,
+                                 end: String,
+                                 statusCode: Int,
+                                 request: JsValue,
+                                 correlationId: String,
+                                 userDetails: UserDetails,
+                                 errorWrapper: Option[ErrorWrapper] = None
+                                ): EopsDeclarationAuditDetail = {
+    val response = errorWrapper.map {
+      wrapper =>
+        EopsDeclarationAuditResponse(statusCode, Some(wrapper.allErrors.map(error => AuditError(error.code))))
+    }.getOrElse(EopsDeclarationAuditResponse(statusCode, None))
+
+    EopsDeclarationAuditDetail(
+      userType = userDetails.userType,
+      agentReferenceNumber = userDetails.agentReferenceNumber,
+      nino = nino,
+      from = start,
+      to = end,
+      request = request,
+      `X-CorrelationId` = correlationId,
+      response = response)
+  }
+
+  private def auditSubmission(details: EopsDeclarationAuditDetail)
+                             (implicit hc: HeaderCarrier,
+                              ec: ExecutionContext): Future[AuditResult] = {
+    val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", details)
+    auditService.auditEvent(event)
   }
 }

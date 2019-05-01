@@ -25,6 +25,7 @@ import v2.mocks.services.{MockEnrolmentsAuthService, MockEopsObligationsService,
 import v2.models.domain.{FulfilledObligation, Obligation}
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
+import v2.models.outcomes.DesResponse
 
 import scala.concurrent.Future
 
@@ -59,15 +60,17 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
   val nino: String = "AA123456A"
   val from: String = "2018-01-01"
   val to: String = "2018-12-31"
+  val correlationId = "X-123"
 
   def eopsErrorTest(error: v2.models.errors.Error, expectedStatus: Int): Unit =
     {
       s"returned a ${error.code} error" in new Test {
         MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
-          .returns(Future.successful(Left(ErrorWrapper(error, None))))
+          .returns(Future.successful(Left(ErrorWrapper(None, error, None))))
 
         val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
         status(response) shouldBe expectedStatus
+        header("X-CorrelationId", response) should not be empty
       }
     }
 
@@ -77,13 +80,14 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
       "passed a valid NINO, from and to date" in new Test {
 
         MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
-          .returns(Future.successful(Right(successEopsObligations)))
+          .returns(Future.successful(Right(DesResponse(correlationId, successEopsObligations))))
 
         private val expectedJson = Json.obj("obligations" -> Json.toJson(successEopsObligations))
         private val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
 
         status(response) shouldBe OK
         contentAsJson(response) shouldBe expectedJson
+        header("X-CorrelationId", response) shouldBe Some(correlationId)
       }
     }
 
@@ -91,12 +95,13 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
       "passed a valid NINO, from and to date" in new Test {
 
         MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
-          .returns(Future.successful(Right(successEopsObligations)))
+          .returns(Future.successful(Right(DesResponse(correlationId, successEopsObligations))))
 
         private val expectedJson = Json.obj("obligations" -> Json.toJson(successEopsObligations))
         private val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
 
         contentAsJson(response) shouldBe expectedJson
+        header("X-CorrelationId", response) shouldBe Some(correlationId)
       }
     }
 

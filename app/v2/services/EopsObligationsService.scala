@@ -25,7 +25,7 @@ import v2.connectors.DesConnector
 import v2.models.domain.{Obligation, ObligationDetails}
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
-import v2.models.outcomes.EopsObligationsOutcome
+import v2.models.outcomes.DesResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -47,14 +47,16 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
                                      (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsObligationsOutcome] = {
 
     connector.getObligations(nino, from, to).map {
-      case Left(singleError :: Nil) => Left(ErrorWrapper(desErrorToMtdError(singleError.code), None))
-      case Left(errors) => Left(ErrorWrapper(BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
-      case Right(obligations) =>
+      case Left(DesResponse(correlationId, singleError :: Nil)) =>
+        Left(ErrorWrapper(Some(correlationId), desErrorToMtdError(singleError.code), None))
+      case Left(DesResponse(correlationId, errors)) =>
+        Left(ErrorWrapper(Some(correlationId), BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
+      case Right(DesResponse(correlationId, obligations)) =>
         val eopsObligations = filterEopsObligations(obligations)
         if (eopsObligations.nonEmpty) {
-          Right(eopsObligations)
+          Right(DesResponse(correlationId, eopsObligations))
         } else {
-          Left(ErrorWrapper(NotFoundError, None))
+          Left(ErrorWrapper(Some(correlationId), NotFoundError, None))
         }
     }
 
@@ -124,17 +126,17 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
       case _ => None
     }
 
-      val validationErrors: Seq[Option[Error]] = Seq(
-        ninoError,
-        fromDateError,
-        toDateError,
-        invalidRangeError
-      )
+    val validationErrors: Seq[Option[Error]] = Seq(
+      ninoError,
+      fromDateError,
+      toDateError,
+      invalidRangeError
+    )
 
     validationErrors.flatten match {
       case List() => Right((LocalDate.parse(from), LocalDate.parse(to)))
-      case error :: Nil => Left(ErrorWrapper(error, None))
-      case errors => Left(ErrorWrapper(BadRequestError, Some(errors)))
+      case error :: Nil => Left(ErrorWrapper(None, error, None))
+      case errors => Left(ErrorWrapper(None, BadRequestError, Some(errors)))
     }
   }
 }

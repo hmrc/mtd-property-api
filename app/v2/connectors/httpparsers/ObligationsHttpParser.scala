@@ -20,17 +20,19 @@ import play.api.Logger
 import play.api.http.Status.OK
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import v2.connectors.ObligationsConnectorOutcome
 import v2.models.domain.ObligationDetails
 import v2.models.errors.{DownstreamError, Error}
-import v2.models.outcomes.ObligationsOutcome
+import v2.models.outcomes.DesResponse
 
 object ObligationsHttpParser extends HttpParser {
 
   private val obligationsJsonReads: Reads[Seq[ObligationDetails]] = (__ \ "obligations").read[Seq[ObligationDetails]]
   private val multipleErrorJsonReads: Reads[Seq[Error]] = (__ \ "failures").read[Seq[Error]]
 
-  implicit val  obligationsHttpReads: HttpReads[ObligationsOutcome] = new HttpReads[ObligationsOutcome] {
-    override def read(method: String, url: String, response: HttpResponse): ObligationsOutcome = {
+  implicit val obligationsHttpReads: HttpReads[ObligationsConnectorOutcome] = new HttpReads[ObligationsConnectorOutcome] {
+    override def read(method: String, url: String, response: HttpResponse): ObligationsConnectorOutcome = {
+      val correlationId = retrieveCorrelationId(response)
 
       val loggingPrefix = "[ObligationsHttpParser][obligationsHttpReads][read]"
 
@@ -47,13 +49,13 @@ object ObligationsHttpParser extends HttpParser {
 
       response.status match {
         case OK => response.validateJson[Seq[ObligationDetails]](obligationsJsonReads) match {
-          case Some(obligations) => Right(obligations)
-          case None => Left(Seq(DownstreamError))
+          case Some(obligations) => Right(DesResponse(correlationId, obligations))
+          case None => Left(DesResponse(correlationId, Seq(DownstreamError)))
         }
         case _ =>
           val errors = parseErrors(response)
           Logger.warn(s"$loggingPrefix Get obligations returned the following error(s): ${errors.map(_.code).mkString(",")}")
-          Left(errors)
+          Left(DesResponse(correlationId, errors))
       }
     }
   }

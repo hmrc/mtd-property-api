@@ -21,8 +21,7 @@ import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.models.auth.UserDetails
-import v2.models.outcomes.AuthOutcome
-import v2.services.EnrolmentsAuthService
+import v2.services.{AuthOutcome, EnrolmentsAuthService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,7 +33,7 @@ trait MockEnrolmentsAuthService extends MockFactory {
     def authoriseUser(): Unit = {
       (mockEnrolmentsAuthService.authorised(_: Predicate)(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *, *)
-        .returns(Future.successful(Right(UserDetails("mtd-id", "Individual", None))))
+        .returns(Future.successful(Right(UserDetails("mtd-id", "Agent", Some("agentId")))))
     }
 
     def authorised(predicate: Predicate): CallHandler[Future[AuthOutcome]] = {

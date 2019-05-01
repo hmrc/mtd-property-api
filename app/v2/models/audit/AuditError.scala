@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package v2.models
+package v2.models.audit
 
-import v2.models.auth.UserDetails
-import v2.models.domain.{Obligation, ObligationDetails}
-import v2.models.errors.{DesError, Error, ErrorWrapper}
+import play.api.libs.json.{Json, OFormat}
 
-package object outcomes {
+case class AuditError(errorCode: String)
 
-  type AuthOutcome = Either[Error, UserDetails]
-  type MtdIdLookupOutcome = Either[Error, String]
-  type ObligationsOutcome = Either[Seq[Error], Seq[ObligationDetails]]
-  type EopsObligationsOutcome = Either[ErrorWrapper, Seq[Obligation]]
-  type EopsDeclarationOutcome = Either[DesError, String]
-
+object AuditError {
+  implicit val format: OFormat[AuditError] = Json.format[AuditError]
 }

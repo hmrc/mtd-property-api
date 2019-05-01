@@ -27,7 +27,7 @@ import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
 import v2.stubs._
 
-class EopsDeclarationRequestISpec extends IntegrationBaseSpec with Status{
+class EopsDeclarationISpec extends IntegrationBaseSpec with Status {
 
   private trait Test {
 
@@ -96,7 +96,7 @@ class EopsDeclarationRequestISpec extends IntegrationBaseSpec with Status{
 
         val response: WSResponse = await(request().post(requestJson))
         response.status shouldBe FORBIDDEN
-        response.json shouldBe Json.toJson(ErrorWrapper(ConflictError, None))
+        response.json shouldBe Json.toJson(ErrorWrapper(None, ConflictError, None))
       }
     }
 
@@ -110,7 +110,7 @@ class EopsDeclarationRequestISpec extends IntegrationBaseSpec with Status{
           EopsDeclarationStub.unSuccessfulEopsDeclaration(nino, from, to, FORBIDDEN, "BVR")
         }
 
-        val expected = ErrorWrapper(BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge)))
+        val expected = ErrorWrapper(None, BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge)))
 
         val response: WSResponse = await(request().post(requestJson))
         response.status shouldBe FORBIDDEN
@@ -128,7 +128,7 @@ class EopsDeclarationRequestISpec extends IntegrationBaseSpec with Status{
           EopsDeclarationStub.unSuccessfulEopsDeclaration(nino, from, to, BAD_REQUEST, "MULTIPLE_ERROR")
         }
 
-        val expected = ErrorWrapper(BadRequestError, Some(Seq(InvalidStartDateError, InvalidEndDateError)))
+        val expected = ErrorWrapper(None, BadRequestError, Some(Seq(InvalidStartDateError, InvalidEndDateError)))
 
         val response: WSResponse = await(request().post(requestJson))
         response.status shouldBe BAD_REQUEST

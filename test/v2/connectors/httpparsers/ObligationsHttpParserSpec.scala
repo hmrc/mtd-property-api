@@ -22,15 +22,17 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers._
 import support.UnitSpec
 import uk.gov.hmrc.http.HttpResponse
+import v2.connectors.ObligationsConnectorOutcome
 import v2.connectors.httpparsers.ObligationsHttpParser.obligationsHttpReads
 import v2.models.domain.{FulfilledObligation, Obligation, ObligationDetails}
 import v2.models.errors.{DownstreamError, Error}
-import v2.models.outcomes.ObligationsOutcome
+import v2.models.outcomes.DesResponse
 
 class ObligationsHttpParserSpec extends UnitSpec {
 
   val method: String = "GET"
   val url: String = "test-url"
+  val correlationId = "x1234id"
 
   "read" should {
 
@@ -78,10 +80,10 @@ class ObligationsHttpParserSpec extends UnitSpec {
       )
 
       "the HttpResponse has a 200 status and a correct response body" in {
-        val response = HttpResponse(OK, Some(validSuccessJson))
-        val result: ObligationsOutcome = obligationsHttpReads.read(method, url, response)
+        val response = HttpResponse(OK, Some(validSuccessJson), Map("CorrelationId" -> Seq(correlationId)))
+        val result: ObligationsConnectorOutcome = obligationsHttpReads.read(method, url, response)
 
-        result shouldBe Right(validSuccessData)
+        result shouldBe Right(DesResponse(correlationId,  validSuccessData))
       }
     }
 
@@ -95,10 +97,10 @@ class ObligationsHttpParserSpec extends UnitSpec {
       )
 
       "the HttpResponse has a 200 status and an invalid response body" in {
-        val response = HttpResponse(OK, Some(invalidSuccessJson))
-        val result: ObligationsOutcome = obligationsHttpReads.read(method, url, response)
+        val response = HttpResponse(OK, Some(invalidSuccessJson), Map("CorrelationId" -> Seq(correlationId)))
+        val result: ObligationsConnectorOutcome = obligationsHttpReads.read(method, url, response)
 
-        result shouldBe Left(Seq(DownstreamError))
+        result shouldBe Left(DesResponse(correlationId, Seq(DownstreamError)))
       }
     }
 
@@ -127,10 +129,10 @@ class ObligationsHttpParserSpec extends UnitSpec {
       )
 
       "the HttpResponse has a 400 status and a multiple error response body" in {
-        val response = HttpResponse(BAD_REQUEST, Some(validMultipleErrorsJson))
-        val result: ObligationsOutcome = obligationsHttpReads.read(method, url, response)
+        val response = HttpResponse(BAD_REQUEST, Some(validMultipleErrorsJson), Map("CorrelationId" -> Seq(correlationId)))
+        val result: ObligationsConnectorOutcome = obligationsHttpReads.read(method, url, response)
 
-        result shouldBe Left(expectedErrors)
+        result shouldBe Left(DesResponse(correlationId, expectedErrors))
       }
     }
 
@@ -145,10 +147,10 @@ class ObligationsHttpParserSpec extends UnitSpec {
       )
 
       "the HttpResponse has a 500 status" in {
-        val response = HttpResponse(INTERNAL_SERVER_ERROR, Some(invalidErrorJson))
-        val result: ObligationsOutcome = obligationsHttpReads.read(method, url, response)
+        val response = HttpResponse(INTERNAL_SERVER_ERROR, Some(invalidErrorJson), Map("CorrelationId" -> Seq(correlationId)))
+        val result: ObligationsConnectorOutcome = obligationsHttpReads.read(method, url, response)
 
-        result shouldBe Left(Seq(DownstreamError))
+        result shouldBe Left(DesResponse(correlationId, Seq(DownstreamError)))
       }
     }
 
@@ -182,12 +184,12 @@ class ObligationsHttpParserSpec extends UnitSpec {
 
       "returns a collection of one error" when {
         val response = HttpResponse(NOT_FOUND, Some(singleErrorJson))
-        lazy val result: ObligationsOutcome = obligationsHttpReads.read(method, url, response)
+        lazy val result: ObligationsConnectorOutcome = obligationsHttpReads.read(method, url, response)
 
         s"the HttpResponse has a status code of $status and a error code of $desErrorCode" in {
           result match {
-            case Left(error :: Nil) => error.code shouldBe desErrorCode
-            case Left(errors) => fail(s"Expected 1 error but received ${errors.size}")
+            case Left(DesResponse(_, error :: Nil)) => error.code shouldBe desErrorCode
+            case Left(DesResponse(_,errors)) => fail(s"Expected 1 error but received ${errors.size}")
             case Right(_) => fail("Expected a left aligned result")
           }
         }

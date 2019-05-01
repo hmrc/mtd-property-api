@@ -19,70 +19,44 @@ package v2.services
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import v2.connectors.DesConnector
-import v2.models.audit.{AuditEvent, EopsDeclarationAuditDetail}
-import v2.models.auth.UserDetails
 import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.SubmitEopsDeclarationErrors._
 import v2.models.errors._
+import v2.models.outcomes.DesResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class EopsDeclarationService @Inject()(auditService: AuditService, connector: DesConnector) {
+class EopsDeclarationService @Inject()(connector: DesConnector) {
 
   def submit(submission: EopsDeclarationSubmission)
             (implicit hc: HeaderCarrier,
-             ec: ExecutionContext,
-             userDetails: UserDetails): Future[Option[ErrorWrapper]] = {
+             ec: ExecutionContext): Future[EopsDeclarationOutcome] = {
 
     val logger: Logger = Logger(this.getClass)
 
     connector.submitEOPSDeclaration(submission.nino, submission.start, submission.end).map {
-      case Left(SingleError(error)) =>
-        Some(ErrorWrapper(desErrorToMtdError(error.code), None))
-      case Left(MultipleErrors(errors)) =>
+      case Left(DesResponse(correlationId, SingleError(error))) =>
+        Left(ErrorWrapper(Some(correlationId), desErrorToMtdError(error.code), None))
+      case Left(DesResponse(correlationId, MultipleErrors(errors))) =>
         val mtdErrors = errors.map(error => desErrorToMtdError(error.code))
         if (mtdErrors.contains(DownstreamError)) {
           logger.info("[EopsDeclarationService] [submit] - downstream returned INVALID_IDTYPE. Revert to ISE")
-          Some(ErrorWrapper(DownstreamError, None))
+          Left(ErrorWrapper(Some(correlationId), DownstreamError, None))
         }
         else {
-          Some(ErrorWrapper(BadRequestError, Some(mtdErrors)))
+          Left(ErrorWrapper(Some(correlationId), BadRequestError, Some(mtdErrors)))
         }
-      case Left(BVRErrors(errors)) =>
+      case Left(DesResponse(correlationId, BVRErrors(errors))) =>
         if (errors.size == 1) {
-          Some(ErrorWrapper(desBvrErrorToMtdError(errors.head.code), None))
+          Left(ErrorWrapper(Some(correlationId), desBvrErrorToMtdError(errors.head.code), None))
         } else {
-          Some(ErrorWrapper(BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
+          Left(ErrorWrapper(Some(correlationId), BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
         }
-      case Left(GenericError(error)) => Some(ErrorWrapper(error, None))
-      case Right(correlationId) =>
-        auditSuccessfulSubmission(submission, correlationId)
-        None
+      case Left(DesResponse(correlationId, GenericError(error))) => Left(ErrorWrapper(Some(correlationId), error, None))
+      case Right(desResponse) => Right(desResponse)
     }
-  }
-
-
-  private def auditSuccessfulSubmission(submission: EopsDeclarationSubmission,
-                                        correlationId: String)
-                                       (implicit ec: ExecutionContext,
-                                        hc: HeaderCarrier,
-                                        userDetails: UserDetails): Future[AuditResult] = {
-    val details = EopsDeclarationAuditDetail(
-      userDetails.userType,
-      userDetails.agentReferenceNumber,
-      submission.nino.toString(),
-      submission.start.toString,
-      submission.end.toString,
-      finalised = true,
-      correlationId
-    )
-
-    val event = AuditEvent("submitEndOfPeriodStatement", "uk-properties-submit-eops", details)
-
-    auditService.auditEvent(event)
   }
 
   private val desErrorToMtdError: Map[String, Error] = Map(

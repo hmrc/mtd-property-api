@@ -20,17 +20,19 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
 import v2.connectors.httpparsers.SubmitEOPSDeclarationHttpParser.submitEOPSDeclarationHttpReads
 import v2.models.errors._
+import v2.models.outcomes.DesResponse
 
 class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
+
+  val correlationId = "x1234id"
 
   "read" should {
     "return a None" when {
       "the http response contains a 204" in {
-        val correlationId = "x1234id"
         val httpResponse = HttpResponse(NO_CONTENT, None, Map("CorrelationId" -> Seq(correlationId)))
 
         val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
-        result shouldBe Right(correlationId)
+        result shouldBe Right(DesResponse(correlationId, ()))
       }
     }
 
@@ -43,18 +45,18 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
             |  "reason": "some reason"
             |}
           """.stripMargin)
-        val expected = SingleError(Error("TEST_CODE", "some reason"))
+        val expected = DesResponse(correlationId, SingleError(Error("TEST_CODE", "some reason")))
 
-        val httpResponse = HttpResponse(BAD_REQUEST, Some(errorResponseJson))
+        val httpResponse = HttpResponse(BAD_REQUEST, Some(errorResponseJson), Map("CorrelationId" -> Seq(correlationId)))
         val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
         result shouldBe Left(expected)
       }
 
       def genericError(status: Int, error: Error): Unit = {
         s"the http response has a status of $status with any body" in {
-          val expected = GenericError(error)
+          val expected =  DesResponse(correlationId, GenericError(error))
 
-          val httpResponse = HttpResponse(status, Some(Json.toJson(error)))
+          val httpResponse = HttpResponse(status, Some(Json.toJson(error)), Map("CorrelationId" -> Seq(correlationId)))
           val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
           result shouldBe Left(expected)
         }
@@ -83,13 +85,14 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
               |  ]
               |}
             """.stripMargin)
-          val expected = MultipleErrors(Seq(Error("TEST_CODE_1", "some reason"), Error("TEST_CODE_2", "some reason")))
+          val expected = DesResponse(correlationId, MultipleErrors(Seq(Error("TEST_CODE_1", "some reason"), Error("TEST_CODE_2", "some reason"))))
 
-          val httpResponse = HttpResponse(status, Some(errorResponseJson))
+          val httpResponse = HttpResponse(status, Some(errorResponseJson), Map("CorrelationId" -> Seq(correlationId)))
           val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
           result shouldBe Left(expected)
         }
       }
+
       testMultipleError(BAD_REQUEST)
       testMultipleError(FORBIDDEN)
       testMultipleError(CONFLICT)
@@ -116,12 +119,27 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
             |  }
             |}
           """.stripMargin)
-        val expected = BVRErrors(Seq(Error("TEST_ID_1", ""), Error("TEST_ID_2", "")))
+        val expected = DesResponse(correlationId, BVRErrors(Seq(Error("TEST_ID_1", ""), Error("TEST_ID_2", ""))))
 
-        val httpResponse = HttpResponse(BAD_REQUEST, Some(errorResponseJson))
+        val httpResponse = HttpResponse(BAD_REQUEST, Some(errorResponseJson), Map("CorrelationId" -> Seq(correlationId)))
         val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
         result shouldBe Left(expected)
       }
+    }
+
+    "return an outbound error if the error JSON doesn't match the Error model" in {
+      val errorResponseJson = Json.parse(
+        """
+          |{
+          |  "this": "TEST_CODE",
+          |  "that": "some reason"
+          |}
+        """.stripMargin)
+      val expected = DesResponse(correlationId, GenericError(DownstreamError))
+
+      val httpResponse = HttpResponse(CONFLICT, Some(errorResponseJson), Map("CorrelationId" -> Seq(correlationId)))
+      val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
+      result shouldBe Left(expected)
     }
   }
 }

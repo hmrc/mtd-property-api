@@ -19,16 +19,18 @@ package v2.connectors.httpparsers
 import play.api.Logger
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import v2.connectors.EopsDeclarationConnectorOutcome
 import v2.models.errors._
-import v2.models.outcomes.EopsDeclarationOutcome
+import v2.models.outcomes.DesResponse
 
 object SubmitEOPSDeclarationHttpParser extends HttpParser {
 
   val logger = Logger(this.getClass)
 
-  implicit val submitEOPSDeclarationHttpReads: HttpReads[EopsDeclarationOutcome] =
-    new HttpReads[EopsDeclarationOutcome] {
-      override def read(method: String, url: String, response: HttpResponse): EopsDeclarationOutcome = {
+  implicit val submitEOPSDeclarationHttpReads: HttpReads[EopsDeclarationConnectorOutcome] =
+    new HttpReads[EopsDeclarationConnectorOutcome] {
+      override def read(method: String, url: String, response: HttpResponse): EopsDeclarationConnectorOutcome = {
+        val correlationId = retrieveCorrelationId(response)
 
         if (response.status != NO_CONTENT) {
           logger.info("[SubmitEOPSDeclarationHttpParser][read] - " +
@@ -37,15 +39,11 @@ object SubmitEOPSDeclarationHttpParser extends HttpParser {
         }
 
         response.status match {
-          case NO_CONTENT => Right(response.header("CorrelationId").getOrElse(""))
-          case BAD_REQUEST | FORBIDDEN | CONFLICT =>
-            Left(parseErrors(response))
-          case NOT_FOUND =>
-            Left(GenericError(NotFoundError))
-          case SERVICE_UNAVAILABLE =>
-            Left(GenericError(ServiceUnavailableError))
-          case _ =>
-            Left(GenericError(DownstreamError))
+          case NO_CONTENT => Right(DesResponse(correlationId, ()))
+          case BAD_REQUEST | FORBIDDEN | CONFLICT => Left(DesResponse(correlationId, parseErrors(response)))
+          case NOT_FOUND => Left(DesResponse(correlationId, GenericError(NotFoundError)))
+          case SERVICE_UNAVAILABLE => Left(DesResponse(correlationId, GenericError(ServiceUnavailableError)))
+          case _ => Left(DesResponse(correlationId, GenericError(DownstreamError)))
         }
       }
     }

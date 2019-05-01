@@ -22,8 +22,7 @@ import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import v2.connectors.DesConnector
-import v2.models.outcomes.{EopsDeclarationOutcome, ObligationsOutcome}
+import v2.connectors.{DesConnector, EopsDeclarationConnectorOutcome, ObligationsConnectorOutcome}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,12 +31,12 @@ trait MockDesConnector extends MockFactory {
   val mockDesConnector: DesConnector = mock[DesConnector]
 
   object MockedDesConnector {
-    def getObligations(nino: String, from: LocalDate, to: LocalDate): CallHandler[Future[ObligationsOutcome]] = {
+    def getObligations(nino: String, from: LocalDate, to: LocalDate): CallHandler[Future[ObligationsConnectorOutcome]] = {
       (mockDesConnector.getObligations(_: String, _: LocalDate, _: LocalDate)(_: HeaderCarrier, _: ExecutionContext))
         .expects(nino, from, to, *, *)
     }
 
-    def submitEOPSDeclaration(nino: Nino, from: LocalDate, to: LocalDate): CallHandler[Future[EopsDeclarationOutcome]] = {
+    def submitEOPSDeclaration(nino: Nino, from: LocalDate, to: LocalDate): CallHandler[Future[EopsDeclarationConnectorOutcome]] = {
       (mockDesConnector.submitEOPSDeclaration(_: Nino, _: LocalDate, _: LocalDate)(_: HeaderCarrier, _: ExecutionContext))
         .expects(nino, from, to, *, *)
     }
