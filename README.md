@@ -13,6 +13,8 @@ The MTD Property API allows operations such as:
 - sbt >1.2.3
 - [Service Manager](https://github.com/hmrc/service-manager)
 
+sbt "~run 9771"
+
 ## Development Setup
 Run from the console using: `$ sbt run`
 
