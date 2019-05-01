@@ -55,7 +55,7 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
           Left(ErrorWrapper(Some(correlationId), BVRError, Some(errors.map(_.code).map(desBvrErrorToMtdError))))
         }
       case Left(DesResponse(correlationId, GenericError(error))) => Left(ErrorWrapper(Some(correlationId), error, None))
-      case Right(DesResponse(correlationId, _)) => Right(DesResponse(correlationId, ()))
+      case Right(desResponse) => Right(desResponse)
     }
   }
 
