@@ -126,5 +126,20 @@ class SubmitEOPSDeclarationHttpParserSpec extends HttpParserSpec {
         result shouldBe Left(expected)
       }
     }
+
+    "return an outbound error if the error JSON doesn't match the Error model" in {
+      val errorResponseJson = Json.parse(
+        """
+          |{
+          |  "this": "TEST_CODE",
+          |  "that": "some reason"
+          |}
+        """.stripMargin)
+      val expected = DesResponse(correlationId, GenericError(DownstreamError))
+
+      val httpResponse = HttpResponse(CONFLICT, Some(errorResponseJson), Map("CorrelationId" -> Seq(correlationId)))
+      val result = submitEOPSDeclarationHttpReads.read(POST, "/test", httpResponse)
+      result shouldBe Left(expected)
+    }
   }
 }
