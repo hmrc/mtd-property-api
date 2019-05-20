@@ -26,10 +26,9 @@ import v2.models.auth.UserDetails
 import v2.models.errors._
 import v2.services.{EnrolmentsAuthService, MtdIdLookupService}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-abstract class AuthorisedController extends BaseController {
+abstract class AuthorisedController(implicit ec: ExecutionContext) extends BaseController {
 
   val authService: EnrolmentsAuthService
   val lookupService: MtdIdLookupService

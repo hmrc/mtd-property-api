@@ -27,6 +27,7 @@ import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
 import v2.models.outcomes.DesResponse
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class EopsObligationsControllerSpec extends ControllerBaseSpec

@@ -32,7 +32,6 @@ import v2.models.errors._
 import v2.models.inbound.EopsDeclarationRawData
 import v2.services.{AuditService, EnrolmentsAuthService, EopsDeclarationService, MtdIdLookupService}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -40,7 +39,7 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
                                           val lookupService: MtdIdLookupService,
                                           requestDataParser: EopsDeclarationRequestDataParser,
                                           service: EopsDeclarationService,
-                                          auditService: AuditService) extends AuthorisedController {
+                                          auditService: AuditService)(implicit ec: ExecutionContext) extends AuthorisedController {
 
   val logger: Logger = Logger(this.getClass)
 

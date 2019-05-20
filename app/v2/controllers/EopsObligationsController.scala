@@ -27,12 +27,12 @@ import v2.models.errors._
 import v2.models.outcomes.DesResponse
 import v2.services.{EnrolmentsAuthService, EopsObligationsService, MtdIdLookupService}
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService,
                                           val lookupService: MtdIdLookupService,
-                                          service: EopsObligationsService) extends AuthorisedController {
+                                          service: EopsObligationsService)(implicit ec: ExecutionContext) extends AuthorisedController {
 
   val logger: Logger = Logger(this.getClass)
 
