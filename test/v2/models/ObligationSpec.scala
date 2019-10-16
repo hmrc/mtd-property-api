@@ -19,8 +19,7 @@ package v2.models
 import java.time.LocalDate
 
 import org.scalatest.Assertion
-import play.api.data.validation.ValidationError
-import play.api.libs.json.{JsResultException, Json}
+import play.api.libs.json.{JsResultException, Json, JsonValidationError}
 import support.UnitSpec
 import v2.models.domain.{FulfilledObligation, Obligation, ObligationStatus, OpenObligation}
 
@@ -36,7 +35,7 @@ class ObligationSpec extends UnitSpec {
   val processed = Some(LocalDate.parse("2018-01-01"))
   val periodKey: String = ""
 
-  val fulfilledObligationInputJson =
+  val fulfilledObligationInputJson: String =
     """
       |{
       |  "status": "F",
@@ -48,7 +47,7 @@ class ObligationSpec extends UnitSpec {
       |}
     """.stripMargin
 
-  val openObligationInputJson =
+  val openObligationInputJson: String =
     """
       |{
       |  "status": "O",
@@ -59,7 +58,7 @@ class ObligationSpec extends UnitSpec {
       |}
     """.stripMargin
 
-  val fulfilledObligationOutputJson =
+  val fulfilledObligationOutputJson: String =
     """
       |{
       |  "status": "Fulfilled",
@@ -70,7 +69,7 @@ class ObligationSpec extends UnitSpec {
       |}
     """.stripMargin
 
-  val openObligationOutputJson =
+  val openObligationOutputJson: String =
     """
       |{
       |  "status": "Open",
@@ -404,8 +403,8 @@ class ObligationSpec extends UnitSpec {
 
   def getOnlyJsonErrorMessage(ex: JsResultException): Either[Assertion, String] = {
     ex.errors match {
-      case (_, ValidationError(onlyError :: Nil) :: Nil) :: Nil => Right(onlyError)
-      case (_, ValidationError(_ :: _) :: Nil) :: Nil => Left(cancel("Too many error messages for property"))
+      case (_, JsonValidationError(onlyError :: Nil) :: Nil) :: Nil => Right(onlyError)
+      case (_, JsonValidationError(_ :: _) :: Nil) :: Nil => Left(cancel("Too many error messages for property"))
       case _ :: _ => Left(cancel("Too many JSON errors only expected one."))
     }
   }

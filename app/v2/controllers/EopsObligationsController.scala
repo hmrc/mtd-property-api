@@ -21,7 +21,7 @@ import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
 import v2.models.outcomes.DesResponse
@@ -32,7 +32,8 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService,
                                           val lookupService: MtdIdLookupService,
-                                          service: EopsObligationsService)(implicit ec: ExecutionContext) extends AuthorisedController {
+                                          val cc: ControllerComponents,
+                                          service: EopsObligationsService)(implicit ec: ExecutionContext) extends AuthorisedController(cc) {
 
   val logger: Logger = Logger(this.getClass)
 

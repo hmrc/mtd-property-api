@@ -65,9 +65,11 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
       .returns(Future.successful(Right("test-mtd-id")))
     lazy val testController = new EopsDeclarationController(mockEnrolmentsAuthService,
       mockMtdIdLookupService,
+      cc,
       mockRequestDataParser,
       mockEopsDeclarationService,
-      mockAuditService)
+      mockAuditService
+    )
   }
 
   val nino: String = "AA123456A"

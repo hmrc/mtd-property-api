@@ -23,14 +23,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
-import uk.gov.hmrc.play.config.AppName
+import uk.gov.hmrc.play.bootstrap.config.AppName
 import v2.models.audit.AuditEvent
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AuditService @Inject()(auditConnector: AuditConnector,
-                             val appNameConfiguration: Configuration) extends AppName {
+                             val appNameConfiguration: Configuration){
 
   def auditEvent[T](event: AuditEvent[T])(implicit hc: HeaderCarrier, ec: ExecutionContext, writer: Writes[T]): Future[AuditResult] = {
 
@@ -38,7 +38,7 @@ class AuditService @Inject()(auditConnector: AuditConnector,
       ("transactionName" -> event.transactionName)
 
     val dataEvent = ExtendedDataEvent(
-      auditSource = appName,
+      auditSource = AppName.fromConfiguration(appNameConfiguration),
       auditType = event.auditType,
       detail = Json.toJson(event.detail),
       tags = eventTags
