@@ -21,7 +21,7 @@ import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, AnyContentAsJson}
+import play.api.mvc.{Action, AnyContentAsJson, ControllerComponents}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
 import v2.controllers.requestParsers.EopsDeclarationRequestDataParser
@@ -37,9 +37,10 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService,
                                           val lookupService: MtdIdLookupService,
+                                          val cc: ControllerComponents,
                                           requestDataParser: EopsDeclarationRequestDataParser,
                                           service: EopsDeclarationService,
-                                          auditService: AuditService)(implicit ec: ExecutionContext) extends AuthorisedController {
+                                          auditService: AuditService)(implicit ec: ExecutionContext) extends AuthorisedController(cc) {
 
   val logger: Logger = Logger(this.getClass)
 

@@ -55,6 +55,7 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
       .returns(Future.successful(Right("test-mtd-id")))
     lazy val testController = new EopsObligationsController(mockEnrolmentsAuthService,
       mockMtdIdLookupService,
+      cc,
       mockEopsObligationsService)
   }
 

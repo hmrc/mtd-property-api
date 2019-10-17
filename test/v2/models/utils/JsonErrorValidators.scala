@@ -17,11 +17,10 @@
 package v2.models.utils
 
 import org.scalatest.Assertion
-import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import support.UnitSpec
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Try}
 
 trait JsonErrorValidators {
   _: UnitSpec =>
@@ -36,7 +35,7 @@ trait JsonErrorValidators {
     val PATH_MISSING_EXCEPTION = "error.path.missing"
   }
 
-  implicit class toJsonImp[T : Writes](a: T){
+  implicit class toJsonImp[T: Writes](a: T) {
     def toJson: JsValue = Json.toJson(a)
   }
 
@@ -61,7 +60,7 @@ trait JsonErrorValidators {
           case Failure(e: JsResultException) =>
             val propertyName = getOnlyJsonErrorPath(e)
             if (propertyName.isRight) {
-              propertyName.right.get should endWith (s".$property")
+              propertyName.right.get should endWith(s".$property")
             }
           case _ => fail("A JSON error was expected")
         }
@@ -109,7 +108,7 @@ trait JsonErrorValidators {
         }
       }
 
-      lazy val pathFilteredErrors: Seq[ValidationError] = readResult.fold(
+      lazy val pathFilteredErrors: Seq[JsonValidationError] = readResult.fold(
         invalid = _.filter { case (_path, _) => _path == jsPath }.flatMap(_._2),
         valid = _ => fail(s"expected to fail but didn't")
       )
@@ -121,13 +120,12 @@ trait JsonErrorValidators {
       "throw an invalid type error" in {
         pathFilteredErrors match {
           case err :: Nil => err.message shouldBe expectedError
-          case errs @ _ :: _ => fail(s"multiple errors returned for $path but only 1 required : $errs")
+          case errs@_ :: _ => fail(s"multiple errors returned for $path but only 1 required : $errs")
           case Nil => fail(s"no property type error found for $path")
         }
       }
     }
   }
-
 
   def testPropertyType[A](jsonString: String)(property: String, invalidValue: String, errorPathAndError: (String, String))
                          (implicit rd: Reads[A]): Unit = {
@@ -140,13 +138,11 @@ trait JsonErrorValidators {
       }
     }.mkString(" ").replaceAll(",\\s*}", " }")
 
-    val errorPathJson = errorPathAndError._1.replace("/", ".")
-
     executeJsonPropertyTests(invalidTypedJson, property, errorPathAndError._2)
   }
 
   def executeJsonPropertyTests[A](invalidJson: String, property: String, errorMessage: String)
-                              (implicit rd: Reads[A]): Unit = {
+                                 (implicit rd: Reads[A]): Unit = {
     s"the JSON has the wrong data type for property $property" should {
 
       val json = Json.parse(invalidJson)
@@ -156,7 +152,7 @@ trait JsonErrorValidators {
       "only throw one error" in {
         result match {
           case Failure(e: JsResultException) => withClue(s"${e.errors.size} errors found, 1 expected : ${e.errors}")(e.errors.size shouldBe 1)
-          case Success(s) => fail("A JSON error was expected")
+          case _ => fail("A JSON error was expected")
         }
       }
 
@@ -165,7 +161,7 @@ trait JsonErrorValidators {
           case Failure(e: JsResultException) =>
             val propertyName = getOnlyJsonErrorPath(e)
             if (propertyName.isRight) {
-              propertyName.right.get should endWith (property)
+              propertyName.right.get should endWith(property)
             }
           case _ => fail("A JSON error was expected")
         }
@@ -198,15 +194,15 @@ trait JsonErrorValidators {
       case (jsonPath, _) :: Nil =>
         //recursive paths using ( __ \\ "field") return `obj*`, while nested objects return `obj.`.
         //Replace these to match the useful part of the path
-        Right(jsonPath.toJsonString.replaceAll("obj(\\.|\\*)", "."))
+        Right(jsonPath.toJsonString.replaceAll("obj([.*])", "."))
       case _ :: _ => Left(cancel("Too many JSON errors only expected one."))
     }
   }
 
   private def getOnlyJsonErrorMessage(ex: JsResultException): Either[Assertion, String] = {
     ex.errors match {
-      case (_, ValidationError(onlyError :: Nil) :: Nil) :: Nil => Right(onlyError)
-      case (_, ValidationError(_ :: _) :: Nil) :: Nil => Left(cancel("Too many error messages for property"))
+      case (_, JsonValidationError(onlyError :: Nil) :: Nil) :: Nil => Right(onlyError)
+      case (_, JsonValidationError(_ :: _) :: Nil) :: Nil => Left(cancel("Too many error messages for property"))
       case _ :: _ => Left(cancel("Too many JSON errors only expected one."))
     }
   }

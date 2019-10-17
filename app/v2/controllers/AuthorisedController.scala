@@ -21,21 +21,25 @@ import play.api.mvc._
 import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.controller.BaseController
+import uk.gov.hmrc.play.bootstrap.controller.BackendController
 import v2.models.auth.UserDetails
 import v2.models.errors._
 import v2.services.{EnrolmentsAuthService, MtdIdLookupService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-abstract class AuthorisedController(implicit ec: ExecutionContext) extends BaseController {
+abstract class AuthorisedController(cc: ControllerComponents)(implicit ec: ExecutionContext) extends BackendController(cc) {
 
   val authService: EnrolmentsAuthService
   val lookupService: MtdIdLookupService
 
   case class UserRequest[A](userDetails: UserDetails, request: Request[A]) extends WrappedRequest[A](request)
 
-  def authorisedAction(nino: String): ActionBuilder[UserRequest] = new ActionBuilder[UserRequest] {
+  def authorisedAction(nino: String): ActionBuilder[UserRequest, AnyContent] = new ActionBuilder[UserRequest, AnyContent] {
+
+    override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
+
+    override protected def executionContext: ExecutionContext = cc.executionContext
 
     def predicate(mtdId: String): Predicate = Enrolment("HMRC-MTD-IT")
       .withIdentifier("MTDITID", mtdId)
