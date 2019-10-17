@@ -25,6 +25,20 @@ import scala.util.{Failure, Try}
 trait JsonErrorValidators {
   _: UnitSpec =>
 
+  object JsonError {
+    val NUMBER_OR_STRING_FORMAT_EXCEPTION = "error.expected.jsnumberorjsstring"
+    val NUMBER_FORMAT_EXCEPTION = "error.expected.numberformatexception"
+    val BOOLEAN_FORMAT_EXCEPTION = "error.expected.jsboolean"
+    val STRING_FORMAT_EXCEPTION = "error.expected.jsstring"
+    val JSNUMBER_FORMAT_EXCEPTION = "error.expected.jsnumber"
+    val JSARRAY_FORMAT_EXCEPTION = "error.expected.jsarray"
+    val PATH_MISSING_EXCEPTION = "error.path.missing"
+  }
+
+  implicit class toJsonImp[T: Writes](a: T) {
+    def toJson: JsValue = Json.toJson(a)
+  }
+
   def testMandatoryProperty[A](jsonString: String)(property: String)(implicit rd: Reads[A]): Unit = {
     s"the JSON is missing the required property $property" should {
 
@@ -62,28 +76,6 @@ trait JsonErrorValidators {
           case _ => fail("A JSON error was expected")
         }
       }
-    }
-  }
-
-  implicit class toJsonImp[T: Writes](a: T) {
-    def toJson: JsValue = Json.toJson(a)
-  }
-
-  private def getOnlyJsonErrorPath(ex: JsResultException): Either[Assertion, String] = {
-    ex.errors match {
-      case (jsonPath, _) :: Nil =>
-        //recursive paths using ( __ \\ "field") return `obj*`, while nested objects return `obj.`.
-        //Replace these to match the useful part of the path
-        Right(jsonPath.toJsonString.replaceAll("obj([.*])", "."))
-      case _ :: _ => Left(cancel("Too many JSON errors only expected one."))
-    }
-  }
-
-  private def getOnlyJsonErrorMessage(ex: JsResultException): Either[Assertion, String] = {
-    ex.errors match {
-      case (_, JsonValidationError(onlyError :: Nil) :: Nil) :: Nil => Right(onlyError)
-      case (_, JsonValidationError(_ :: _) :: Nil) :: Nil => Left(cancel("Too many error messages for property"))
-      case _ :: _ => Left(cancel("Too many JSON errors only expected one."))
     }
   }
 
@@ -197,13 +189,21 @@ trait JsonErrorValidators {
     )
   }
 
-  object JsonError {
-    val NUMBER_OR_STRING_FORMAT_EXCEPTION = "error.expected.jsnumberorjsstring"
-    val NUMBER_FORMAT_EXCEPTION = "error.expected.numberformatexception"
-    val BOOLEAN_FORMAT_EXCEPTION = "error.expected.jsboolean"
-    val STRING_FORMAT_EXCEPTION = "error.expected.jsstring"
-    val JSNUMBER_FORMAT_EXCEPTION = "error.expected.jsnumber"
-    val JSARRAY_FORMAT_EXCEPTION = "error.expected.jsarray"
-    val PATH_MISSING_EXCEPTION = "error.path.missing"
+  private def getOnlyJsonErrorPath(ex: JsResultException): Either[Assertion, String] = {
+    ex.errors match {
+      case (jsonPath, _) :: Nil =>
+        //recursive paths using ( __ \\ "field") return `obj*`, while nested objects return `obj.`.
+        //Replace these to match the useful part of the path
+        Right(jsonPath.toJsonString.replaceAll("obj([.*])", "."))
+      case _ :: _ => Left(cancel("Too many JSON errors only expected one."))
+    }
+  }
+
+  private def getOnlyJsonErrorMessage(ex: JsResultException): Either[Assertion, String] = {
+    ex.errors match {
+      case (_, JsonValidationError(onlyError :: Nil) :: Nil) :: Nil => Right(onlyError)
+      case (_, JsonValidationError(_ :: _) :: Nil) :: Nil => Left(cancel("Too many error messages for property"))
+      case _ :: _ => Left(cancel("Too many JSON errors only expected one."))
+    }
   }
 }
