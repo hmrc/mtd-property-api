@@ -34,8 +34,8 @@ trait MockHttpClient extends MockFactory {
     }
 
     def postEmpty[T](url: String): CallHandler[Future[T]] = {
-      (mockHttpClient.POSTEmpty[T](_: String)(_: HttpReads[T], _: HeaderCarrier, _: ExecutionContext))
-        .expects(url, *, *, *)
+      (mockHttpClient.POSTEmpty[T](_: String, _: Seq[(String, String)])(_: HttpReads[T], _: HeaderCarrier, _: ExecutionContext))
+        .expects(url, *, *, *, *)
     }
   }
 }
