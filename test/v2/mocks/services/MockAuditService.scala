@@ -21,7 +21,6 @@ import org.scalamock.scalatest.MockFactory
 import play.api.libs.json.Writes
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditResult
-import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import v2.models.audit.AuditEvent
 import v2.services.AuditService
 

@@ -17,8 +17,7 @@
 package v2.controllers.requestParsers.validators.validations
 
 import support.UnitSpec
-import v2.models.errors.{MissingStartDateError, NinoFormatError}
-import v2.models.utils.JsonErrorValidators
+import v2.models.errors.MissingStartDateError
 
 class NonEmptyValidationSpec extends UnitSpec {
 
