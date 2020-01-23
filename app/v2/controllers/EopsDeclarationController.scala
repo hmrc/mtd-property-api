@@ -68,7 +68,7 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
     }
 
   private def processError(errorResponse: ErrorWrapper) = {
-    errorResponse.error match {
+    (errorResponse.error: @unchecked) match {
       case InvalidStartDateError
            | InvalidEndDateError
            | RangeToDateBeforeFromDateError
@@ -114,7 +114,7 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
                                  request: JsValue,
                                  correlationId: String,
                                  userDetails: UserDetails,
-                                 errorWrapper: Option[ErrorWrapper] = None
+                                 errorWrapper: Option[ErrorWrapper]
                                 ): EopsDeclarationAuditDetail = {
     val response = errorWrapper.map {
       wrapper =>
