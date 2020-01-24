@@ -19,7 +19,6 @@ package v2.services
 import play.api.Configuration
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.audit.AuditExtensions
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.Success
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
@@ -45,13 +44,11 @@ class AuditServiceSpec extends ServiceSpec {
     val transactionName = "some-transaction-name"
     val auditType = "some-audit-type"
     val eventDetails = "some data"
-    val tags = AuditExtensions.auditHeaderCarrier(hc).toAuditTags() + ("transactionName" -> transactionName)
     val expected: Future[AuditResult] = Future.successful(Success)
 
     "return a successful audit result" in new Test {
       val expected: Future[AuditResult] = Future.successful(Success)
       val eventDetails = "some data"
-      val generatedEvent = ExtendedDataEvent(auditSource = "", auditType = "", detail = Json.toJson(eventDetails))
 
       (mockAuditConnector.sendExtendedEvent(_: ExtendedDataEvent)(_: HeaderCarrier, _: ExecutionContext))
         .expects(*, *, *)

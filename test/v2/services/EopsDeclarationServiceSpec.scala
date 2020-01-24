@@ -49,8 +49,6 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
     "return None without errors " when {
       "successful request is made end des" in new Test {
 
-        val httpResponse = HttpResponse(responseStatus = NO_CONTENT, None)
-
         MockedDesConnector.submitEOPSDeclaration(Nino(nino), LocalDate.parse(start), LocalDate.parse(end))
           .returns(Future.successful(Right(DesResponse(correlationId, ()))))
 

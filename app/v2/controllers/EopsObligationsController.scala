@@ -48,7 +48,7 @@ class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService
     }
 
   private def processError(errorResponse: ErrorWrapper) = {
-    errorResponse.error match {
+    (errorResponse.error: @unchecked) match {
       case MissingFromDateError | MissingToDateError
            | InvalidFromDateError | InvalidToDateError
            | RangeToDateBeforeFromDateError | RangeEndDateBeforeStartDateError | RangeTooBigError
