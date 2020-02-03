@@ -8,9 +8,9 @@ The MTD Property API allows operations such as:
 - Getting your end of year obligations 
 
 ## Requirements
-- Scala 2.11.x
+- Scala 2.12.x
 - Java 8
-- sbt >1.2.3
+- sbt 1.3.7
 - [Service Manager](https://github.com/hmrc/service-manager)
 
 sbt "~run 9771"
