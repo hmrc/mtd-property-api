@@ -45,4 +45,5 @@ object SubmitEopsDeclarationErrors {
   object RuleConsolidatedExpenses extends Error("RULE_CONSOLIDATED_EXPENSES",
     "Consolidated expenses are not allowed if the cumulative turnover amount exceeds the threshold.")
 
+  object NonMatchingPeriodError extends Error("RULE_NON_MATCHING_PERIOD", "An End of Period Statement without a matching accounting period cannot be submitted")
 }

@@ -139,7 +139,8 @@ class EopsDeclarationServiceSpec extends ServiceSpec {
       ("INVALID_ACCOUNTINGPERIODSTARTDATE", "invalid start date", InvalidStartDateError),
       ("CONFLICT", "duplicate submission", ConflictError),
       ("EARLY_SUBMISSION", "early submission", EarlySubmissionError),
-      ("LATE_SUBMISSION", "late submission", LateSubmissionError)
+      ("LATE_SUBMISSION", "late submission", LateSubmissionError),
+      ("NON_MATCHING_PERIOD", "non matching period", NonMatchingPeriodError)
     )
 
     possibleDesErrors.foreach {
