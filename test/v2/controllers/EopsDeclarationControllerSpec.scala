@@ -182,7 +182,8 @@ class EopsDeclarationControllerSpec extends ControllerBaseSpec
 
       val eopsErrors = Seq(NotFinalisedDeclaration, ConflictError, RuleClass4Over16, RuleClass4PensionAge,
         RuleFhlPrivateUseAdjustment, RuleNonFhlPrivateUseAdjustment,
-        RuleMismatchStartDate, RuleMismatchEndDate, RuleConsolidatedExpenses, EarlySubmissionError, LateSubmissionError)
+        RuleMismatchStartDate, RuleMismatchEndDate, RuleConsolidatedExpenses, EarlySubmissionError, LateSubmissionError,
+        NonMatchingPeriodError)
 
       for (error <- eopsErrors) {
         eopsDeclarationBusinessScenarios(error, FORBIDDEN)

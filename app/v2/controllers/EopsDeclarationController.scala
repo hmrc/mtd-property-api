@@ -87,6 +87,7 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
            | RuleConsolidatedExpenses
            | EarlySubmissionError
            | LateSubmissionError
+           | NonMatchingPeriodError
            | BVRError =>
         Forbidden(Json.toJson(errorResponse))
       case NotFoundError => NotFound(Json.toJson(errorResponse))

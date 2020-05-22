@@ -69,7 +69,8 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
     "EARLY_SUBMISSION" -> EarlySubmissionError,
     "LATE_SUBMISSION" -> LateSubmissionError,
     "SERVER_ERROR" -> DownstreamError,
-    "SERVICE_UNAVAILABLE" -> ServiceUnavailableError
+    "SERVICE_UNAVAILABLE" -> ServiceUnavailableError,
+    "NON_MATCHING_PERIOD" -> NonMatchingPeriodError
   )
 
   private val desBvrErrorToMtdError: Map[String, Error] = Map(
