@@ -19,7 +19,6 @@ package v2.services
 import java.time.LocalDate
 
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.HttpResponse
 import v2.connectors.EopsDeclarationConnectorOutcome
 import v2.mocks.connectors.MockDesConnector
 import v2.models.auth.UserDetails
