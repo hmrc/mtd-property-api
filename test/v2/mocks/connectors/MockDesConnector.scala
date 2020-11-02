@@ -32,13 +32,13 @@ trait MockDesConnector extends MockFactory {
 
   object MockedDesConnector {
     def getObligations(nino: String, from: LocalDate, to: LocalDate): CallHandler[Future[ObligationsConnectorOutcome]] = {
-      (mockDesConnector.getObligations(_: String, _: LocalDate, _: LocalDate)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(nino, from, to, *, *)
+      (mockDesConnector.getObligations(_: String, _: LocalDate, _: LocalDate)(_: HeaderCarrier, _: ExecutionContext, _: String))
+        .expects(nino, from, to, *, *, *)
     }
 
     def submitEOPSDeclaration(nino: Nino, from: LocalDate, to: LocalDate): CallHandler[Future[EopsDeclarationConnectorOutcome]] = {
-      (mockDesConnector.submitEOPSDeclaration(_: Nino, _: LocalDate, _: LocalDate)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(nino, from, to, *, *)
+      (mockDesConnector.submitEOPSDeclaration(_: Nino, _: LocalDate, _: LocalDate)(_: HeaderCarrier, _: ExecutionContext, _: String))
+        .expects(nino, from, to, *, *, *)
     }
   }
 

@@ -32,7 +32,7 @@ class ObligationSpec extends UnitSpec {
   val due: LocalDate = LocalDate.parse("2018-01-01")
   val statusFulfilled: FulfilledObligation.type = FulfilledObligation
   val statusOpen: ObligationStatus = OpenObligation
-  val processed = Some(LocalDate.parse("2018-01-01"))
+  val processed: Option[LocalDate] = Some(LocalDate.parse("2018-01-01"))
   val periodKey: String = ""
 
   val fulfilledObligationInputJson: String =
@@ -79,7 +79,7 @@ class ObligationSpec extends UnitSpec {
       |}
     """.stripMargin
 
-  val fulfilledObligation = Obligation(
+  val fulfilledObligation: Obligation = Obligation(
     startDate = start,
     endDate = end,
     dueDate = due,
@@ -88,7 +88,7 @@ class ObligationSpec extends UnitSpec {
     periodKey = periodKey
   )
 
-  val openObligation = Obligation(
+  val openObligation: Obligation = Obligation(
     startDate = start,
     endDate = end,
     dueDate = due,

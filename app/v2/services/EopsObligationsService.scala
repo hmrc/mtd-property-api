@@ -34,7 +34,7 @@ import scala.util.Try
 class EopsObligationsService @Inject()(connector: DesConnector) {
 
   def retrieveEopsObligations(nino: String, from: String, to: String)
-                             (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsObligationsOutcome] = {
+                             (implicit hc: HeaderCarrier, ec: ExecutionContext, correlationId: String): Future[EopsObligationsOutcome] = {
 
     validateGetEopsObligationsArgs(nino, from, to) match {
       case Right((fromDate, toDate)) => retrieveEopsObligations(nino, fromDate, toDate)
@@ -44,19 +44,19 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
   }
 
   private def retrieveEopsObligations(nino: String, from: LocalDate, to: LocalDate)
-                                     (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsObligationsOutcome] = {
+                                     (implicit hc: HeaderCarrier, ec: ExecutionContext, correlationId: String): Future[EopsObligationsOutcome] = {
 
     connector.getObligations(nino, from, to).map {
       case Left(DesResponse(correlationId, singleError :: Nil)) =>
-        Left(ErrorWrapper(Some(correlationId), desErrorToMtdError(singleError.code), None))
+        Left(ErrorWrapper(correlationId, desErrorToMtdError(singleError.code), None))
       case Left(DesResponse(correlationId, errors)) =>
-        Left(ErrorWrapper(Some(correlationId), BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
+        Left(ErrorWrapper(correlationId, BadRequestError, Some(errors.map(_.code).map(desErrorToMtdError))))
       case Right(DesResponse(correlationId, obligations)) =>
         val eopsObligations = filterEopsObligations(obligations)
         if (eopsObligations.nonEmpty) {
           Right(DesResponse(correlationId, eopsObligations))
         } else {
-          Left(ErrorWrapper(Some(correlationId), NotFoundError, None))
+          Left(ErrorWrapper(correlationId, NotFoundError, None))
         }
     }
 
@@ -108,7 +108,7 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
 
   private def validateGetEopsObligationsArgs(nino: String,
                                              from: String,
-                                             to: String): Either[ErrorWrapper, (LocalDate, LocalDate)] = {
+                                             to: String)(implicit correlationId: String): Either[ErrorWrapper, (LocalDate, LocalDate)] = {
 
     val MAX_DATE_RANGE_IN_DAYS = 366
 
@@ -135,8 +135,8 @@ class EopsObligationsService @Inject()(connector: DesConnector) {
 
     validationErrors.flatten match {
       case List() => Right((LocalDate.parse(from), LocalDate.parse(to)))
-      case error :: Nil => Left(ErrorWrapper(None, error, None))
-      case errors => Left(ErrorWrapper(None, BadRequestError, Some(errors)))
+      case error :: Nil => Left(ErrorWrapper(correlationId, error, None))
+      case errors => Left(ErrorWrapper(correlationId, BadRequestError, Some(errors)))
     }
   }
 }

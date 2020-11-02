@@ -29,6 +29,7 @@ import scala.concurrent.Future
 class DesConnectorSpec extends ConnectorSpec {
 
   val baseUrl = "test-mtdIdBaseUrl"
+  implicit val correlationId: String = "x1234id"
 
   private trait Test extends MockHttpClient with MockAppConfig {
 
@@ -60,8 +61,6 @@ class DesConnectorSpec extends ConnectorSpec {
 
     val urlPath = s"/enterprise/obligation-data/nino/$nino/ITSA?from=$from&to=$to"
 
-    val correlationId = "x1234id"
-
     "return a collection of obligation details" when {
       "the http client returns a collection of obligations" in new Test {
 
@@ -92,8 +91,6 @@ class DesConnectorSpec extends ConnectorSpec {
 
     val url = s"$baseUrl/income-tax/income-sources/nino/${nino.nino}/uk-property/$from/$to/declaration"
 
-    val correlationId = "x1234id"
-
     "return a None" when {
       "the http client returns None" in new Test {
         MockedHttpClient.postEmpty[EopsDeclarationConnectorOutcome](url)
@@ -106,7 +103,7 @@ class DesConnectorSpec extends ConnectorSpec {
 
     "return an ErrorResponse" when {
       "the http client returns an error response" in new Test {
-        val errorResponse = SingleError(NinoFormatError)
+        val errorResponse: SingleError = SingleError(NinoFormatError)
 
         MockedHttpClient.postEmpty[EopsDeclarationConnectorOutcome](url)
           .returns(Future.successful(Left(DesResponse(correlationId, errorResponse))))

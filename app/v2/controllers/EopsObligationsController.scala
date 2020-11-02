@@ -16,8 +16,6 @@
 
 package v2.controllers
 
-import java.util.UUID
-
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.libs.json.Json
@@ -26,6 +24,7 @@ import v2.models.errors.GetEopsObligationsErrors._
 import v2.models.errors._
 import v2.models.outcomes.DesResponse
 import v2.services.{EnrolmentsAuthService, EopsObligationsService, MtdIdLookupService}
+import v2.utils.IdGenerator
 
 import scala.concurrent.ExecutionContext
 
@@ -33,17 +32,31 @@ import scala.concurrent.ExecutionContext
 class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService,
                                           val lookupService: MtdIdLookupService,
                                           val cc: ControllerComponents,
+                                          val idGenerator: IdGenerator,
                                           service: EopsObligationsService)(implicit ec: ExecutionContext) extends AuthorisedController(cc) {
 
   val logger: Logger = Logger(this.getClass)
+  implicit val endpointLogContext: EndpointLogContext =
+    EndpointLogContext(controllerName = "EopsObligationsController", endpointName = "Get EOPS Obligations")
 
   def getEopsObligations(nino: String, from: String, to: String): Action[AnyContent] =
     authorisedAction(nino).async { implicit request =>
+      implicit val correlationId: String = idGenerator.generateCorrelationId
+      logger.info(
+        s"[${endpointLogContext.controllerName}][${endpointLogContext.endpointName}] " +
+          s"with CorrelationId: $correlationId")
+
       service.retrieveEopsObligations(nino, from, to).map {
         case Left(e) =>
-          processError(e).withHeaders("X-CorrelationId" -> getCorrelationId(e))
-        case Right(DesResponse(correlationId, success)) =>
-          Ok(Json.obj("obligations" -> Json.toJson(success))).withHeaders("X-CorrelationId" -> correlationId)
+          logger.info(
+            s"[${endpointLogContext.controllerName}][${endpointLogContext.endpointName}] - " +
+              s"Error response received with CorrelationId: ${e.correlationId}")
+          processError(e).withHeaders("X-CorrelationId" -> e.correlationId)
+        case Right(DesResponse(resultCorrelationId, success)) =>
+          logger.info(
+            s"[${endpointLogContext.controllerName}][${endpointLogContext.endpointName}] - " +
+              s"Success response received with CorrelationId: $resultCorrelationId")
+          Ok(Json.obj("obligations" -> Json.toJson(success))).withHeaders("X-CorrelationId" -> resultCorrelationId)
       }
     }
 
@@ -56,19 +69,6 @@ class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService
         BadRequest(Json.toJson(errorResponse))
       case NotFoundError => NotFound(Json.toJson(errorResponse))
       case DownstreamError => InternalServerError(Json.toJson(errorResponse))
-    }
-  }
-
-  private def getCorrelationId(errorWrapper: ErrorWrapper): String = {
-    errorWrapper.correlationId match {
-      case Some(correlationId) => logger.info("[EopsObligationsController][getCorrelationId] - " +
-        s"Error received from DES ${Json.toJson(errorWrapper)} with CorrelationId: $correlationId")
-        correlationId
-      case None =>
-        val correlationId = UUID.randomUUID().toString
-        logger.info("[EopsObligationsController][getCorrelationId] - " +
-          s"Validation error: ${Json.toJson(errorWrapper)} with CorrelationId: $correlationId")
-        correlationId
     }
   }
 

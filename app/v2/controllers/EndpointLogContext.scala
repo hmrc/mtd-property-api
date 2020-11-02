@@ -14,20 +14,9 @@
  * limitations under the License.
  */
 
-package v2.services
+package v2.controllers
 
-import play.api.http.{HeaderNames, MimeTypes, Status}
-import support.UnitSpec
-import uk.gov.hmrc.http.HeaderCarrier
-
-import scala.concurrent.ExecutionContext
-
-trait ServiceSpec extends UnitSpec
-  with Status
-  with MimeTypes
-  with HeaderNames {
-
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
-  implicit val correlationId: String = "x1234id"
-}
+case class EndpointLogContext(
+                               controllerName: String,
+                               endpointName: String
+                             )
