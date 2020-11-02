@@ -29,12 +29,14 @@ import v2.models.inbound.EopsDeclarationRawData
 
 class EopsDeclarationRequestDataParserSpec extends UnitSpec {
 
+  implicit val correlationId: String = "x1234id"
+
   trait Test extends MockEopsDeclarationInputDataValidator {
     lazy val parser = new EopsDeclarationRequestDataParser(mockValidator)
 
     // WLOG - validation is mocked
-    val rawData = EopsDeclarationRawData("AA112233A", "2018-01-01", "2019-01-01", AnyContentAsJson(Json.obj()))
-    val submission = EopsDeclarationSubmission(Nino("AA112233A"), LocalDate.parse("2018-01-01"), LocalDate.parse("2019-01-01"))
+    val rawData: EopsDeclarationRawData = EopsDeclarationRawData("AA112233A", "2018-01-01", "2019-01-01", AnyContentAsJson(Json.obj()))
+    val submission: EopsDeclarationSubmission = EopsDeclarationSubmission(Nino("AA112233A"), LocalDate.parse("2018-01-01"), LocalDate.parse("2019-01-01"))
   }
 
   "EopsDeclarationRequestDataParser" when {
@@ -50,14 +52,14 @@ class EopsDeclarationRequestDataParserSpec extends UnitSpec {
       "return the error" in new Test {
         MockedEopsDeclarationInputDataValidator.validate(rawData).returns(List(NinoFormatError))
 
-        parser.parseRequest(rawData) shouldBe Left(ErrorWrapper(None, NinoFormatError, None))
+        parser.parseRequest(rawData) shouldBe Left(ErrorWrapper(correlationId, NinoFormatError, None))
       }
     }
 
     "raw data has multiple errors" must {
       "return the multple errors with BadRequestError as main error" in new Test {
         MockedEopsDeclarationInputDataValidator.validate(rawData).returns(List(NinoFormatError, MissingStartDateError))
-        parser.parseRequest(rawData) shouldBe Left(ErrorWrapper(None, BadRequestError, Some(List(NinoFormatError, MissingStartDateError))))
+        parser.parseRequest(rawData) shouldBe Left(ErrorWrapper(correlationId, BadRequestError, Some(List(NinoFormatError, MissingStartDateError))))
       }
     }
   }

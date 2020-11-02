@@ -31,8 +31,8 @@ trait MockEopsDeclarationRequestService extends MockFactory {
   object MockedEopsDeclarationService {
     def submitDeclaration(eopsDeclarationSubmission: EopsDeclarationSubmission): CallHandler[Future[EopsDeclarationOutcome]] = {
       (mockEopsDeclarationService.submit(_: EopsDeclarationSubmission)
-      (_: HeaderCarrier, _: ExecutionContext))
-        .expects(eopsDeclarationSubmission, *, *)
+      (_: HeaderCarrier, _: ExecutionContext, _: String))
+        .expects(eopsDeclarationSubmission, *, *, *)
     }
   }
 

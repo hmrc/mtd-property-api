@@ -23,14 +23,14 @@ import v2.models.utils.JsonErrorValidators
 
 class EopsDeclarationRequestSpec extends UnitSpec with JsonErrorValidators{
 
-  val eopsDeclarationRequestJson =
+  val eopsDeclarationRequestJson: String =
     """
       |{
       |"finalised": true
       |}
     """.stripMargin
 
-  val eopsDeclarationRequest = EopsDeclarationRequest(finalised = true)
+  val eopsDeclarationRequest: EopsDeclarationRequest = EopsDeclarationRequest(finalised = true)
 
   "eopsDeclaration reads" should {
 

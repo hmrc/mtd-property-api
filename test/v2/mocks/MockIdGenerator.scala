@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package v2.mocks.requestParsers
+package v2.mocks
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import v2.controllers.requestParsers.EopsDeclarationRequestDataParser
-import v2.models.domain.EopsDeclarationSubmission
-import v2.models.errors.ErrorWrapper
-import v2.models.inbound.EopsDeclarationRawData
+import v2.utils.IdGenerator
 
-trait MockEopsDeclarationRequestRawDataParser extends MockFactory {
+trait MockIdGenerator extends MockFactory {
 
-  val mockRequestDataParser: EopsDeclarationRequestDataParser = mock[EopsDeclarationRequestDataParser]
+  val mockIdGenerator: IdGenerator = mock[IdGenerator]
 
-  object MockedEopsDeclarationRequestDataParser {
-    def parseRequest(data: EopsDeclarationRawData): CallHandler[Either[ErrorWrapper, EopsDeclarationSubmission]] = {
-      (mockRequestDataParser.parseRequest(_: EopsDeclarationRawData)(_: String))
-        .expects(data, *)
-    }
+  object MockIdGenerator {
+    def generateCorrelationId: CallHandler[String] = (mockIdGenerator.generateCorrelationId _).expects()
   }
 }

@@ -24,18 +24,31 @@ import v2.controllers.requestParsers.validators.EopsDeclarationInputDataValidato
 import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.{BadRequestError, ErrorWrapper}
 import v2.models.inbound.EopsDeclarationRawData
+import v2.utils.Logging
 
-class EopsDeclarationRequestDataParser @Inject()(validator: EopsDeclarationInputDataValidator) {
+class EopsDeclarationRequestDataParser @Inject()(validator: EopsDeclarationInputDataValidator) extends Logging{
 
-  def parseRequest(data: EopsDeclarationRawData): Either[ErrorWrapper, EopsDeclarationSubmission] = {
+  def parseRequest(data: EopsDeclarationRawData)(implicit correlationId: String): Either[ErrorWrapper, EopsDeclarationSubmission] = {
 
     lazy val eopsDeclarationSubmission =
       EopsDeclarationSubmission(Nino(data.nino), LocalDate.parse(data.start), LocalDate.parse(data.end))
 
     validator.validate(data) match {
-      case Nil => Right(eopsDeclarationSubmission)
-      case err :: Nil => Left(ErrorWrapper(None, err, None))
-      case errs => Left(ErrorWrapper(None, BadRequestError, Some(errs)))
+      case Nil =>
+        logger.info(
+          "[RequestParser][parseRequest] " +
+            s"Validation successful for the request with CorrelationId: $correlationId")
+        Right(eopsDeclarationSubmission)
+      case err :: Nil =>
+        logger.info(
+          "[RequestParser][parseRequest] " +
+            s"Validation failed with ${err.code} error for the request with CorrelationId: $correlationId")
+        Left(ErrorWrapper(correlationId, err, None))
+      case errs =>
+        logger.info(
+          "[RequestParser][parseRequest] " +
+            s"Validation failed with ${errs.map(_.code).mkString(",")} error for the request with CorrelationId: $correlationId")
+        Left(ErrorWrapper(correlationId, BadRequestError, Some(errs)))
     }
   }
 

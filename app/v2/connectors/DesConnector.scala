@@ -31,12 +31,12 @@ import scala.concurrent.{ExecutionContext, Future}
 class DesConnector @Inject()(http: HttpClient,
                              appConfig: AppConfig) {
 
-  private[connectors] def desHeaderCarrier(implicit hc: HeaderCarrier): HeaderCarrier = hc
+  private[connectors] def desHeaderCarrier(implicit hc: HeaderCarrier, correlationId: String): HeaderCarrier = hc
     .copy(authorization = Some(Authorization(s"Bearer ${appConfig.desToken}")))
-    .withExtraHeaders("Environment" -> appConfig.desEnv)
+    .withExtraHeaders("Environment" -> appConfig.desEnv, "CorrelationId" -> correlationId)
 
   def getObligations(nino: String, from: LocalDate, to: LocalDate)
-                    (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ObligationsConnectorOutcome] = {
+                    (implicit hc: HeaderCarrier, ec: ExecutionContext, correlationId: String): Future[ObligationsConnectorOutcome] = {
     import v2.connectors.httpparsers.ObligationsHttpParser.obligationsHttpReads
 
     val urlPath = s"/enterprise/obligation-data/nino/$nino/ITSA?from=$from&to=$to"
@@ -45,7 +45,7 @@ class DesConnector @Inject()(http: HttpClient,
   }
 
   def submitEOPSDeclaration(nino: Nino, from: LocalDate, to: LocalDate)
-                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[EopsDeclarationConnectorOutcome] = {
+                           (implicit hc: HeaderCarrier, ec: ExecutionContext, correlationId: String): Future[EopsDeclarationConnectorOutcome] = {
     import v2.connectors.httpparsers.SubmitEOPSDeclarationHttpParser.submitEOPSDeclarationHttpReads
 
     val url = s"${appConfig.desBaseUrl}/income-tax/income-sources/nino/${nino.nino}/uk-property/$from/$to/declaration"

@@ -80,7 +80,7 @@ class ObligationsHttpParserSpec extends UnitSpec {
       )
 
       "the HttpResponse has a 200 status and a correct response body" in {
-        val response = HttpResponse(OK, Some(validSuccessJson), Map("CorrelationId" -> Seq(correlationId)))
+        val response = HttpResponse(OK, validSuccessJson, Map("CorrelationId" -> Seq(correlationId)))
         val result: ObligationsConnectorOutcome = obligationsHttpReads.read(method, url, response)
 
         result shouldBe Right(DesResponse(correlationId,  validSuccessData))
@@ -97,7 +97,7 @@ class ObligationsHttpParserSpec extends UnitSpec {
       )
 
       "the HttpResponse has a 200 status and an invalid response body" in {
-        val response = HttpResponse(OK, Some(invalidSuccessJson), Map("CorrelationId" -> Seq(correlationId)))
+        val response = HttpResponse(OK, invalidSuccessJson, Map("CorrelationId" -> Seq(correlationId)))
         val result: ObligationsConnectorOutcome = obligationsHttpReads.read(method, url, response)
 
         result shouldBe Left(DesResponse(correlationId, Seq(DownstreamError)))
@@ -129,7 +129,7 @@ class ObligationsHttpParserSpec extends UnitSpec {
       )
 
       "the HttpResponse has a 400 status and a multiple error response body" in {
-        val response = HttpResponse(BAD_REQUEST, Some(validMultipleErrorsJson), Map("CorrelationId" -> Seq(correlationId)))
+        val response = HttpResponse(BAD_REQUEST, validMultipleErrorsJson, Map("CorrelationId" -> Seq(correlationId)))
         val result: ObligationsConnectorOutcome = obligationsHttpReads.read(method, url, response)
 
         result shouldBe Left(DesResponse(correlationId, expectedErrors))
@@ -147,7 +147,7 @@ class ObligationsHttpParserSpec extends UnitSpec {
       )
 
       "the HttpResponse has a 500 status" in {
-        val response = HttpResponse(INTERNAL_SERVER_ERROR, Some(invalidErrorJson), Map("CorrelationId" -> Seq(correlationId)))
+        val response = HttpResponse(INTERNAL_SERVER_ERROR, invalidErrorJson, Map("CorrelationId" -> Seq(correlationId)))
         val result: ObligationsConnectorOutcome = obligationsHttpReads.read(method, url, response)
 
         result shouldBe Left(DesResponse(correlationId, Seq(DownstreamError)))
@@ -183,7 +183,7 @@ class ObligationsHttpParserSpec extends UnitSpec {
       )
 
       "returns a collection of one error" when {
-        val response = HttpResponse(NOT_FOUND, Some(singleErrorJson))
+        val response = HttpResponse(NOT_FOUND, singleErrorJson, Map.empty[String,Seq[String]])
         lazy val result: ObligationsConnectorOutcome = obligationsHttpReads.read(method, url, response)
 
         s"the HttpResponse has a status code of $status and a error code of $desErrorCode" in {

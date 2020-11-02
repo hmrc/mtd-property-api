@@ -29,8 +29,8 @@ trait MockEopsObligationsService extends MockFactory {
 
   object MockedEopsObligationsService {
     def retrieveEopsObligations(nino: String, from: String, to: String): CallHandler[Future[EopsObligationsOutcome]] = {
-      (mockEopsObligationsService.retrieveEopsObligations(_: String, _:String, _:String)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(nino, from, to, *, *)
+      (mockEopsObligationsService.retrieveEopsObligations(_: String, _:String, _:String)(_: HeaderCarrier, _: ExecutionContext, _: String))
+        .expects(nino, from, to, *, *, *)
     }
   }
 }

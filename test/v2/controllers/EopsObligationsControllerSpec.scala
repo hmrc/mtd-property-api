@@ -21,6 +21,7 @@ import java.time.LocalDate
 import play.api.libs.json.Json
 import play.api.mvc.Result
 import uk.gov.hmrc.http.HeaderCarrier
+import v2.mocks.MockIdGenerator
 import v2.mocks.services.{MockEnrolmentsAuthService, MockEopsObligationsService, MockMtdIdLookupService}
 import v2.models.domain.{FulfilledObligation, Obligation}
 import v2.models.errors.GetEopsObligationsErrors._
@@ -33,7 +34,8 @@ import scala.concurrent.Future
 class EopsObligationsControllerSpec extends ControllerBaseSpec
   with MockEopsObligationsService
   with MockEnrolmentsAuthService
-  with MockMtdIdLookupService {
+  with MockMtdIdLookupService
+  with MockIdGenerator {
 
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
@@ -50,12 +52,14 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
   )
 
   class Test {
+    MockIdGenerator.generateCorrelationId.returns(correlationId)
     MockedEnrolmentsAuthService.authoriseUser()
     MockedMtdIdLookupService.lookup("AA123456A")
       .returns(Future.successful(Right("test-mtd-id")))
     lazy val testController = new EopsObligationsController(mockEnrolmentsAuthService,
       mockMtdIdLookupService,
       cc,
+      mockIdGenerator,
       mockEopsObligationsService)
   }
 
@@ -68,7 +72,7 @@ class EopsObligationsControllerSpec extends ControllerBaseSpec
     {
       s"returned a ${error.code} error" in new Test {
         MockedEopsObligationsService.retrieveEopsObligations(nino, from, to)
-          .returns(Future.successful(Left(ErrorWrapper(None, error, None))))
+          .returns(Future.successful(Left(ErrorWrapper(correlationId, error, None))))
 
         val response: Future[Result] = testController.getEopsObligations(nino, from, to)(fakeRequest)
         status(response) shouldBe expectedStatus

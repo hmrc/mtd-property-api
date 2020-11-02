@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.http.Status
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.{WSRequest, WSResponse}
 import support.IntegrationBaseSpec
 import v2.models.errors.SubmitEopsDeclarationErrors._
@@ -35,7 +35,7 @@ class EopsDeclarationISpec extends IntegrationBaseSpec with Status {
     val from: String = "2017-04-06"
     val to: String = "2018-04-05"
 
-    val requestJson = Json.parse(
+    val requestJson: JsValue = Json.parse(
       """
         |{
         |"finalised": true
@@ -96,7 +96,7 @@ class EopsDeclarationISpec extends IntegrationBaseSpec with Status {
 
         val response: WSResponse = await(request().post(requestJson))
         response.status shouldBe FORBIDDEN
-        response.json shouldBe Json.toJson(ErrorWrapper(None, ConflictError, None))
+        response.json shouldBe Json.toJson(ErrorWrapper("", ConflictError, None))
       }
     }
 
@@ -110,7 +110,7 @@ class EopsDeclarationISpec extends IntegrationBaseSpec with Status {
           EopsDeclarationStub.unSuccessfulEopsDeclaration(nino, from, to, FORBIDDEN, "BVR")
         }
 
-        val expected = ErrorWrapper(None, BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge)))
+        val expected: ErrorWrapper = ErrorWrapper("", BVRError, Some(Seq(RuleClass4Over16, RuleClass4PensionAge)))
 
         val response: WSResponse = await(request().post(requestJson))
         response.status shouldBe FORBIDDEN
@@ -128,7 +128,7 @@ class EopsDeclarationISpec extends IntegrationBaseSpec with Status {
           EopsDeclarationStub.unSuccessfulEopsDeclaration(nino, from, to, BAD_REQUEST, "MULTIPLE_ERROR")
         }
 
-        val expected = ErrorWrapper(None, BadRequestError, Some(Seq(InvalidStartDateError, InvalidEndDateError)))
+        val expected: ErrorWrapper = ErrorWrapper("", BadRequestError, Some(Seq(InvalidStartDateError, InvalidEndDateError)))
 
         val response: WSResponse = await(request().post(requestJson))
         response.status shouldBe BAD_REQUEST
