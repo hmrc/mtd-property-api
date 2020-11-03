@@ -43,7 +43,7 @@ class EopsDeclarationService @Inject()(connector: DesConnector) {
       case Left(DesResponse(correlationId, MultipleErrors(errors))) =>
         val mtdErrors = errors.map(error => desErrorToMtdError(error.code))
         if (mtdErrors.contains(DownstreamError)) {
-          logger.info("[EopsDeclarationService] [submit] - downstream returned INVALID_IDTYPE. Revert to ISE")
+          logger.info(s"[EopsDeclarationService] [submit] - downstream returned INVALID_IDTYPE with CorrelationId: $correlationId. Revert to ISE")
           Left(ErrorWrapper(correlationId, DownstreamError, None))
         }
         else {
