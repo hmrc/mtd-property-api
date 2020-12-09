@@ -19,9 +19,9 @@ Run the microservice from the console using: `sbt run` (starts on port 9771 by d
 Start the service manager profile: `sm --start MTDFB_SA_PROP`
 
 ## Run Tests
-Run unit tests: `$ sbt test`
+Run unit tests: `sbt test`
 
-Run integration tests: `$ sbt it:test`
+Run integration tests: `sbt it:test`
 
 ## Reporting Issues
 You can create a GitHub issue [here](https://github.com/hmrc/mtd-property-api/issues)
