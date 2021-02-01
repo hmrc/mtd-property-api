@@ -19,6 +19,7 @@ package v2.services
 import java.time.LocalDate
 
 import javax.inject.{Inject, Singleton}
+import play.api.Logger
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
@@ -33,12 +34,16 @@ import scala.util.Try
 @Singleton
 class EopsObligationsService @Inject()(connector: DesConnector) {
 
+  val logger = Logger(this.getClass)
+
   def retrieveEopsObligations(nino: String, from: String, to: String)
                              (implicit hc: HeaderCarrier, ec: ExecutionContext, correlationId: String): Future[EopsObligationsOutcome] = {
 
     validateGetEopsObligationsArgs(nino, from, to) match {
       case Right((fromDate, toDate)) => retrieveEopsObligations(nino, fromDate, toDate)
-      case Left(errors) => Future.successful(Left(errors))
+      case Left(errors) => logger.warn(s"[EopsObligationsService][]retrieveEopsObligations[validateGetEopsObligationsArgs] " +
+        s"Received validation errors ${errors.allErrors.map(_.code).mkString(",")}")
+        Future.successful(Left(errors))
     }
 
   }

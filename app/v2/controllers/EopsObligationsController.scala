@@ -48,12 +48,13 @@ class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService
 
       service.retrieveEopsObligations(nino, from, to).map {
         case Left(e) =>
-          logger.info(
+          logger.warn(
             s"[${endpointLogContext.controllerName}][${endpointLogContext.endpointName}] - " +
-              s"Error response received with CorrelationId: ${e.correlationId}")
+              s"Error response received with CorrelationId: ${e.correlationId}" +
+              s" and errors ${e.allErrors.map(_.code).mkString(",")}")
           processError(e).withHeaders("X-CorrelationId" -> e.correlationId)
         case Right(DesResponse(resultCorrelationId, success)) =>
-          logger.info(
+          logger.warn(
             s"[${endpointLogContext.controllerName}][${endpointLogContext.endpointName}] - " +
               s"Success response received with CorrelationId: $resultCorrelationId")
           Ok(Json.obj("obligations" -> Json.toJson(success))).withHeaders("X-CorrelationId" -> resultCorrelationId)
