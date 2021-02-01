@@ -40,12 +40,12 @@ class EopsDeclarationRequestDataParser @Inject()(validator: EopsDeclarationInput
             s"Validation successful for the request with CorrelationId: $correlationId")
         Right(eopsDeclarationSubmission)
       case err :: Nil =>
-        logger.info(
+        logger.warn(
           "[RequestParser][parseRequest] " +
             s"Validation failed with ${err.code} error for the request with CorrelationId: $correlationId")
         Left(ErrorWrapper(correlationId, err, None))
       case errs =>
-        logger.info(
+        logger.warn(
           "[RequestParser][parseRequest] " +
             s"Validation failed with ${errs.map(_.code).mkString(",")} error for the request with CorrelationId: $correlationId")
         Left(ErrorWrapper(correlationId, BadRequestError, Some(errs)))

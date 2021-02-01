@@ -54,7 +54,7 @@ class EopsObligationsController @Inject()(val authService: EnrolmentsAuthService
               s" and errors ${e.allErrors.map(_.code).mkString(",")}")
           processError(e).withHeaders("X-CorrelationId" -> e.correlationId)
         case Right(DesResponse(resultCorrelationId, success)) =>
-          logger.warn(
+          logger.info(
             s"[${endpointLogContext.controllerName}][${endpointLogContext.endpointName}] - " +
               s"Success response received with CorrelationId: $resultCorrelationId")
           Ok(Json.obj("obligations" -> Json.toJson(success))).withHeaders("X-CorrelationId" -> resultCorrelationId)
