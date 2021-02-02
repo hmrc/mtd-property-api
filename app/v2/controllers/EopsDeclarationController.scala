@@ -66,16 +66,17 @@ class EopsDeclarationController @Inject()(val authService: EnrolmentsAuthService
               NoContent.withHeaders("X-CorrelationId" -> desResponse.correlationId)
             case Left(errorWrapper) =>
               val result = processError(errorWrapper)
-              logger.info(
+              logger.warn(
                 s"[${endpointLogContext.controllerName}][${endpointLogContext.endpointName}] - " +
-                  s"Error response received with CorrelationId: ${errorWrapper.correlationId}")
+                  s"Error response received with CorrelationId: ${errorWrapper.correlationId}" +
+                  s" and errors: ${errorWrapper.allErrors.map(_.code).mkString(",")}")
               auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.body,
                 errorWrapper.correlationId, request.userDetails, Some(errorWrapper)))
               result.withHeaders("X-CorrelationId" -> errorWrapper.correlationId)
           }
         case Left(errorWrapper) =>
           val result = processError(errorWrapper)
-          logger.info(
+          logger.warn(
             s"[${endpointLogContext.controllerName}][${endpointLogContext.endpointName}] - " +
               s"Error response received with CorrelationId: ${errorWrapper.correlationId}")
           auditSubmission(createAuditDetails(nino, start, end, result.header.status, request.body,

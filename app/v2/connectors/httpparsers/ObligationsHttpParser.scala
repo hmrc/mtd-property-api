@@ -49,12 +49,15 @@ object ObligationsHttpParser extends HttpParser {
 
       response.status match {
         case OK => response.validateJson[Seq[ObligationDetails]](obligationsJsonReads) match {
-          case Some(obligations) => Right(DesResponse(correlationId, obligations))
-          case None => Left(DesResponse(correlationId, Seq(DownstreamError)))
+          case Some(obligations) => logger.info(s"$loggingPrefix - Successful response from DES with correlationId: $correlationId")
+            Right(DesResponse(correlationId, obligations))
+          case None => logger.warn(s"$loggingPrefix - downstream returned None. Revert to ISE for correlationId: $correlationId")
+            Left(DesResponse(correlationId, Seq(DownstreamError)))
         }
         case _ =>
           val errors = parseErrors(response)
-          Logger.warn(s"$loggingPrefix Get obligations returned the following error(s): ${errors.map(_.code).mkString(",")}")
+          Logger.warn(s"$loggingPrefix Get obligations returned the following error(s): ${errors.map(_.code).mkString(",")} " +
+            s"for correlationId: $correlationId")
           Left(DesResponse(correlationId, errors))
       }
     }

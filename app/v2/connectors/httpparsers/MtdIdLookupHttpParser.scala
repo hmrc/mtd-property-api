@@ -31,10 +31,12 @@ object MtdIdLookupHttpParser extends HttpParser {
       response.status match {
         case OK => response.validateJson[String](mtdIdJsonReads) match {
           case Some(mtdId) => Right(mtdId)
-          case None => Left(DownstreamError)
+          case None => logger.warn(s"[MtdIdLookupHttpParser][mtdIdLookupHttpReads] No MTD_ID found for the unique identifier, Revert to ISE")
+            Left(DownstreamError)
         }
         case FORBIDDEN => Left(NinoFormatError)
-        case _ => Left(DownstreamError)
+        case _ => logger.warn(s"[MtdIdLookupHttpParser][mtdIdLookupHttpReads] Unexpected status received for the unique identifier, Revert to ISE")
+          Left(DownstreamError)
       }
     }
   }

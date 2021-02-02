@@ -25,6 +25,8 @@ import scala.util.{Success, Try}
 
 trait HttpParser {
 
+  val logger = Logger(this.getClass)
+
   implicit class KnownJsonResponse(response: HttpResponse) {
     def validateJson[T](implicit reads: Reads[T]): Option[T] = {
       Try(response.json) match {
