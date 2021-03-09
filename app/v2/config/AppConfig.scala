@@ -35,13 +35,13 @@ trait AppConfig {
 
 @Singleton
 class AppConfigImpl @Inject()(servicesConfig: ServicesConfig,
-                              config: Configuration) extends AppConfig {
+                              configuration: Configuration) extends AppConfig {
 
   val mtdIdBaseUrl: String = servicesConfig.baseUrl("mtd-id-lookup")
   val desBaseUrl: String = servicesConfig.baseUrl("des")
   val desEnv: String = servicesConfig.getString("microservice.services.des.env")
   val desToken: String = servicesConfig.getString("microservice.services.des.token")
-  val confidenceLevelConfig: ConfidenceLevelConfig = config.get[ConfidenceLevelConfig](s"api.confidence-level-check")
+  val confidenceLevelConfig: ConfidenceLevelConfig = configuration.get[ConfidenceLevelConfig](s"api.confidence-level-check")
 }
 
 case class ConfidenceLevelConfig(definitionEnabled: Boolean, authValidationEnabled: Boolean)
