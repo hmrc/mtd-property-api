@@ -16,7 +16,7 @@
 
 package v2.mocks
 
-import v2.config.AppConfig
+import v2.config.{AppConfig, ConfidenceLevelConfig}
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
 
@@ -25,9 +25,15 @@ trait MockAppConfig extends MockFactory {
   val mockAppConfig: AppConfig = mock[AppConfig]
 
   object MockedAppConfig {
+
     def desBaseUrl: CallHandler[String] = (mockAppConfig.desBaseUrl _).expects()
+
     def desToken: CallHandler[String] = (mockAppConfig.desToken _).expects()
+
     def desEnvironment: CallHandler[String] = (mockAppConfig.desEnv _).expects()
+
     def mtdIdBaseUrl: CallHandler[String] = (mockAppConfig.mtdIdBaseUrl _).expects()
+
+    def confidenceLevelCheckEnabled: CallHandler[ConfidenceLevelConfig] = (mockAppConfig.confidenceLevelConfig _: () => ConfidenceLevelConfig).expects()
   }
 }

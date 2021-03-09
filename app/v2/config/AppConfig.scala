@@ -16,8 +16,9 @@
 
 package v2.config
 
+import com.typesafe.config.Config
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.{ConfigLoader, Configuration}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 trait AppConfig {
@@ -28,6 +29,8 @@ trait AppConfig {
   def desEnv: String
 
   def desToken: String
+
+  def confidenceLevelConfig: ConfidenceLevelConfig
 }
 
 @Singleton
@@ -38,4 +41,16 @@ class AppConfigImpl @Inject()(servicesConfig: ServicesConfig,
   val desBaseUrl: String = servicesConfig.baseUrl("des")
   val desEnv: String = servicesConfig.getString("microservice.services.des.env")
   val desToken: String = servicesConfig.getString("microservice.services.des.token")
+  val confidenceLevelConfig: ConfidenceLevelConfig = config.get[ConfidenceLevelConfig](s"api.confidence-level-check")
+}
+
+case class ConfidenceLevelConfig(definitionEnabled: Boolean, authValidationEnabled: Boolean)
+object ConfidenceLevelConfig {
+  implicit val configLoader: ConfigLoader[ConfidenceLevelConfig] = (rootConfig: Config, path: String) => {
+    val config = rootConfig.getConfig(path)
+    ConfidenceLevelConfig(
+      definitionEnabled = config.getBoolean("definition.enabled"),
+      authValidationEnabled = config.getBoolean("auth-validation.enabled")
+    )
+  }
 }
