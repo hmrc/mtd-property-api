@@ -18,6 +18,4 @@ package v2.models.domain
 
 import java.time.LocalDate
 
-import uk.gov.hmrc.domain.Nino
-
 case class EopsDeclarationSubmission(nino: Nino, start: LocalDate, end: LocalDate)

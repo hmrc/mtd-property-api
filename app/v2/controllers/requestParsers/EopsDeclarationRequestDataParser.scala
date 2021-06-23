@@ -19,7 +19,7 @@ package v2.controllers.requestParsers
 import java.time.LocalDate
 
 import javax.inject.Inject
-import uk.gov.hmrc.domain.Nino
+import v2.models.domain.Nino
 import v2.controllers.requestParsers.validators.EopsDeclarationInputDataValidator
 import v2.models.domain.EopsDeclarationSubmission
 import v2.models.errors.{BadRequestError, ErrorWrapper}

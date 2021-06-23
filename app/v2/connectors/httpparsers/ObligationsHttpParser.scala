@@ -16,7 +16,6 @@
 
 package v2.connectors.httpparsers
 
-import play.api.Logger
 import play.api.http.Status.OK
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
@@ -24,8 +23,9 @@ import v2.connectors.ObligationsConnectorOutcome
 import v2.models.domain.ObligationDetails
 import v2.models.errors.{DownstreamError, Error}
 import v2.models.outcomes.DesResponse
+import v2.utils.Logging
 
-object ObligationsHttpParser extends HttpParser {
+object ObligationsHttpParser extends HttpParser with Logging {
 
   private val obligationsJsonReads: Reads[Seq[ObligationDetails]] = (__ \ "obligations").read[Seq[ObligationDetails]]
   private val multipleErrorJsonReads: Reads[Seq[Error]] = (__ \ "failures").read[Seq[Error]]
@@ -40,7 +40,7 @@ object ObligationsHttpParser extends HttpParser {
         val singleError = response.validateJson[Error].map(Seq(_))
         lazy val multipleErrors = response.validateJson[Seq[Error]](multipleErrorJsonReads)
         lazy val unableToParseJsonError = {
-          Logger.warn(s"$loggingPrefix Unable to parse errors: ${response.body}")
+          logger.warn(s"$loggingPrefix Unable to parse errors: ${response.body}")
           Seq(DownstreamError)
         }
 
@@ -56,7 +56,7 @@ object ObligationsHttpParser extends HttpParser {
         }
         case _ =>
           val errors = parseErrors(response)
-          Logger.warn(s"$loggingPrefix Get obligations returned the following error(s): ${errors.map(_.code).mkString(",")} " +
+          logger.warn(s"$loggingPrefix Get obligations returned the following error(s): ${errors.map(_.code).mkString(",")} " +
             s"for correlationId: $correlationId")
           Left(DesResponse(correlationId, errors))
       }

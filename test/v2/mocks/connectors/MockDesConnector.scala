@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import org.scalamock.handlers.CallHandler
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.domain.Nino
+import v2.models.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.{DesConnector, EopsDeclarationConnectorOutcome, ObligationsConnectorOutcome}
 

@@ -18,8 +18,7 @@ package v2.connectors
 
 import java.time.LocalDate
 
-import play.api.http.HeaderNames
-import uk.gov.hmrc.domain.Nino
+import v2.models.domain.Nino
 import v2.mocks.{MockAppConfig, MockHttpClient}
 import v2.models.errors._
 import v2.models.outcomes.DesResponse
@@ -28,9 +27,6 @@ import scala.concurrent.Future
 
 class DesConnectorSpec extends ConnectorSpec {
 
-  val baseUrl = "test-mtdIdBaseUrl"
-  implicit val correlationId: String = "x1234id"
-
   private trait Test extends MockHttpClient with MockAppConfig {
 
     val connector = new DesConnector(
@@ -38,19 +34,11 @@ class DesConnectorSpec extends ConnectorSpec {
       appConfig = mockAppConfig
     )
 
+    val desRequestHeaders: Seq[(String, String)] = Seq("Environment" -> "des-environment", "Authorization" -> s"Bearer des-token")
     MockedAppConfig.desBaseUrl returns baseUrl
     MockedAppConfig.desToken returns "des-token"
     MockedAppConfig.desEnvironment returns "des-environment"
-  }
-
-  "desHeaderCarrier" should {
-    "return a header carrier with an authorization header using the DES token specified in config" in new Test {
-      connector.desHeaderCarrier.headers.contains(HeaderNames.AUTHORIZATION -> "Bearer des-token") shouldBe true
-    }
-
-    "return a header carrier with an environment header using the DES environment specified in config" in new Test {
-      connector.desHeaderCarrier.headers.contains("Environment" -> "des-environment") shouldBe true
-    }
+    MockedAppConfig.desEnvironmentHeaders returns Some(allowedDesHeaders)
   }
 
   "getObligations" should {
@@ -64,7 +52,10 @@ class DesConnectorSpec extends ConnectorSpec {
     "return a collection of obligation details" when {
       "the http client returns a collection of obligations" in new Test {
 
-        MockedHttpClient.get[ObligationsConnectorOutcome](baseUrl + urlPath)
+        MockedHttpClient.get[ObligationsConnectorOutcome](baseUrl + urlPath,
+          dummyDesHeaderCarrierConfig,
+          desRequestHeaders,
+          Seq("AnotherHeader" -> "HeaderValue"))
           .returns(Future.successful(Right(DesResponse(correlationId, Seq.empty))))
 
         val result: ObligationsConnectorOutcome = await(connector.getObligations(nino, from, to))
@@ -74,7 +65,10 @@ class DesConnectorSpec extends ConnectorSpec {
 
     "return a DownstreamError" when {
       "the http client returns a DownstreamError" in new Test {
-        MockedHttpClient.get[ObligationsConnectorOutcome](baseUrl + urlPath)
+        MockedHttpClient.get[ObligationsConnectorOutcome](baseUrl + urlPath,
+          dummyDesHeaderCarrierConfig,
+          desRequestHeaders,
+          Seq("AnotherHeader" -> "HeaderValue"))
           .returns(Future.successful(Left(DesResponse(correlationId, Seq(DownstreamError)))))
 
         val result: ObligationsConnectorOutcome = await(connector.getObligations(nino, from, to))

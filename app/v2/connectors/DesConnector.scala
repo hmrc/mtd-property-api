@@ -19,10 +19,8 @@ package v2.connectors
 import java.time.LocalDate
 
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.logging.Authorization
-import uk.gov.hmrc.http.HttpClient
+import v2.models.domain.Nino
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import v2.config.AppConfig
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,9 +29,20 @@ import scala.concurrent.{ExecutionContext, Future}
 class DesConnector @Inject()(http: HttpClient,
                              appConfig: AppConfig) {
 
-  private[connectors] def desHeaderCarrier(implicit hc: HeaderCarrier, correlationId: String): HeaderCarrier = hc
-    .copy(authorization = Some(Authorization(s"Bearer ${appConfig.desToken}")))
-    .withExtraHeaders("Environment" -> appConfig.desEnv, "CorrelationId" -> correlationId)
+  private def desHeaderCarrier(additionalHeaders: Seq[String] = Seq.empty)(implicit hc: HeaderCarrier, correlationId: String): HeaderCarrier = {
+    HeaderCarrier(
+      extraHeaders = hc.extraHeaders ++
+        // Contract headers
+        Seq(
+          "Authorization" -> s"Bearer ${appConfig.desToken}",
+          "Environment" -> appConfig.desEnv,
+          "CorrelationId" -> correlationId
+        ) ++
+        // Other headers (i.e Gov-Test-Scenario, Content-Type)
+        hc.headers(additionalHeaders ++ appConfig.desEnvironmentHeaders.getOrElse(Seq.empty))
+    )
+  }
+
 
   def getObligations(nino: String, from: LocalDate, to: LocalDate)
                     (implicit hc: HeaderCarrier, ec: ExecutionContext, correlationId: String): Future[ObligationsConnectorOutcome] = {
@@ -41,7 +50,7 @@ class DesConnector @Inject()(http: HttpClient,
 
     val urlPath = s"/enterprise/obligation-data/nino/$nino/ITSA?from=$from&to=$to"
 
-    http.GET[ObligationsConnectorOutcome](appConfig.desBaseUrl + urlPath)(implicitly, desHeaderCarrier, implicitly)
+    http.GET[ObligationsConnectorOutcome](appConfig.desBaseUrl + urlPath)(implicitly, desHeaderCarrier(), implicitly)
   }
 
   def submitEOPSDeclaration(nino: Nino, from: LocalDate, to: LocalDate)
@@ -50,6 +59,6 @@ class DesConnector @Inject()(http: HttpClient,
 
     val url = s"${appConfig.desBaseUrl}/income-tax/income-sources/nino/${nino.nino}/uk-property/$from/$to/declaration"
 
-    http.POSTEmpty[EopsDeclarationConnectorOutcome](url)(submitEOPSDeclarationHttpReads, desHeaderCarrier, implicitly)
+    http.POSTEmpty[EopsDeclarationConnectorOutcome](url)(submitEOPSDeclarationHttpReads, desHeaderCarrier(), implicitly)
   }
 }

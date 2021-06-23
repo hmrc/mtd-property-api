@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import uk.gov.hmrc.domain.Nino
+import v2.models.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.connectors.DesConnector
 import v2.models.domain.{Obligation, ObligationDetails}
