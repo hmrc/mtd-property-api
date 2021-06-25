@@ -42,7 +42,7 @@ trait ConnectorSpec extends UnitSpec
     HeaderCarrier.Config(
       Seq("^not-test-BaseUrl?$".r),
       Seq.empty[String],
-      Some("individual-cis-deductions-api")
+      Some("mtd-property-api")
     )
 
   val requiredDesHeaders: Seq[(String, String)] = Seq(
