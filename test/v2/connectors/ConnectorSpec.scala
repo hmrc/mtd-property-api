@@ -48,7 +48,7 @@ trait ConnectorSpec extends UnitSpec
   val requiredDesHeaders: Seq[(String, String)] = Seq(
     "Authorization" -> "Bearer des-token",
     "Environment" -> "des-environment",
-    "User-Agent" -> "individual-cis-deductions-api",
+    "User-Agent" -> "mtd-property-api",
     "CorrelationId" -> correlationId,
     "Gov-Test-Scenario" -> "DEFAULT"
   )
