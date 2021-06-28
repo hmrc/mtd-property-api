@@ -28,6 +28,8 @@ trait AppConfig {
 
   def desEnv: String
 
+  def desEnvironmentHeaders: Option[Seq[String]]
+
   def desToken: String
 
   def confidenceLevelConfig: ConfidenceLevelConfig
@@ -40,6 +42,7 @@ class AppConfigImpl @Inject()(servicesConfig: ServicesConfig,
   val mtdIdBaseUrl: String = servicesConfig.baseUrl("mtd-id-lookup")
   val desBaseUrl: String = servicesConfig.baseUrl("des")
   val desEnv: String = servicesConfig.getString("microservice.services.des.env")
+  val desEnvironmentHeaders: Option[Seq[String]] = configuration.getOptional[Seq[String]]("microservice.services.des.environmentHeaders")
   val desToken: String = servicesConfig.getString("microservice.services.des.token")
   val confidenceLevelConfig: ConfidenceLevelConfig = configuration.get[ConfidenceLevelConfig](s"api.confidence-level-check")
 }

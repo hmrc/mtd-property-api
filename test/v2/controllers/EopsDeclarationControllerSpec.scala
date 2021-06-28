@@ -20,7 +20,7 @@ import java.time.LocalDate
 
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContentAsJson, Result}
-import uk.gov.hmrc.domain.Nino
+import v2.models.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import v2.mocks.MockIdGenerator
 import v2.mocks.requestParsers.MockEopsDeclarationRequestRawDataParser

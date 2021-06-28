@@ -28,9 +28,21 @@ trait MockHttpClient extends MockFactory {
   val mockHttpClient: HttpClient = mock[HttpClient]
 
   object MockedHttpClient {
-    def get[T](url: String): CallHandler[Future[T]] = {
-      (mockHttpClient.GET(_: String)(_: HttpReads[T], _: HeaderCarrier, _: ExecutionContext))
-        .expects(url, *, *, *)
+    def get[T](url: String,
+               config: HeaderCarrier.Config,
+               requiredHeaders: Seq[(String, String)] = Seq.empty,
+               excludedHeaders: Seq[(String, String)] = Seq.empty): CallHandler[Future[T]] = {
+      (mockHttpClient
+        .GET(_: String, _: Seq[(String, String)], _: Seq[(String, String)])(_: HttpReads[T], _: HeaderCarrier, _: ExecutionContext))
+        .expects(where {
+          (actualUrl: String, _: Seq[(String, String)], _: Seq[(String, String)], _: HttpReads[T], hc: HeaderCarrier, _: ExecutionContext) =>
+          {
+            val headersForUrl = hc.headersForUrl(config)(actualUrl)
+            url == actualUrl &&
+              requiredHeaders.forall(h => headersForUrl.contains(h)) &&
+              excludedHeaders.forall(h => !headersForUrl.contains(h))
+          }
+        })
     }
 
     def postEmpty[T](url: String): CallHandler[Future[T]] = {

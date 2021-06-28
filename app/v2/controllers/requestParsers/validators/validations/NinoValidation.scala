@@ -16,7 +16,7 @@
 
 package v2.controllers.requestParsers.validators.validations
 
-import uk.gov.hmrc.domain.Nino
+import v2.models.domain.Nino
 import v2.models.errors.{Error, NinoFormatError}
 import v2.validations.NoValidationErrors
 
